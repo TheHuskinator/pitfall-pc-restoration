@@ -1,0 +1,163 @@
+# =====================================================================
+# Pitfall: The Mayan Adventure — PC Restoration
+# Keeps original game material, credentials, and build junk out of Git.
+# =====================================================================
+
+# ---------------------------------------------------------------------
+# 1. Private folder for ALL original/proprietary material
+#    Put disc images, installed game files, extracted assets, manuals,
+#    recordings of the original game, etc. in here. Nothing in it is
+#    ever committed.
+# ---------------------------------------------------------------------
+/private/
+/original/
+/originals/
+/game/
+/install/
+/extracted/
+/dump/
+/dumps/
+
+# ---------------------------------------------------------------------
+# 2. Disc images and archives (wherever they appear)
+# ---------------------------------------------------------------------
+*.iso
+*.bin
+*.cue
+*.img
+*.ima
+*.mdf
+*.mds
+*.nrg
+*.ccd
+*.sub
+*.toc
+*.chd
+*.cdi
+*.ecm
+*.vhd
+*.vhdx
+*.vmdk
+*.zip
+*.7z
+*.rar
+*.cab
+*.tar
+*.gz
+
+# ---------------------------------------------------------------------
+# 3. Executables and libraries
+#    Covers both the original game's binaries and our own build output.
+# ---------------------------------------------------------------------
+*.exe
+*.dll
+*.ocx
+*.drv
+*.vxd
+*.sys
+*.com
+*.msi
+*.ex_
+*.dl_
+
+# ---------------------------------------------------------------------
+# 4. Media/asset formats that would most likely be original game content
+#    (If we later create our OWN test assets in these formats, add a
+#    specific "!path/to/file" exception below with the user's approval.)
+# ---------------------------------------------------------------------
+*.wav
+*.mid
+*.midi
+*.rmi
+*.mp3
+*.ogg
+*.flac
+*.avi
+*.smk
+*.mve
+*.mov
+*.mp4
+*.bmp
+*.pcx
+*.dib
+*.pal
+*.sav
+
+# ---------------------------------------------------------------------
+# 5. Credentials and secrets
+# ---------------------------------------------------------------------
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+*.cer
+*.crt
+*.token
+secrets/
+credentials*
+*.credentials
+.netrc
+.git-credentials
+
+# ---------------------------------------------------------------------
+# 6. Build output and IDE files
+# ---------------------------------------------------------------------
+build/
+builds/
+out/
+bin/
+obj/
+dist/
+Debug/
+Release/
+x64/
+x86/
+*.obj
+*.o
+*.lib
+*.a
+*.pdb
+*.ilk
+*.idb
+*.exp
+*.tlog
+CMakeFiles/
+CMakeCache.txt
+cmake-build-*/
+CMakeUserPresets.json
+.vs/
+*.user
+*.suo
+*.sln.docstates
+.vscode/*
+!.vscode/extensions.json
+.idea/
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ---------------------------------------------------------------------
+# 7. Temporary, log, and OS files
+# ---------------------------------------------------------------------
+tmp/
+temp/
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+*~
+Thumbs.db
+ehthumbs.db
+desktop.ini
+.DS_Store
+$RECYCLE.BIN/
+
+# ---------------------------------------------------------------------
+# 8. Local AI-agent settings (personal, not shared)
+# ---------------------------------------------------------------------
+.claude/settings.local.json

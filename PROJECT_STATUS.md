@@ -27,6 +27,8 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 The project is at the planning/research stage. No local game media, source code, build environment, or working restoration has been confirmed available yet. No technical direction has been finalized.
 
+**2026-10-14 — repository setup:** Added `CLAUDE.md` (permanent agent rules), `.gitignore` (blocks original game files, disc images, media, credentials, and build output), a git-ignored `private/` folder for original material, and a `docs/` structure (research, inventory, legal, decisions, technical, testing). Remote confirmed as `TheHuskinator/pitfall-pc-restoration` (private). Changes are not yet committed or pushed.
+
 ## Evidence, leads, and uncertainties
 
 | Item | What is known | What remains uncertain / needed |
@@ -103,3 +105,4 @@ Each work session should leave the project easier to resume:
 | 2026-10-14 | Target the Kinesoft Windows 95 PC edition for a Windows 10/11 restoration. | Working direction | Browser port is deferred. |
 | 2026-10-14 | C++/SDL3 identified as a candidate. | Pending | No implementation commitment. |
 | 2026-10-14 | User directs and tests; coding agent implements under direction. | Active | Applies throughout the project. |
+| 2026-10-14 | Original/proprietary material kept only in git-ignored `private/`; docs hold metadata and hashes only. | Active | See `docs/legal/rights-and-provenance.md`. |
