@@ -51,7 +51,7 @@ Claude Code should read the repository instructions and rights policy, confirm t
 - [ ] Confirm the local GitHub Desktop checkout matches `main` and verify original files are excluded from version control.
 - [ ] Add a root `README.md` with goals, phase, and document links.
 - [ ] Capture Chris outreach date/method; **historical source citations logged** in `docs/research/sources.md` (2026-10-15).
-- [ ] Inventory the user-reported four-file media set read-only; establish provenance, permission for use, completeness, and release identity. DLL, `.PH`, and CD-audio inspection remains a later scoped task.
+- [x] Inventory the user-reported four-file media set read-only (done 2026-10-15). Provenance, permission for use, completeness, and release identity remain open. DLL, `.PH`, and CD-audio inspection remains a later scoped task.
 - [ ] Create GitHub issues for research, media recovery, rights, compatibility, and tool validation if desired.
 - [ ] Validate Claude Code / Ghidra / REA installation and x86 analysis support; do not assume tool readiness.
 - [ ] Evaluate Windows 11 native execution, compatibility mode and DxWnd in a documented test environment.
@@ -81,6 +81,23 @@ Claude Code should read the repository instructions and rights policy, confirm t
 - **Approval preserved:** The user approved this two-file documentation update to `main`. That approval does not authorize future commits or pushes, contact, tools, or game execution. Each future push requires specific user approval under `CLAUDE.md`.
 - Earlier compatibility and tooling proposals remain later possibilities, not authorization to proceed. This first-media task supersedes the earlier immediate tasks to obtain files or begin executable/PH analysis.
 
+## 2026-10-15 — First read-only media examination: result
+
+Full report: `docs/technical/original-media-examination.md`. Hashes: `docs/inventory/materials-inventory.md` (MEDIA-001).
+
+- **Location:** the four files are in `private/original-media/Pitfall_The_Mayan_Adventure_ISO/`. The user confirmed this as the canonical path on 2026-10-15, and `CLAUDE.md` was updated. All four are git-ignored (`/private/`), and nothing under `private/` is tracked.
+- **Provenance — Reported (user, 2026-10-15):** made from a legitimate physical copy the user owned.
+- **Verified:** a structurally consistent CloneCD-style raw image.
+  - IMG and SUB both hold exactly 272,313 sectors, which equals the CCD lead-out.
+  - CCD and CUE agree on all 24 tracks.
+  - The layout is **single-session mixed-mode**: track 1 is Mode 1 data (valid sync/headers at sampled sectors; ISO 9660 identifier present); tracks 2–24 are declared CD audio and contain non-silent sample data at sampled points.
+  - SHA-256 hashes were identical before and after the examination.
+- **Discrepancies:**
+  - Both descriptors omit track 2's INDEX 00, while the (unvalidated) subchannel shows a 149-sector track-2 pregap. The 150 sectors involved are all zero.
+  - Pregaps for tracks 3–24 are 148 sectors, consistent across all sources.
+- **Unknown:** who made the image and when (file timestamps 2007-03-31 — weak evidence), release/region/revision, audio authenticity/completeness, and data-sector error status (EDC/ECC not checked).
+- **Next smallest proposed task (needs user approval):** a read-only ISO 9660 directory inventory of track 1. It would record names, sizes, dates and in-memory SHA-256 per file, plus volume descriptor fields, with no mounting or extraction to disk. Optionally it could also decode the Media Catalog Number and validate Q CRCs.
+
 ## Evidence, leads, and uncertainties
 
 | Item | What is known | What remains uncertain / needed |
@@ -90,7 +107,7 @@ Claude Code should read the repository instructions and rights policy, confirm t
 | Historical research | Six technical posts and the author's roadmap indexed 2026-10-15; published PH-format observations extracted into `docs/technical/ph-resource-formats.md`. | Validate reported formats against authorized retail files; request his private MATLAB scripts and name maps with permission. |
 | Original developer lead | Andy Glaister is identified as an original Kinesoft developer. | Verify role/contact details and determine whether outreach is appropriate and successful. |
 | Communications | User reports awaiting Chris Heimlich's response to an email. | Email date, address, delivery, and response remain unverified in the project record; record details when confirmed. |
-| Materials | User reports a scratched original physical PC disc and `Pitfall.img`, `Pitfall.sub`, `Pitfall.ccd`, and `Pitfall.cue` intended for `private/original-media/`. | Verify local presence, byte sizes, hashes, descriptor consistency, provenance, permission for use, completeness, and exact release identity. No file contents inspected in this audit. |
+| Materials | User reports a scratched original physical PC disc. Four-file image set MEDIA-001, reported by the user as made from their own legitimate physical copy, present in `private/original-media/Pitfall_The_Mayan_Adventure_ISO/`; sizes, hashes and structure verified 2026-10-15 (single-session, 1 data + 23 audio tracks). | Provenance, permission for use, completeness, exact release identity, audio authenticity and data error status remain unverified. |
 
 ## Sources, ownership, and rights
 
@@ -114,8 +131,8 @@ Claude Code should read the repository instructions and rights policy, confirm t
 
 ## Immediate next actions
 
-1. Give Claude Code the first read-only media examination defined in `CLAUDE.md`; verify local file presence and Git exclusion before inspection.
-2. Record the four files' metadata, SHA-256 hashes, provenance as reported or verified, and descriptor/structure findings; do not modify original source media.
+1. **Completed 2026-10-15:** first read-only media examination (see result section above). Chat 2 to review `docs/technical/original-media-examination.md`.
+2. **Done 2026-10-15:** the user reported provenance (their own legitimate physical copy) and chose the real subfolder path. Next: the user approves (or not) the proposed read-only ISO 9660 directory inventory.
 3. **Completed 2026-10-15:** Index six original-port-analysis articles and the author's roadmap with citations; extract reported findings. Next: validate using lawful local game files and follow up on private tools/permissions.
 4. Verify the Andy Glaister lead and draft—not send—an outreach note unless the user explicitly authorizes contact.
 5. Review Claude's report through Chat 2 (research), Chat 3 (next development handoff), and Chat 4 (QA) as appropriate, with Chat 1 coordinating. Obtain the applicable user approval before mounting, extraction, installation, game execution, tool installation, or implementation.
