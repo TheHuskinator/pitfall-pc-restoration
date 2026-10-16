@@ -105,6 +105,14 @@ Neither auditor had access to the disc image. Hashes, raw-sector observations, Q
 
 **Evidence limit:** Claude wrote the tool and performed every run. These results are reproducible by anyone with the image, but no independent party has run them yet.
 
+## R2.2 — `PITSTART.EXE` and `KILLPIT.EXE` static analysis (2026-10-16)
+
+| Step | What happened | Outcome |
+| --- | --- | --- |
+| R2.2-S | Scope proposed by Claude (only these two files; the reviewed parser; fingerprints verified first; headers, sections, entry points and static imports only; stop on mismatch, unsupported format, malformed result or error) | Approved by the user, 2026-10-16. Work had recommended the same boundaries (P8). |
+| R2.2-X | Examination | Pre-check passed (clean `main` at `29589a7`; parser blob `1299ce51…`; LF-normalized SHA-256 `81FDEB05…`). Both runs matched their fingerprints and gave `RESULT: OK`. No stop condition was triggered. No other files were read and no game code was executed. |
+| R2.2-R | Report `docs/technical/startup-executables.md` | Draft, uncommitted. **Awaiting Chat 2 audit.** |
+
 ## Repository hygiene: tracker character-encoding repair (2026-10-15)
 
 - **The problem:** commit `50cf7d0` saved this tracker with garbled characters: **30 damaged sequences across 22 lines**, such as `â€”` for "—" and `Â§` for "§". The cause was a Claude bulk edit, run in Windows PowerShell 5.1, that read the UTF-8 file as Windows-1252 and wrote it back as UTF-8. Earlier commits (`8f881aa`, `5aa4a29`) were clean.

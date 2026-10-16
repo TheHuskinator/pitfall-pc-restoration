@@ -11,6 +11,8 @@ Findings about how the original Kinesoft Windows 95 build works.
 
 - [executable.md](executable.md) — **Verified** PE header and static imports of `ASSETS/PITFALL.EXE`: 32-bit x86 Windows GUI program, PE timestamp field 1995-09-15 (actual build time not established); six standard Windows DLLs in its static imports (no DirectX or `WAIL32.DLL` in static imports; run-time loading untested).
 
+- [startup-executables.md](startup-executables.md) — **R2.2 (draft, pending Chat 2 audit):** static headers and imports of `PITSTART.EXE` and `ASSETS/KILLPIT.EXE`. Both are 32-bit x86 Windows GUI programs. `PITSTART.EXE` imports 92 functions from 6 DLLs, including Video for Windows (`MSVFW32.dll`); `KILLPIT.EXE` imports 24 functions from KERNEL32 and USER32. Roles are hypotheses only.
+
 ## Planned technical investigations (create pages when evidence arrives)
 
 - `install-layout.md` — what the installer puts where; files on the disc vs. on the hard drive.
