@@ -49,6 +49,7 @@ Stop after the report. Mounting, extraction, executable/dependency inspection of
 
 ## Working practices
 
+- **Honor brief boundaries literally.** If a brief's stop condition is met, stop and ask, even when proceeding looks harmless. Operations beyond the approved list (extra scans, helpers, bundled checks) are proposed, not performed. (Adopted 2026-10-15 after audit findings K1/K2 in `docs/reviews/media-001-audit-tracker.md`.)
 - **Evidence over assumption.** Label every significant claim as *verified* (with source), *reported* (secondhand), or *assumption*. Historical or developer recollections must be corroborated.
 - **Originals are read-only.** Never modify user-supplied original files. Read-only metadata checks and hashing may read the originals directly. Use copies for any later authorized extraction, experimentation, or execution; record SHA-256 hashes in `docs/inventory/`.
 - **Small, testable steps.** Each milestone should end with something the user can run or check, plus written test steps.
@@ -69,6 +70,8 @@ docs/
   decisions/            Architecture decision records (one file per decision)
   technical/            File formats, executable analysis, engine notes
   testing/              Test plans and playtest report templates
+  reviews/              Independent audits and recommendation tracking
+tools/                  Small read-only helper scripts (see tools/README.md)
 private/                (git-ignored) original game files, disc images, extracted assets
 ```
 

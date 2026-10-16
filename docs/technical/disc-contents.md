@@ -51,7 +51,7 @@ public static class Edc {
 // Per sector: Edc.Compute(raw, 2064) == BitConverter.ToUInt32(raw, 2064)
 ```
 
-Limitation: the full listing script is not in the repository. The aggregate 8,880/8,880 result has therefore not been reproduced by an independent party. Committing a reviewed, read-only verifier script would make it reproducible; that needs separate user approval.
+**Reproducibility:** a read-only verifier now lives at [`tools/verify-media001.ps1`](../../tools/verify-media001.ps1) (see [`tools/README.md`](../../tools/README.md)). It re-runs the EDC self-test, the full Mode 1 header/EDC check, the volume-descriptor checks and the per-file comparison against the inventory. A second run on 2026-10-15 passed every check, and a deliberate negative test failed as expected. The same examiner ran both, so this is reproducibility, **not independent confirmation**. Independent confirmation still requires a run by another party.
 
 ## Findings
 
@@ -87,7 +87,7 @@ The highest file extent ends exactly at block 8,728, matching the volume space. 
 - **Dates:** every directory and file record is dated `1995-08-24 00:01:00`, GMT offset 0. These are ISO directory-record timestamps written when the disc was mastered. They are not independently verified manufacturing or release dates.
 - **Flags:**
   - All 40 **file** records have flags `0x00`, meaning no hidden, multi-extent or interleaved entries.
-  - The `ASSETS` **directory** record has the directory bit (`0x02`) set. This is inferred from the directory walk descending into it; the full flag byte for that record was not printed.
+  - The `ASSETS` **directory** record has flags `0x02` (the directory bit), read directly by the verifier on its second run (2026-10-15).
 - **Total file bytes:** 17,792,330.
 
 The full per-file table with sizes, extents and SHA-256 is in [materials-inventory.md](../inventory/materials-inventory.md#media-001--data-track-file-inventory).

@@ -44,14 +44,14 @@ Neither auditor had access to the disc image. Hashes, raw-sector observations, Q
 
 | ID | Recommendation | Status |
 | --- | --- | --- |
-| W1 | Directory-record flag wording ("every directory and file record has flags 0x00") | Partly outdated: the committed text said "All **file** flags are `0x00`". The sentence sat beside "every directory and file record is dated", which made it ambiguous, so it was clarified anyway: file records `0x00`; `ASSETS` directory record has the `0x02` bit (inferred from the walk). Applied (uncommitted). |
+| W1 | Directory-record flag wording ("every directory and file record has flags 0x00") | Partly outdated: the committed text said "All **file** flags are `0x00`". The sentence sat beside "every directory and file record is dated", which made it ambiguous, so it was clarified anyway: file records `0x00`; `ASSETS` directory record `0x02`. The latter was read directly by the verifier on 2026-10-15. Committed in `8f881aa`; verifier observation uncommitted. |
 | W2 | Replace "intact" with "all 8,880 observed Mode 1 sectors passed header and EDC validation" | Applied (uncommitted); same as C2 |
 | W3 | "No installer" → "no `SETUP.EXE` or `INSTALL.EXE` listed" | Applied (uncommitted); same as C5 |
 | W4 | "Other dependencies not shipped" → "external dependencies remain unknown" | Applied (uncommitted); same as C5 |
 | W5 | Mark the "first examination next / not independently inspected" passage as historical | Applied (uncommitted); same as C6 |
 | W6 | EDC coverage is 8,880 Mode 1 sectors, not all 9,030 descriptor-assigned track-1 sectors | Applied (uncommitted) in `disc-contents.md`, D5 and `PROJECT_STATUS.md` |
 | W7 | Track-2 index finding stays "unvalidated Q-channel interpretation" | Applied (uncommitted); same as C4 |
-| W8 | **Before** executable-import work: preserve a small, reviewable read-only verifier (or at least document the EDC polynomial and test vector), then do a second approved run confirming the EDC and directory results | Partly done: algorithm and test vector are documented (C3). Committing a verifier script and running it again are **Open (needs approval)**. |
+| W8 | **Before** executable-import work: preserve a small, reviewable read-only verifier (or at least document the EDC polynomial and test vector), then do a second approved run confirming the EDC and directory results | **Done (uncommitted), approved 2026-10-15.** `tools/verify-media001.ps1` takes its expectations from the inventory. Second run: all checks PASS. Negative test: 2/2 planted errors caught, exit 1. Still open: a run by a party other than Claude, for independent confirmation. |
 
 ## Conflicting findings (not silently resolved)
 
@@ -62,10 +62,10 @@ Neither auditor had access to the disc image. Hashes, raw-sector observations, Q
 | K3 | What comes next | PE header/import summary of `PITFALL.EXE` | Preserve a verifier and confirm EDC/directory results first | No conflict on facts; this is an ordering choice for the user. Committing a small read-only verifier first improves reproducibility at low cost, but either order is defensible. |
 | K4 | Claim B (track structure) | "Can't verify" (descriptor bytes unavailable) | "Pass" (on lead-out arithmetic) | Not a real conflict. The auditors checked different things, and both are accurate within their access. |
 
-## Proposed process change (not applied)
+## Process change (approved and applied 2026-10-15)
 
-Add to `CLAUDE.md` *Working practices*:
+`CLAUDE.md` *Working practices* now includes:
 
 > "If a brief's stop condition is met, stop and ask, even when proceeding looks harmless. Operations beyond the approved list (extra scans, helpers, bundled checks) are proposed, not performed."
 
-Awaiting user approval.
+This closes C-h.

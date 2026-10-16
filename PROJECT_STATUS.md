@@ -46,11 +46,11 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - ECC and Q-channel CRC validation.
   - The track-2 index discrepancy (D2).
   - The game's external dependencies.
-  - Independent reproduction of the EDC and listing results.
+  - Independent reproduction of the EDC and listing results. These are now reproducible with `tools/verify-media001.ps1`. Claude's second run passed every check on 2026-10-15, but that is not an independent run.
 
 **Not yet done:** no executable analysis, game execution, compatibility testing, working build environment or restoration code.
 
-**Next proposed task (awaiting user decision):** read-only PE header and static import-table summary of `ASSETS/PITFALL.EXE`, read in memory from the image, with boundaries as recommended by Chat 2 (see `docs/reviews/media-001-audit-tracker.md`). ChatGPT Work recommends first preserving a reviewable read-only verifier (see the tracker, item W6). The user decides the order.
+**Next proposed task (awaiting user decision):** read-only PE header and static import-table summary of `ASSETS/PITFALL.EXE`, read in memory from the image, with boundaries as recommended by Chat 2 (see `docs/reviews/media-001-audit-tracker.md`). The read-only verifier ChatGPT Work recommended (tracker item W8) was added and run on 2026-10-15 (`tools/verify-media001.ps1`): all checks pass, and the negative test fails as designed.
 
 **2026-10-14 — repository setup:** Added `CLAUDE.md` (permanent agent rules), `.gitignore` (blocks original game files, disc images, media, credentials, and build output), a git-ignored `private/` folder for original material, and a `docs/` structure (research, inventory, legal, decisions, technical, testing). Remote confirmed as `TheHuskinator/pitfall-pc-restoration` (private). The setup files were committed to GitHub; this earlier pending-push note was superseded on 2026-10-15.
 
