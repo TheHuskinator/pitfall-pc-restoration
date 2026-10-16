@@ -55,3 +55,76 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify-media001.ps1 -E
 | 2026-10-15 | Claude Code (Windows 11 Home 10.0.26200, PowerShell 5.1.26100.9444) | All checks PASS. Negative test (wrong volume ID plus one altered inventory hash in a scratch copy) gave exactly 2 FAILs, exit code 1. |
 
 A run by the same examiner is a reproducibility check, not an independent confirmation. A run by someone else with their own copy of the image would be.
+
+## `inspect-pe.ps1` — read-only PE32 header/import inspector
+
+**Purpose:** report a 32-bit Windows program's (PE32) headers, sections, entry point and static imports, in original and sorted order. It is the reviewed and synthetic-tested replacement for the session-local parser behind report R2.1 ([docs/technical/executable.md](../docs/technical/executable.md)). Review history: [audit tracker](../docs/reviews/media-001-audit-tracker.md).
+
+**Safety:**
+- Opens its input read-only.
+- Never writes, executes, disassembles or extracts anything.
+- In image mode, verifies the file's SHA-256 before parsing.
+- Prints only header values, offsets, hashes and import names/ordinals.
+
+**Input modes:**
+- `-Path <file>`: a standalone file. Used by the tests.
+- `-Image <img> -Extent <lba> -Size <bytes> -ExpectedSha256 <hash>`: a file inside a raw 2,352-byte-sector Mode 1 image.
+
+**Exit codes** (each also printed as the final `RESULT:` line):
+
+| Code | Meaning |
+| --- | --- |
+| 0 | OK |
+| 1 | Input error (arguments, missing file, size, extent or range) |
+| 2 | Hash mismatch; nothing parsed |
+| 3 | Malformed (truncated, out of range, unterminated, ambiguous or inconsistent structure) |
+| 4 | Unsupported (not MZ, MZ without a PE signature, or not PE32) |
+| 5 | Internal error |
+
+**Structural rules it enforces:**
+- End of the section table ≤ `SizeOfHeaders` ≤ file size.
+- No overlapping section address ranges.
+- Section raw data lies inside the file.
+- The import directory lies inside one section's stored data.
+- Import descriptors and their all-zero terminator lie within the declared directory size.
+- Lookup tables and names must be terminated inside their region.
+- Names must be printable ASCII.
+
+**Address-mapping policy:** this tool bounds section mapping by `VirtualSize`. That is the tool's deliberate, stricter policy, not a claim that it reproduces the Windows loader exactly.
+
+### Run (MEDIA-001 `PITFALL.EXE`)
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\inspect-pe.ps1 -Image private\original-media\Pitfall_The_Mayan_Adventure_ISO\Pitfall.img -Extent 8070 -Size 772608 -ExpectedSha256 36047291632BEAD27D3AF09EE99BBEF1EEC06F3B9FEA53DB906ECB1E74BFFA86
+```
+
+**Expected result:**
+- `SHA-256 check: matches expected value`;
+- the values in R2.1 §2–§6 (see §10 for the comparison);
+- `Total imported functions: 180 from 6 DLL(s)`;
+- `RESULT: OK`, exit code `0`.
+
+### Tests
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\tests\test-inspect-pe.ps1
+```
+
+**What they do:**
+- 29 tests build harmless synthetic PE32 files in memory, with no game data and no system files.
+- Each runs the inspector in a separate process and checks the exit code and key output lines.
+- They cover every finding from both of ChatGPT Work's reviews (the mapping is in the script's header comment), plus image mode across several sectors, with marker bytes so that a misplaced read would fail the fingerprint check.
+- The temporary folder is deleted afterwards.
+
+**Expected result:** 29 `PASS` lines, then `RESULT: all 29 tests passed`, exit code `0`.
+
+**Line endings:** with Git's `core.autocrlf=true`, checked-out copies use CRLF line endings, so their SHA-256 differs from that of the committed (LF) files. The code is identical: compare Git blob IDs, or hash after converting CRLF to LF.
+
+### Runs so far
+
+| Date | Who | Run | Result |
+| --- | --- | --- | --- |
+| 2026-10-15 | Claude Code (user-approved) | Synthetic tests at `c389278` | 29/29 PASS, exit 0; temporary folder removed |
+| 2026-10-15 | Claude Code (user-approved) | `PITFALL.EXE` re-read at `c389278` | Fingerprint matched before parsing; `RESULT: OK`, exit 0. All R2.1 values reproduced; only display order differs ([executable.md §10](../docs/technical/executable.md)) |
+
+**Evidence limit:** both runs were performed and reported by Claude, who also wrote the tool, so this is not an independent confirmation. ChatGPT Work reviewed the source (twice) and the reported results, but did not run the tool.

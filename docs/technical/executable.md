@@ -2,6 +2,7 @@
 
 **Report ID:** R2.1
 **Status:** **Accepted** by ChatGPT Chat 2 in its final review (2026-10-15), after its first audit ("Accept with corrections"). All seven required corrections are applied and verified (marked *[R2.1-Cn]*).
+**Addendum:** §10 (2026-10-15) records a reproduction of these results with the reviewed and synthetic-tested replacement parser. The addendum is pending review; it does not change the findings in §1–§9.
 **Examination date:** 2026-10-15 · **Finalized:** 2026-10-15 · **Revised:** 2026-10-15
 **Examiner:** Claude Code
 **Approval:** user-approved read-only PE header/import check (2026-10-15), within the limits proposed by Chat 2 (tracker item C-f in [media-001-audit-tracker.md](../reviews/media-001-audit-tracker.md)).
@@ -41,7 +42,7 @@
 
 **Environment:** Windows 11 Home 10.0.26200; Windows PowerShell 5.1.26100.9444; .NET CLR 4.0.30319.42000. No tools were installed.
 
-**Script:** session-local and **not committed**. Adding it to `tools/` is proposed in §9.
+**Script:** session-local and **not committed**. Adding it to `tools/` is proposed in §9. *(Later: the scratch script was not preserved as-is. A reviewed and synthetic-tested replacement parser, `tools/inspect-pe.ps1`, reproduced these results; see §10.)*
 
 **Integrity before and after:** the image SHA-256 (`EDCE93BE…E147172`) was re-checked after the examination and is unchanged. All MEDIA-001 data sectors, including those of this file, were previously reported to pass EDC (`tools/verify-media001.ps1`, 2026-10-15).
 
@@ -180,7 +181,7 @@ The code at the entry point was **not** disassembled (Not tested).
 
 Complete function lists, reformatted for readability:
 - The lists are roughly alphabetical, not strictly sorted. For example, KERNEL32's `_l*` functions come first, and COMCTL32's ordinals are in numeric order.
-- **The original lookup-table (thunk) order was not retained** in this report. *[R2.1-C4]*
+- **The original lookup-table (thunk) order was not retained** in this report. *[R2.1-C4]* *(Later recorded in §10.3.)*
 
 **`ADVAPI32.dll` (6):** RegCloseKey, RegCreateKeyA, RegFlushKey, RegOpenKeyA, RegQueryValueExA, RegSetValueExA
 
@@ -251,11 +252,11 @@ These are **not findings**. They are listed only so that a later, separately app
 - Presence and behavior of the imported functions on Windows 10/11.
 - `PITSTART.EXE`, `KILLPIT.EXE` and `WAIL32.DLL` (not examined).
 - Comparison with any other copy of `PITFALL.EXE` (no reference hash is available).
-- Cross-checking the parse with an independent PE parser, or validating the session-local parser against a known, harmless PE test file.
+- Cross-checking the parse with an independent PE parser, or validating the session-local parser against a known, harmless PE test file. *(Later: a replacement parser, validated against 29 synthetic test files, reproduced these results; see §10. Claude wrote and ran both parsers, so this is still not an independent implementation or an independent party's run.)*
 - Comparison with current Windows DLL exports (see Q6–Q7).
 - Certificate-table contents: none is declared (security directory empty), so there was nothing to inspect.
 - Dependencies reached indirectly: libraries that the six imported DLLs, or any run-time-loaded library, themselves load remain unknown.
-- The original thunk order of the import lists (not retained; see §6).
+- The original thunk order of the import lists (not retained; see §6). *(Later recorded in §10.3.)*
 
 ## 9. Reproduction and proposed follow-ups
 
@@ -275,10 +276,80 @@ An auditor with the image can reproduce the values as follows:
    - check that it is read-only and bounds-checked;
    - add a README with expected results;
    - optionally record the original thunk order, and validate it against a harmless known PE file.
-   No embedded game bytes.
+   No embedded game bytes. *(Done on branch `draft/inspect-pe`, 2026-10-15; see §10. Merging into `main` awaits review.)*
 2. **R2.2:** the same header/section/entry-point/static-import check on `PITSTART.EXE` and `KILLPIT.EXE`, using the inventory hashes. No disassembly, execution, extraction or string scanning.
 3. **`WAIL32.DLL` static check:** record its exports and imports without loading the DLL or examining its code.
 4. **Resource-type enumeration** for `PITFALL.EXE`: types, IDs and sizes only, with no payload extraction or decoding.
 5. **Run-time dependencies:**
    - a bounded static search for DLL names gives leads only;
    - executing or monitoring the game needs its own approved test plan and environment.
+
+## 10. Addendum (2026-10-15): reproduction with the reviewed replacement parser
+
+**Status:** documentation on branch `draft/inspect-pe`, pending review. Nothing in §1–§9 was changed by this re-read. It confirms those values; it does not correct them.
+
+### 10.1 The tool, its review and its tests
+
+**Parser:**
+- `tools/inspect-pe.ps1` at commit `c389278` (Git blob `1299ce51c5f69d1c5ed1612291a35e89e27cbb07`).
+- It replaces the session-local scratch parser that produced §1–§9.
+- It was written by Claude after ChatGPT Work's source-only review of the scratch parser, which made five findings: unchecked failed address lookups, missing bounds checks, unbounded import tables, silent name truncation, and failures that looked like success.
+- It was revised after Work's second review: enforcing the declared import-directory size, rejecting overlapping sections, requiring `SizeOfHeaders` to cover the section table, and adding multi-sector image tests.
+- Work accepted `c389278` for testing on source review alone; Work did not run it.
+- See [`tools/README.md`](../../tools/README.md) and the [audit tracker](../reviews/media-001-audit-tracker.md).
+
+**Synthetic tests:**
+- `tools/tests/test-inspect-pe.ps1` at `c389278` (blob `43d4e3e4217fe0f1cbec0073f31cf1ace968ac09`).
+- The 29 tests build harmless synthetic PE32 files in memory: no game data and no system files.
+- Run by Claude on 2026-10-15 with user approval: **29 / 29 PASS, exit code 0**. The temporary test folder was removed afterwards.
+
+**Line-ending note:** before both runs, the working-tree SHA-256 values differed from the reviewed ones, because `core.autocrlf=true` had converted the line endings to CRLF. After converting CRLF back to LF, both files match the reviewed fingerprints (`81FDEB05…` and `D5199AD4…`), and their Git blob IDs equal those in `c389278`. Line endings are the only difference.
+
+### 10.2 Re-read of `ASSETS/PITFALL.EXE` (user-approved, 2026-10-15)
+
+**Method:**
+- Image mode: extent 8070, size 772,608, expected SHA-256 `36047291…1E74BFFA86`.
+- The fingerprint was checked **before** parsing and matched.
+- Result: `RESULT: OK`, exit code 0.
+- No other game file was read, nothing was executed, and no game bytes were written to disk.
+
+**The parser's structural checks all passed:**
+- `SizeOfHeaders` `0x400` ≥ the end of the section table `0x290`.
+- No overlapping section address ranges.
+- The import directory (`0x74000`, size `0x11EE`) lies within `.idata`'s stored data under the tool's VirtualSize-bounded policy, and the descriptor terminator lies within the declared size.
+
+| Compared with §1–§9 | Result |
+| --- | --- |
+| DOS/PE signatures, COFF header, optional header, data directories | All values match |
+| 7 sections: addresses, sizes, raw positions, characteristic values | All match |
+| Raw end `0xBCA00`, 0 bytes after the last section | Match |
+| Entry point: RVA `0x4AC60`, VA `0x0044AC60`, `.text`, file offset `0x4A060` | Match |
+| Descriptor OriginalFirstThunk / FirstThunk values for all 6 DLLs; descriptor TimeDateStamp 0 | All match |
+| Import names and ordinals per DLL (automated set comparison against §6) | Identical for all 6 DLLs |
+| Counts: COMCTL32 4, KERNEL32 63, WINMM 17, USER32 64, GDI32 26, ADVAPI32 6 = 180 | Match |
+
+**Display-only differences (not discrepancies):**
+- The tool's sorted lists use byte-wise (ordinal) string order. So KERNEL32's `_l*` functions sort last, and `GetCPInfo` precedes `GetCommandLineA`. §6's lists were reformatted by hand for readability (R2.1-C4).
+- Section flag labels print in a different order (e.g. `.reloc` `[IDATA DISCARDABLE R]`). The characteristic values are identical.
+
+**New observations, not previously reported:**
+- The ForwarderChain is `0x0` in all 6 descriptors.
+- All 6 lookup tables were read via OriginalFirstThunk.
+- COMCTL32 imports 1 function by name and 3 by ordinal; the other five DLLs import entirely by name.
+
+### 10.3 Original import order (lookup-table order, as stored in the file)
+
+- **`COMCTL32.dll` (4):** #5, PropertySheetA, #6, #17
+- **`KERNEL32.dll` (63):** CreateFileA, ReadFile, LeaveCriticalSection, _lclose, _lwrite, SetFilePointer, EnterCriticalSection, SetStdHandle, VirtualAlloc, VirtualFree, FlushFileBuffers, _llseek, SetFileAttributesA, GetOEMCP, GetACP, GetModuleFileNameA, UnhandledExceptionFilter, RtlUnwind, TlsGetValue, LocalAlloc, LocalFree, FindResourceA, LoadResource, LockResource, Sleep, SetPriorityClass, _lopen, _lcreat, LoadLibraryA, LoadModule, SetErrorMode, GlobalReAlloc, GetProcAddress, FreeLibrary, GlobalFree, DeleteCriticalSection, GlobalUnlock, GetSystemDirectoryA, GetTempPathA, GetFileAttributesA, GetFileType, DeleteFileA, CreateProcessA, TlsAlloc, CloseHandle, GetVersion, GetCurrentProcess, InitializeCriticalSection, GlobalAlloc, GlobalLock, GetStdHandle, GetCPInfo, GetLastError, WriteFile, GetCurrentThreadId, WideCharToMultiByte, TlsSetValue, GetCommandLineA, MultiByteToWideChar, GetStartupInfoA, GetModuleHandleA, GetEnvironmentStrings, ExitProcess
+- **`WINMM.dll` (17):** timeKillEvent, auxGetNumDevs, auxGetDevCapsA, auxGetVolume, auxSetVolume, mciSendCommandA, timeGetTime, waveOutGetNumDevs, sndPlaySoundA, timeEndPeriod, timeBeginPeriod, timeSetEvent, joyReleaseCapture, joySetCapture, joyGetNumDevs, joyGetDevCapsA, joyGetPos
+- **`USER32.dll` (64):** DestroyWindow, GetDC, DrawMenuBar, DestroyMenu, KillTimer, SetMenu, LoadMenuA, LoadStringA, CopyRect, SendMessageA, LoadBitmapA, GetDlgCtrlID, CheckRadioButton, SetTimer, GetSystemMetrics, SetCapture, ReleaseCapture, GetAsyncKeyState, SystemParametersInfoA, GetFocus, IsDlgButtonChecked, CheckDlgButton, EnableWindow, SetWindowLongA, LoadCursorA, FindWindowA, SendDlgItemMessageA, CallWindowProcA, GetWindowRect, ClientToScreen, MoveWindow, EndDialog, MessageBoxA, EnableMenuItem, CheckMenuItem, AdjustWindowRect, TranslateMessage, DispatchMessageA, PeekMessageA, PostQuitMessage, BeginPaint, EndPaint, ReleaseDC, GetClientRect, ScreenToClient, PtInRect, WinHelpA, PostMessageA, DialogBoxParamA, SetCursor, DefWindowProcA, MessageBeep, SetForegroundWindow, CreateWindowExA, LoadIconA, RegisterClassA, ShowWindow, GetMenu, SetWindowPos, GetWindowLongA, UpdateWindow, GetKeyNameTextA, GetDlgItem, CreateDialogParamA
+- **`GDI32.dll` (26):** RealizePalette, DeleteDC, SelectObject, StretchBlt, GetObjectA, SetDIBits, CreateCompatibleBitmap, CreateCompatibleDC, CreatePalette, SetBkMode, GetStockObject, CreateFontIndirectA, CreateDIBSection, SetTextColor, SetStretchBltMode, GetSystemPaletteEntries, SetDIBColorTable, SetSystemPaletteUse, GetDeviceCaps, GetSystemPaletteUse, BitBlt, GdiFlush, AnimatePalette, TextOutA, DeleteObject, SelectPalette
+- **`ADVAPI32.dll` (6):** RegCloseKey, RegFlushKey, RegOpenKeyA, RegQueryValueExA, RegSetValueExA, RegCreateKeyA
+
+### 10.4 Evidence limits
+
+- **Claude-reported:** the re-read, the fingerprint match, the full header comparison and the test run were all performed and reported by Claude. **Claude performed both examinations**: the original R2.1 parse and this re-read.
+- **Not independent:** the tool is **the reviewed and synthetic-tested replacement parser**. It is not an independent implementation, since its development was informed by the scratch parser and done by the same examiner.
+- **What reviewers checked:** ChatGPT Work independently compared the reported import lists with this report (all 180 entries match) and checked the section-table, entry-point and file-size arithmetic. Work did not inspect the original bytes.
+- **Still needed:** independent confirmation still requires a run by another party with their own access to the image.
+- **Mapping policy:** the tool bounds address mapping by VirtualSize. That is its documented policy, not a claim about Windows loader behavior.

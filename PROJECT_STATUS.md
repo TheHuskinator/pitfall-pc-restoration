@@ -48,7 +48,10 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - The game's external dependencies.
   - Independent reproduction of the EDC and listing results. These are now reproducible with `tools/verify-media001.ps1`. Claude's second run passed every check on 2026-10-15, but that is not an independent run.
 
-**Not yet done:** no executable analysis, game execution, compatibility testing, working build environment or restoration code.
+**Not yet done:**
+- executable analysis beyond static PE headers and imports of `PITFALL.EXE` (no disassembly, strings, resources, or other executables);
+- game execution and compatibility testing;
+- a working build environment or restoration code.
 
 **Done 2026-10-15:**
 - The read-only verifier `tools/verify-media001.ps1` (tracker item W8) passes all checks, and its negative test fails as designed.
@@ -58,10 +61,16 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - No DirectX DLL or `WAIL32.DLL` is statically imported. Run-time loading via `LoadLibraryA` is possible and untested.
   - Discrepancy D-EXE-1: the PE timestamp field is 22 days 23:52:45 **after** the disc's 1995-08-24 00:01:00 directory dates. Not interpreted.
   - **R2.1 audit (Chat 2, 2026-10-15):** "Accept with corrections". All seven corrections were applied, and the **final review verdict is ACCEPT**. Chat 2 confirmed the arithmetic and internal consistency only; the parser's reading of the bytes has not been independently reproduced.
+- **PE parser preserved and tested (branch `draft/inspect-pe`, not yet merged):**
+  - `tools/inspect-pe.ps1`, the reviewed and synthetic-tested replacement parser, is at commit `c389278`. ChatGPT Work did two source reviews and accepted it for testing.
+  - Synthetic tests: **29/29 PASS** (user-approved run).
+  - User-approved re-read of `PITFALL.EXE`: fingerprint matched; **all R2.1 values reproduced**, with display-order differences only. The original import order is now recorded (`executable.md` §10.3).
+  - Work accepted this as a **Claude-reported reproduction**. Claude performed both examinations, so it is not an independent confirmation.
+  - The documentation for this step is uncommitted on the draft branch, pending review. It includes a repair of garbled characters that commit `50cf7d0` introduced into the audit tracker.
 
-**Next proposed tasks, in Chat 2's recommended order (each awaiting user decision):**
-1. Review and preserve the read-only PE parser in `tools/`.
-2. R2.2: the same check on `PITSTART.EXE` and `KILLPIT.EXE`.
+**Next proposed tasks (each awaiting user decision):**
+1. Review the draft-branch documentation update, then decide whether to merge `draft/inspect-pe` into `main`.
+2. R2.2: the same read-only check on `PITSTART.EXE` and `KILLPIT.EXE`, separately scoped.
 3. Static exports/imports check of `WAIL32.DLL`.
 4. Resource-type enumeration for `PITFALL.EXE` (no extraction).
 5. Run-time dependencies: static string leads, or execution under its own approved test plan.
