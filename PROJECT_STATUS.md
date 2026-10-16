@@ -98,6 +98,20 @@ Full report: `docs/technical/original-media-examination.md`. Hashes: `docs/inven
 - **Unknown:** who made the image and when (file timestamps 2007-03-31 — weak evidence), release/region/revision, audio authenticity/completeness, and data-sector error status (EDC/ECC not checked).
 - **Next smallest proposed task (needs user approval):** a read-only ISO 9660 directory inventory of track 1. It would record names, sizes, dates and in-memory SHA-256 per file, plus volume descriptor fields, with no mounting or extraction to disk. Optionally it could also decode the Media Catalog Number and validate Q CRCs.
 
+## 2026-10-15 — Data-track file inventory (user-approved)
+
+Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/materials-inventory.md`.
+
+- **Verified:**
+  - All 8,880 data-track sectors pass header and EDC checks, so the data track is intact.
+  - The ISO 9660 volume is `PITFALL`, with no Joliet descriptor and blank publisher/date fields.
+  - It holds 40 files, all dated 1995-08-24: `ASSETS/PITFALL.EXE`, `WAIL32.DLL`, `INIT.PH`, `LEVEL00`–`LEVEL23.PH`, `INTRO.AVI`, `KILLPIT.EXE`, `PITSTART.WAV`, four `.HLP` and four `.WRI` files, plus root `PITSTART.EXE` and `AUTORUN.INF`.
+  - Every file was hashed in memory. Nothing was extracted, opened or executed.
+- **Matches research:** `PITFALL.EXE`, `INIT.PH`, the `LEVEL*.PH` naming and `WAIL32.DLL` are all present, as S001 and the request checklist describe.
+- **New observations:** there are 24 level files, no installer, and only one DLL on the disc.
+- **Still unknown:** exact release, region and revision. The volume metadata is blank, so this needs a hash comparison with another known copy or markings on the physical disc/box.
+- **Next proposed task (needs approval):** a read-only header and import-table summary of `ASSETS/PITFALL.EXE`, read in memory from the image. It would show which Windows/DirectX components the game needs before any compatibility testing.
+
 ## Evidence, leads, and uncertainties
 
 | Item | What is known | What remains uncertain / needed |
@@ -132,7 +146,7 @@ Full report: `docs/technical/original-media-examination.md`. Hashes: `docs/inven
 ## Immediate next actions
 
 1. **Completed 2026-10-15:** first read-only media examination (see result section above). Chat 2 to review `docs/technical/original-media-examination.md`.
-2. **Done 2026-10-15:** the user reported provenance (their own legitimate physical copy) and chose the real subfolder path. Next: the user approves (or not) the proposed read-only ISO 9660 directory inventory.
+2. **Done 2026-10-15:** the user reported provenance (their own legitimate physical copy) and chose the real subfolder path. The read-only ISO 9660 directory inventory was approved and completed. Next: the user decides on the proposed `PITFALL.EXE` header/import summary.
 3. **Completed 2026-10-15:** Index six original-port-analysis articles and the author's roadmap with citations; extract reported findings. Next: validate using lawful local game files and follow up on private tools/permissions.
 4. Verify the Andy Glaister lead and draft—not send—an outreach note unless the user explicitly authorizes contact.
 5. Review Claude's report through Chat 2 (research), Chat 3 (next development handoff), and Chat 4 (QA) as appropriate, with Chat 1 coordinating. Obtain the applicable user approval before mounting, extraction, installation, game execution, tool installation, or implementation.
