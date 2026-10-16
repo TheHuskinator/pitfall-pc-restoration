@@ -70,7 +70,7 @@ A run by the same examiner is a reproducibility check, not an independent confir
 - `-Path <file>`: a standalone file. Used by the tests.
 - `-Image <img> -Extent <lba> -Size <bytes> -ExpectedSha256 <hash>`: a file inside a raw 2,352-byte-sector Mode 1 image.
 
-**Exit codes** (each also printed as the final `RESULT:` line):
+**Exit codes:** for outcomes handled by the script itself, after PowerShell has started and bound the parameters, each code is also printed as the final `RESULT:` line. Failures before that point produce PowerShell's own error output, and are **not** guaranteed to print a `RESULT:` line or to use these codes. Examples: a missing or wrongly typed argument rejected during parameter binding, or PowerShell failing to start.
 
 | Code | Meaning |
 | --- | --- |
@@ -85,12 +85,16 @@ A run by the same examiner is a reproducibility check, not an independent confir
 - End of the section table ≤ `SizeOfHeaders` ≤ file size.
 - No overlapping section address ranges.
 - Section raw data lies inside the file.
-- The import directory lies inside one section's stored data.
+- The import directory lies within one supported stored region: either the header area (an RVA below both `SizeOfHeaders` and the lowest section address, mapped 1:1) or one section's stored data.
 - Import descriptors and their all-zero terminator lie within the declared directory size.
 - Lookup tables and names must be terminated inside their region.
 - Names must be printable ASCII.
 
 **Address-mapping policy:** this tool bounds section mapping by `VirtualSize`. That is the tool's deliberate, stricter policy, not a claim that it reproduces the Windows loader exactly.
+
+**Known comment inaccuracies in the scripts:** these are left unchanged so that the reviewed script blobs stay intact. They are to be fixed in a later, separately reviewed comment-only update.
+- `inspect-pe.ps1`'s header comment says the import directory must lie "inside one section's stored data". The code also accepts the header region, as described above.
+- Both scripts' header comments still say "DRAFT … not yet executed". Both have since been run; see *Runs so far*.
 
 ### Run (MEDIA-001 `PITFALL.EXE`)
 
@@ -111,14 +115,18 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\tests\test-inspect-pe.
 ```
 
 **What they do:**
-- 29 tests build harmless synthetic PE32 files in memory, with no game data and no system files.
-- Each runs the inspector in a separate process and checks the exit code and key output lines.
+- 29 synthetic test cases. Each builds a harmless test file from scratch in memory, with no game data and no system files. Some are valid; most are deliberately malformed or unsupported (truncated, out of range, unterminated, overlapping, wrong format, and so on).
+- Each test file is **written to a new temporary folder on disk**, and the inspector is run against it in a separate process. The test checks the exit code and key output lines.
 - They cover every finding from both of ChatGPT Work's reviews (the mapping is in the script's header comment), plus image mode across several sectors, with marker bytes so that a misplaced read would fail the fingerprint check.
 - The temporary folder is deleted afterwards.
 
 **Expected result:** 29 `PASS` lines, then `RESULT: all 29 tests passed`, exit code `0`.
 
-**Line endings:** with Git's `core.autocrlf=true`, checked-out copies use CRLF line endings, so their SHA-256 differs from that of the committed (LF) files. The code is identical: compare Git blob IDs, or hash after converting CRLF to LF.
+**Line endings:** Git's `core.autocrlf=true` setting can write CRLF line endings into checked-out copies of files committed with LF, so the SHA-256 of a checked-out copy can differ from the reviewed value.
+- **Committed content:** to compare it, use the Git blob ID (`git hash-object`, which applies Git's normalization).
+- **A physical working file:** to show it differs only in line endings, hash it after converting CRLF to LF and compare with the reviewed value.
+
+On 2026-10-15, Claude reported doing both checks for these two scripts; see *Runs so far*.
 
 ### Runs so far
 
@@ -126,5 +134,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\tests\test-inspect-pe.
 | --- | --- | --- | --- |
 | 2026-10-15 | Claude Code (user-approved) | Synthetic tests at `c389278` | 29/29 PASS, exit 0; temporary folder removed |
 | 2026-10-15 | Claude Code (user-approved) | `PITFALL.EXE` re-read at `c389278` | Fingerprint matched before parsing; `RESULT: OK`, exit 0. All R2.1 values reproduced; only display order differs ([executable.md §10](../docs/technical/executable.md)) |
+
+**Reviewed code identity for both runs** (commit `c389278`):
+
+| File | Git blob ID | Reviewed SHA-256 (LF line endings) |
+| --- | --- | --- |
+| `tools/inspect-pe.ps1` | `1299ce51c5f69d1c5ed1612291a35e89e27cbb07` | `81FDEB05637DB9C35072EB768EEAF2FFFF3105749771A516F534CE23A13C193C` |
+| `tools/tests/test-inspect-pe.ps1` | `43d4e3e4217fe0f1cbec0073f31cf1ace968ac09` | `D5199AD4ECFD841017C35E8A81546B05127906E5C597AD9203B8F6A1707964E9` |
+
+Claude's reported checks: both working files matched these blob IDs and, after CRLF→LF conversion, these SHA-256 values.
 
 **Evidence limit:** both runs were performed and reported by Claude, who also wrote the tool, so this is not an independent confirmation. ChatGPT Work reviewed the source (twice) and the reported results, but did not run the tool.

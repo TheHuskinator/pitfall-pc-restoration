@@ -260,7 +260,7 @@ These are **not findings**. They are listed only so that a later, separately app
 
 ## 9. Reproduction and proposed follow-ups
 
-**Reproducibility limitation *[R2.1-C7]*:**
+**Reproducibility limitation *[R2.1-C7]*** *(historical, as of R2.1's finalization; the later reproduction with the reviewed replacement parser is in §10)*:
 - This report gives enough offsets and values for anyone to **recalculate** the results.
 - However, the session-local parser that produced them is not in the repository, so its results have **not been independently reproduced** from the binary.
 - Chat 2's audit (2026-10-15) independently checked the arithmetic and internal consistency only, not the underlying bytes.
@@ -300,10 +300,16 @@ An auditor with the image can reproduce the values as follows:
 
 **Synthetic tests:**
 - `tools/tests/test-inspect-pe.ps1` at `c389278` (blob `43d4e3e4217fe0f1cbec0073f31cf1ace968ac09`).
-- The 29 tests build harmless synthetic PE32 files in memory: no game data and no system files.
-- Run by Claude on 2026-10-15 with user approval: **29 / 29 PASS, exit code 0**. The temporary test folder was removed afterwards.
+- 29 synthetic test cases. Each builds a harmless test file from scratch in memory — valid, or deliberately malformed or unsupported — with no game data and no system files. Each file is written to a new temporary folder on disk, and the inspector is run against it.
+- Run by Claude on 2026-10-15 with user approval: **29 / 29 PASS, exit code 0** (Claude-reported). The temporary test folder was removed afterwards.
 
-**Line-ending note:** before both runs, the working-tree SHA-256 values differed from the reviewed ones, because `core.autocrlf=true` had converted the line endings to CRLF. After converting CRLF back to LF, both files match the reviewed fingerprints (`81FDEB05…` and `D5199AD4…`), and their Git blob IDs equal those in `c389278`. Line endings are the only difference.
+**Line-ending note (Claude's reported checks, before both runs):**
+- **Mismatch found:** the working-tree files' SHA-256 values differed from the reviewed fingerprints. This is consistent with Git's `core.autocrlf=true` (set locally) writing CRLF line endings into checked-out copies of LF content.
+- **Normalized hashes match:** after Claude converted CRLF back to LF, both files hashed exactly to the reviewed values:
+  - `inspect-pe.ps1`: `81FDEB05637DB9C35072EB768EEAF2FFFF3105749771A516F534CE23A13C193C`
+  - `test-inspect-pe.ps1`: `D5199AD4ECFD841017C35E8A81546B05127906E5C597AD9203B8F6A1707964E9`
+- **Blob IDs match:** `git hash-object` gave the blob IDs stored in `c389278`.
+- **What each shows:** blob identity shows that the content *after Git's normalization* equals the committed content; on its own, it does not prove what the physical working file contains. The LF-normalized hash match is Claude's evidence that the working files differed from the reviewed files only in line endings.
 
 ### 10.2 Re-read of `ASSETS/PITFALL.EXE` (user-approved, 2026-10-15)
 
@@ -311,7 +317,7 @@ An auditor with the image can reproduce the values as follows:
 - Image mode: extent 8070, size 772,608, expected SHA-256 `36047291…1E74BFFA86`.
 - The fingerprint was checked **before** parsing and matched.
 - Result: `RESULT: OK`, exit code 0.
-- No other game file was read, nothing was executed, and no game bytes were written to disk.
+- No other game file was read, no original game code was executed (only the read-only parser was run), and no game bytes were written to disk.
 
 **The parser's structural checks all passed:**
 - `SizeOfHeaders` `0x400` ≥ the end of the section table `0x290`.
@@ -332,10 +338,12 @@ An auditor with the image can reproduce the values as follows:
 - The tool's sorted lists use byte-wise (ordinal) string order. So KERNEL32's `_l*` functions sort last, and `GetCPInfo` precedes `GetCommandLineA`. §6's lists were reformatted by hand for readability (R2.1-C4).
 - Section flag labels print in a different order (e.g. `.reloc` `[IDATA DISCARDABLE R]`). The characteristic values are identical.
 
-**New observations, not previously reported:**
-- The ForwarderChain is `0x0` in all 6 descriptors.
-- All 6 lookup tables were read via OriginalFirstThunk.
-- COMCTL32 imports 1 function by name and 3 by ordinal; the other five DLLs import entirely by name.
+**Confirmations and derived summaries of information already in §6:**
+- All 6 lookup tables were read via OriginalFirstThunk. This is consistent with §6, which reports a non-zero OriginalFirstThunk for every descriptor and gives their values.
+- COMCTL32 imports 1 function by name and 3 by ordinal; the other five DLLs import entirely by name. This summarizes §6's lists, which already show the three COMCTL32 ordinals.
+
+**Newly reported (not stated in §1–§9):**
+- The ForwarderChain field is `0x0` in all 6 import descriptors.
 
 ### 10.3 Original import order (lookup-table order, as stored in the file)
 

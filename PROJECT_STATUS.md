@@ -66,7 +66,8 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - Synthetic tests: **29/29 PASS** (user-approved run).
   - User-approved re-read of `PITFALL.EXE`: fingerprint matched; **all R2.1 values reproduced**, with display-order differences only. The original import order is now recorded (`executable.md` §10.3).
   - Work accepted this as a **Claude-reported reproduction**. Claude performed both examinations, so it is not an independent confirmation.
-  - The documentation for this step is uncommitted on the draft branch, pending review. It includes a repair of garbled characters that commit `50cf7d0` introduced into the audit tracker.
+  - The documentation for this step is committed on the draft branch (`21fa6a2`), pending review. It includes a repair of the garbled characters that commit `50cf7d0` introduced into the audit tracker (30 sequences across 22 lines).
+  - ChatGPT Work reviewed `21fa6a2`: **Accept with corrections**, documentation only, with no parser changes. The corrections are in the follow-up commit on the draft branch, pending review.
 
 **Next proposed tasks (each awaiting user decision):**
 1. Review the draft-branch documentation update, then decide whether to merge `draft/inspect-pe` into `main`.
@@ -194,12 +195,18 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 
 ## Immediate next actions
 
-1. **Completed 2026-10-15:** first read-only media examination (see result section above). Chat 2 to review `docs/technical/original-media-examination.md`.
-2. **Done 2026-10-15:** the user reported provenance (their own legitimate physical copy) and chose the real subfolder path. The read-only ISO 9660 directory inventory was approved and completed. Next: the user decides on the proposed `PITFALL.EXE` header/import summary.
-3. **Completed 2026-10-15:** Index six original-port-analysis articles and the author's roadmap with citations; extract reported findings. Next: validate using lawful local game files and follow up on private tools/permissions.
-4. Verify the Andy Glaister lead and draft—not send—an outreach note unless the user explicitly authorizes contact.
-5. Review Claude's report through Chat 2 (research), Chat 3 (next development handoff), and Chat 4 (QA) as appropriate, with Chat 1 coordinating. Obtain the applicable user approval before mounting, extraction, installation, game execution, tool installation, or implementation.
-6. Do not commit to C++/SDL3 until the technical-discovery milestone produces a short recommendation.
+**Current (2026-10-15)** — the authoritative technical list is *Next proposed tasks* in *Current project status* above:
+1. Review the draft-branch documentation (`21fa6a2` plus its correction commit), then the user decides whether to merge `draft/inspect-pe` into `main`.
+2. R2.2: a separately scoped, read-only check of `PITSTART.EXE` and `KILLPIT.EXE`. Fingerprints are verified first; the check covers signatures, headers, sections, entry points and static imports only; it stops on a mismatch or an unsupported format; and filename-based guesses stay hypotheses.
+3. Verify the Andy Glaister lead and draft—not send—an outreach note unless the user explicitly authorizes contact.
+4. Route reports through Chat 2 (research), Chat 3 (development handoff), Chat 4 (QA) and ChatGPT Work (audit) as appropriate, with Chat 1 coordinating. Obtain the applicable user approval before mounting, extraction, installation, game execution, tool installation or implementation.
+5. Do not commit to C++/SDL3 until the technical-discovery milestone produces a short recommendation.
+
+**Completed (historical):**
+- 2026-10-15: first read-only media examination (`docs/technical/original-media-examination.md`), audited by Chat 2 and ChatGPT Work.
+- 2026-10-15: provenance reported by the user; real subfolder path adopted; read-only ISO 9660 directory inventory completed.
+- 2026-10-15: `PITFALL.EXE` header/import summary (R2.1), accepted by Chat 2. Reproduced with the reviewed replacement parser (§10 of `docs/technical/executable.md`).
+- 2026-10-15: six original-port-analysis articles and the author's roadmap indexed with citations; reported findings extracted. Still open: validating them against local game files, and following up on private tools/permissions.
 
 ## Key risks
 

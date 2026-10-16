@@ -1,9 +1,10 @@
 # MEDIA-001 audit tracker
 
 **Created:** 2026-10-15
-**Covers:** the two independent audits of Claude Code's MEDIA-001 examinations (commits `d0cd045` and `d906553`).
+**Covers:** the independent audits of Claude Code's MEDIA-001 examinations (commits `d0cd045` and `d906553`), of report R2.1, and of the PE parser and its documentation (branch `draft/inspect-pe`).
 **Status meanings:**
-- **Applied (uncommitted):** the correction is in the working tree, awaiting user authorization to commit.
+- **Applied:** the correction is committed; the row or section names the commit or branch where it matters.
+- **Committed on the draft branch, pending review:** committed on `draft/inspect-pe`, not yet merged into `main`.
 - **Already addressed:** existing text already met the recommendation.
 - **Open:** not done; needs a user decision or a separately approved task.
 - **Outdated:** superseded by events.
@@ -36,9 +37,9 @@ Neither auditor had access to the disc image. Hashes, raw-sector observations, Q
 | C-c | Q-channel CRC validation; ADR-2 Media Catalog Number decoding; more pregap-boundary checks; ECC validation; careful audio-track examination | Open (needs separate approval) |
 | C-d | Physical disc or box markings; comparison against a known reference | Open (needs user action) |
 | C-e | Later, separately scoped inspection of `PITSTART.EXE` (launcher / CD-dependent startup) | Open (future proposal) |
-| C-f | Next task: read-only PE header / static import summary of `PITFALL.EXE`, with stated limits (verify SHA-256; DOS/PE signatures, machine, bitness, subsystem, sections, entry point, imports; record a non-PE format as observed; no disassembly, decompilation, execution, resource extraction, downloads or patching) | **Done, approved 2026-10-15.** See `docs/technical/executable.md`. The hash was verified before parsing; the file is a valid PE32. Nothing was disassembled, executed or extracted. |
+| C-f | Next task: read-only PE header / static import summary of `PITFALL.EXE`, with stated limits (verify SHA-256; DOS/PE signatures, machine, bitness, subsystem, sections, entry point, imports; record a non-PE format as observed; no disassembly, decompilation, execution, resource extraction, downloads or patching) | **Done, approved 2026-10-15.** See `docs/technical/executable.md`. The hash was verified before parsing; the file is a valid PE32. Nothing was disassembled or extracted, and no original game code was executed (only the read-only parser was run). |
 | C-g | Commit-state note: "not yet committed" was outdated once pushed | Outdated / already resolved (`origin/main` = `d906553` locally as of 2026-10-15) |
-| C-h | Process lesson: future briefs should separate authorized reads, optional analysis, and operations needing renewed approval | Open (process; see *Proposed process change* below) |
+| C-h | Process lesson: future briefs should separate authorized reads, optional analysis, and operations needing renewed approval | **Applied / closed** (2026-10-15): `CLAUDE.md` rule adopted; see *Process change (approved and applied 2026-10-15)* below |
 
 ## Work — recommendations
 
@@ -94,19 +95,23 @@ Neither auditor had access to the disc image. Hashes, raw-sector observations, Q
 | P1 | Work's source-only review of the session-local scratch parser (SHA-256 `0CBB6CE2…`) | 5 findings: failed lookup returned `-1` and could become a name; missing bounds checks; unbounded import traversal; silent name truncation; failures returned normally. |
 | P2 | Draft replacement `tools/inspect-pe.ps1` plus 24 synthetic tests (branch `draft/inspect-pe`, commit `6a583bc`) | Work: substantial improvement, with 3 corrections plus 1 test addition: enforce the import-directory size, reject overlapping sections, require `SizeOfHeaders` ≥ end of section table, and add multi-sector image coverage. |
 | P3 | Revision `c389278`: all 4 items, 29 tests, VirtualSize policy documented | Work: **ACCEPT for testing** (source only; not run). |
-| P4 | Synthetic test run (user-approved) at `c389278` | **29/29 PASS**, exit 0. Code confirmed identical to `c389278` by Git blob ID; working-tree hashes differed only by CRLF line endings. |
+| P4 | Synthetic test run (user-approved) at `c389278` | **29/29 PASS**, exit 0 (Claude-reported). Claude's checks before the run:<br>• the working-tree files' SHA-256 differed from the reviewed values;<br>• after converting CRLF to LF, both matched the reviewed values exactly;<br>• `git hash-object`, which applies Git's line-ending normalization, gave the blob IDs stored in `c389278`.<br>Blob identity shows that the normalized content equals the commit. The LF-normalized hash match is Claude's evidence that the physical working files differed only in line endings. |
 | P5 | `PITFALL.EXE` re-read (user-approved) at `c389278` | Fingerprint matched before parsing; `RESULT: OK`. All R2.1 values reproduced; display-order differences only. Original order recorded. |
 | P6 | Work's review of the P5 report | **Accepted as a Claude-reported reproduction**, with one wording correction: describe the tool as "the reviewed and synthetic-tested replacement parser", not as built separately, and keep the statement that Claude performed both examinations. Work independently compared all 180 reported imports with R2.1 and checked the arithmetic; it did not inspect bytes. |
-| P7 | Documentation update (`executable.md` §10, `tools/README.md`, this tracker, `PROJECT_STATUS.md`) | Applied on `draft/inspect-pe`, uncommitted. The P6 wording correction is used in all new text. **Pending review before any merge.** |
+| P7 | Documentation update (`executable.md` §10, `tools/README.md`, this tracker, `PROJECT_STATUS.md`) | Committed on the draft branch as `21fa6a2`, pending review. The P6 wording correction is used in all new text. |
+| P8 | Work's review of `21fa6a2` | **Accept with corrections.**<br>• Confirmed: scope, preservation of R2.1 §1–§9, the §10.3 order (all 180 entries), the evidence limits, and the encoding reversal.<br>• Required, documentation only: encoding count (30 across 22 lines, not 21); stale "uncommitted" wording; the C-h status; §10.2 split of confirmations versus new observations, and "no original game code was executed"; README import-region, exit-code and test-fixture wording; attribution of the line-ending checks; reconciling the old "Immediate next actions".<br>• No parser changes required, and the reviewed script blobs are to be retained.<br>• Corrections applied in the follow-up commit on `draft/inspect-pe`, pending review. |
 
 **Evidence limit:** Claude wrote the tool and performed every run. These results are reproducible by anyone with the image, but no independent party has run them yet.
 
 ## Repository hygiene: tracker character-encoding repair (2026-10-15)
 
-- **The problem:** commit `50cf7d0` saved this tracker with garbled characters: 21 sequences such as `â€”` for "—" and `Â§` for "§". The cause was a Claude bulk edit, run in Windows PowerShell 5.1, that read the UTF-8 file as Windows-1252 and wrote it back as UTF-8. Earlier commits (`8f881aa`, `5aa4a29`) were clean, and no other repository file was affected.
-- **The fix:** applied on `draft/inspect-pe`, uncommitted. The exact mistake was reversed: the text was re-encoded as Windows-1252 and decoded as UTF-8.
-- **Verified:** the result has no replacement characters; re-applying the faulty conversion reproduces the damaged text exactly; and its non-ASCII characters (§ ¹ – — →) match those of the last clean version.
-- **Not changed:** no wording. Neither review noticed the problem; it was found while preparing this update.
+- **The problem:** commit `50cf7d0` saved this tracker with garbled characters: **30 damaged sequences across 22 lines**, such as `â€”` for "—" and `Â§` for "§". The cause was a Claude bulk edit, run in Windows PowerShell 5.1, that read the UTF-8 file as Windows-1252 and wrote it back as UTF-8. Earlier commits (`8f881aa`, `5aa4a29`) were clean.
+- **Breakdown** (counted by reversing the damage and tallying the original characters): § ×13, → ×9, — ×5, – ×2, ¹ ×1.
+- **Count correction:** commit `21fa6a2` first reported "21 sequences". ChatGPT Work's review found the true count of 30. Claude's search pattern had missed the 9 garbled arrows (`â†’`). The corrected count and the "no other file affected" claim were re-checked on 2026-10-15 with a broader pattern across every tracked `.md` and `.ps1` file on `main` and on `draft/inspect-pe`. Only this tracker is affected; on the draft branch, the only matches are the examples quoted deliberately in this note. The count correction is in the follow-up commit to `21fa6a2` (see P8).
+- **The fix:** committed on the draft branch in `21fa6a2`, pending review. The exact mistake was reversed: the text was re-encoded as Windows-1252 and decoded as UTF-8.
+- **Verified:** the result has no replacement characters; re-applying the faulty conversion reproduces the damaged text exactly; and its non-ASCII characters (§ ¹ – — →) match those of the last clean version. ChatGPT Work independently confirmed the reversal and the 30-sequence count (P8).
+- **Scope of the repair:** the encoding repair itself changed no wording. The same commit `21fa6a2` *separately* made intentional status updates (the R2.1-O3 and R2.1-N rows) and added new sections (the P-step table and this note). The precise bulk-edit command responsible is Claude's explanation; the observed conversion is consistent with it.
+- Neither earlier review noticed the problem; Claude found it while preparing `21fa6a2`.
 
 ## Process change (approved and applied 2026-10-15)
 
