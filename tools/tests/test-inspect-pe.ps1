@@ -23,13 +23,21 @@
                0x460 import address table (same values)
                0x480 hint 1 "Zeta" / 0x490 hint 2 "Alpha"
 
-    Coverage of the ChatGPT Work review (2026-10-15):
+    Coverage of ChatGPT Work's first review (2026-10-15):
       #1 unmapped RVA must not become a name          -> T09, T23
       #2 header/section bounds                        -> T04, T07, T08, T15, T22
       #3 import tables: termination, all-zero entry   -> T10, T11, T12
       #4 unterminated or invalid names                -> T13, T24
       #5 distinct exit codes for each outcome         -> every test checks its code
-      Also: header-based RVA (T17), original order kept (T01, T17), image mode (T18, T19)
+    Coverage of ChatGPT Work's second review (commit 6a583bc):
+      R2-1 declared import-directory size enforced    -> T10, T25, T26
+      R2-2 overlapping sections rejected              -> T27
+      R2-3 SizeOfHeaders must cover the section table -> T28
+      R2-4 multi-sector image mode, partial last sector -> T29 (and T18)
+    Also: header-based RVA (T17), original order kept (T01, T17), image mode (T18, T19)
+
+    Synthetic disc images are pre-filled with 0xEE marker bytes. A read from the
+    wrong sector position would therefore pull in marker bytes and fail the SHA-256 check.
 #>
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2
@@ -77,6 +85,7 @@ function New-ValidPe {
 function New-RawImage([byte[]]$Data, [int]$Lead) {
     $blocks = [int][math]::Ceiling($Data.Length / 2048)
     $img = New-Object byte[] (($Lead + $blocks) * 2352)
+    for ($k = 0; $k -lt $img.Length; $k++) { $img[$k] = 0xEE }   # marker: any misplaced read changes the hash
     for ($k = 0; $k -lt $blocks; $k++) {
         $n = [math]::Min(2048, $Data.Length - $k * 2048)
         [Array]::Copy($Data, $k * 2048, $img, ($Lead + $k) * 2352 + 16, $n)
@@ -113,9 +122,9 @@ $tests = @(
        Expect = @('RESULT: MALFORMED', 'data directories') }
     @{ Id = 'T09'; Desc = 'unmappable hint/name RVA is not read as a name (Work #1)'; Exit = 3; Mutate = { param($b) W32 $b 0x440 0x9000 }
        Expect = @('RESULT: MALFORMED', 'RVA 0x9000'); Reject = @('original order') }
-    @{ Id = 'T10'; Desc = 'descriptor table with no terminator before section end'; Exit = 3
+    @{ Id = 'T10'; Desc = 'import directory extends past its section''s stored data'; Exit = 3
        Mutate = { param($b) W32 $b 0xC0 0x21EC; W32 $b 0x5EC 0x2040; W32 $b 0x5F8 0x2030; W32 $b 0x5FC 0x2060 }
-       Expect = @('RESULT: MALFORMED', 'Import descriptor table is not terminated') }
+       Expect = @('RESULT: MALFORMED', 'extends beyond the stored data'); Reject = @('DLL TEST.DLL') }
     @{ Id = 'T11'; Desc = 'partially zero descriptor is not a terminator'; Exit = 3; Mutate = { param($b) W32 $b (0x414 + 16) 0x2060 }
        Expect = @('RESULT: MALFORMED', 'neither a valid entry nor an all-zero terminator') }
     @{ Id = 'T12'; Desc = 'lookup table with no zero entry before section end'; Exit = 3
@@ -156,6 +165,32 @@ $tests = @(
        Expect = @('RESULT: MALFORMED', 'DLL name'); Reject = @('DLL TEST.DLL') }
     @{ Id = 'T24'; Desc = 'non-printable byte inside a name'; Exit = 3; Mutate = { param($b) $b[0x483] = 0x01 }
        Expect = @('RESULT: MALFORMED', 'non-printable') }
+    @{ Id = 'T25'; Desc = 'terminator lies outside the declared import directory size (Work R2-1)'; Exit = 3
+       Mutate = { param($b) W32 $b 0xC4 0x14 }
+       Expect = @('RESULT: MALFORMED', 'not terminated within the declared import directory size'); Reject = @('RESULT: OK') }
+    @{ Id = 'T26'; Desc = 'import directory size smaller than one descriptor'; Exit = 3
+       Mutate = { param($b) W32 $b 0xC4 0x10 }
+       Expect = @('RESULT: MALFORMED', 'too small') }
+    @{ Id = 'T27'; Desc = 'overlapping sections rejected (Work R2-2)'; Exit = 3
+       Mutate = { param($b) W32 $b (0x138 + 8) 0x1800 }
+       Expect = @('RESULT: MALFORMED', 'overlap'); Reject = @('=== STATIC IMPORTS') }
+    @{ Id = 'T28'; Desc = 'SizeOfHeaders smaller than the end of the section table (Work R2-3)'; Exit = 3
+       Mutate = { param($b) W32 $b (0x58 + 60) 0x100 }
+       Expect = @('RESULT: MALFORMED', 'does not cover the section table') }
+    @{ Id = 'T29'; Desc = 'image mode across 3 sectors with a partly used last sector (Work R2-4)'; Exit = 0
+       Build = {
+           # Base fixture plus a 3,464-byte patterned overlay = 5,000 bytes = 2 full blocks + 904 bytes.
+           $base = New-ValidPe
+           $t = New-Object byte[] 5000
+           [Array]::Copy($base, $t, $base.Length)
+           for ($k = $base.Length; $k -lt $t.Length; $k++) { $t[$k] = [byte](($k * 7 + 3) % 251) }
+           , $t }
+       Args = { param($File, $Sha, $Bytes)
+                $img = Join-Path $work 'T29.img'
+                [IO.File]::WriteAllBytes($img, (New-RawImage $Bytes 3))
+                @('-Image', $img, '-Extent', '3', '-Size', [string]$Bytes.Length, '-ExpectedSha256', $Sha) }
+       Expect = @('sectors 3-5', 'SHA-256 check: matches expected value', 'bytes after the last section: 3464',
+                  'Total imported functions: 3 from 1 DLL(s)', 'RESULT: OK') }
 )
 
 # ---------------------------------------------------------------- runner

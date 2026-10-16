@@ -22,12 +22,22 @@
             ASSETS/PITFALL.EXE in MEDIA-001).
     -ExpectedSha256 is required in image mode and optional in file mode.
 
-    Address handling
+    Structural rules enforced (a violation is reported as MALFORMED)
+      - End of the section table <= SizeOfHeaders <= file size.
+      - No two sections overlap in their virtual address ranges.
+      - Each section's stored raw data lies inside the file.
+      - The import directory [RVA, RVA + Size) lies inside one section's stored
+        data. Its descriptor table, including the all-zero terminator, lies within
+        the declared directory Size.
+
+    Address handling (this tool's supported policy)
       An RVA below both SizeOfHeaders and the lowest section VirtualAddress is
-      mapped 1:1 into the headers. Any other RVA must fall inside a section's
-      virtual range (VirtualSize, or SizeOfRawData when VirtualSize is 0) and
-      inside that section's stored file data. Otherwise the input is reported
-      as malformed; nothing is read from an unmapped address.
+      mapped 1:1 into the headers. Any other RVA must fall inside exactly one
+      section's virtual range (VirtualSize, or SizeOfRawData when VirtualSize is 0)
+      and inside that section's stored file data. Otherwise the input is reported
+      as malformed; nothing is read from an unmapped or ambiguous address.
+      Bounding by VirtualSize is a deliberate, stricter policy of this tool. It is
+      not claimed to reproduce the Windows loader's behavior exactly.
 
     Exit codes (each also printed as the final "RESULT:" line)
       0  OK             parsed successfully
@@ -125,18 +135,19 @@ function Resolve-Rva([long]$Rva, [string]$What) {
     if ($Rva -ge 0 -and $Rva -lt $hdrEnd) {
         return @{ Offset = $Rva; Limit = $hdrEnd; Region = '(headers)' }
     }
-    foreach ($s in $script:sections) {
-        $span = if ($s.VSize -gt 0) { $s.VSize } else { $s.RawSize }
-        if ($Rva -ge $s.VA -and $Rva -lt ($s.VA + $span)) {
-            $mapped = [math]::Min($span, $s.RawSize)
-            $delta = $Rva - $s.VA
-            if ($delta -ge $mapped) {
-                Fail 3 ('{0}: RVA 0x{1:X} is in section {2} but beyond its stored file data' -f $What, $Rva, $s.Name)
-            }
-            return @{ Offset = $s.RawPtr + $delta; Limit = $s.RawPtr + $mapped; Region = "section $($s.Name)" }
-        }
+    $hits = @($script:sections | Where-Object { $Rva -ge $_.VA -and $Rva -lt ($_.VA + $_.Span) })
+    if ($hits.Count -gt 1) {
+        # Overlaps are rejected when the section table is read; this is a second, local guard.
+        Fail 3 ('{0}: RVA 0x{1:X} is ambiguous; it lies in sections {2}' -f $What, $Rva, (($hits | ForEach-Object { $_.Name }) -join ', '))
     }
-    Fail 3 ('{0}: RVA 0x{1:X} is not inside the headers or any section' -f $What, $Rva)
+    if ($hits.Count -eq 0) { Fail 3 ('{0}: RVA 0x{1:X} is not inside the headers or any section' -f $What, $Rva) }
+    $s = $hits[0]
+    $mapped = [math]::Min($s.Span, $s.RawSize)
+    $delta = $Rva - $s.VA
+    if ($delta -ge $mapped) {
+        Fail 3 ('{0}: RVA 0x{1:X} is in section {2} but beyond its stored file data' -f $What, $Rva, $s.Name)
+    }
+    return @{ Offset = $s.RawPtr + $delta; Limit = $s.RawPtr + $mapped; Region = "section $($s.Name)" }
 }
 
 # ---------------------------------------------------------------- main
@@ -273,13 +284,18 @@ try {
     '=== SECTIONS'
     $st = $o + $optSize
     Need $st (40 * $nsec) 'section table'
+    $stEnd = $st + 40 * $nsec
+    if ($script:sizeOfHeaders -lt $stEnd) {
+        Fail 3 ('SizeOfHeaders 0x{0:X} does not cover the section table, which ends at 0x{1:X}' -f $script:sizeOfHeaders, $stEnd)
+    }
     for ($i = 0; $i -lt $nsec; $i++) {
         $b = $st + 40 * $i
         $name = Printable (([Text.Encoding]::ASCII.GetString($script:buf, [int]$b, 8)).TrimEnd([char]0))
         $s = [pscustomobject]@{
             Name = $name; VSize = (U32 ($b + 8)); VA = (U32 ($b + 12))
-            RawSize = (U32 ($b + 16)); RawPtr = (U32 ($b + 20)); Chars = (U32 ($b + 36))
+            RawSize = (U32 ($b + 16)); RawPtr = (U32 ($b + 20)); Chars = (U32 ($b + 36)); Span = 0L
         }
+        $s.Span = if ($s.VSize -gt 0) { $s.VSize } else { $s.RawSize }   # virtual extent used for address mapping
         $f = @()
         if ($s.Chars -band 0x20) { $f += 'CODE' }
         if ($s.Chars -band 0x40) { $f += 'IDATA' }
@@ -294,6 +310,16 @@ try {
         if ($s.RawSize -gt 0) { Need $s.RawPtr $s.RawSize ('section {0} raw data' -f $name) }
         $script:sections += $s
     }
+    # Reject overlapping virtual ranges so that every RVA maps to at most one section.
+    for ($i = 0; $i -lt $script:sections.Count; $i++) {
+        for ($j = $i + 1; $j -lt $script:sections.Count; $j++) {
+            $p = $script:sections[$i]; $q = $script:sections[$j]
+            if ($p.Span -gt 0 -and $q.Span -gt 0 -and $p.VA -lt ($q.VA + $q.Span) -and $q.VA -lt ($p.VA + $p.Span)) {
+                Fail 3 ('Sections {0} [0x{1:X}, 0x{2:X}) and {3} [0x{4:X}, 0x{5:X}) overlap in virtual address range' -f `
+                    $p.Name, $p.VA, ($p.VA + $p.Span), $q.Name, $q.VA, ($q.VA + $q.Span))
+            }
+        }
+    }
     $lastRawEnd = 0L
     foreach ($s in $script:sections) {
         if ($s.RawSize -gt 0 -and ($s.RawPtr + $s.RawSize) -gt $lastRawEnd) { $lastRawEnd = $s.RawPtr + $s.RawSize }
@@ -306,8 +332,7 @@ try {
     else {
         $epSec = $null
         foreach ($s in $script:sections) {
-            $span = if ($s.VSize -gt 0) { $s.VSize } else { $s.RawSize }
-            if ($ep -ge $s.VA -and $ep -lt ($s.VA + $span)) { $epSec = $s; break }
+            if ($ep -ge $s.VA -and $ep -lt ($s.VA + $s.Span)) { $epSec = $s; break }
         }
         if ($epSec) {
             $delta = $ep - $epSec.VA
@@ -322,11 +347,16 @@ try {
     if (-not $dirs.ContainsKey(1) -or $dirs[1][0] -eq 0) { '(no import directory)' }
     else {
         $impRva = $dirs[1][0]; $impSize = $dirs[1][1]
+        if ($impSize -lt 20) { Fail 3 ('Import directory size {0} is too small to hold even the 20-byte terminator' -f $impSize) }
         $loc = Resolve-Rva $impRva 'import directory'
+        if ($loc.Offset + $impSize -gt $loc.Limit) {
+            Fail 3 ('Import directory [RVA 0x{0:X}, size 0x{1:X}) extends beyond the stored data of {2} (ends at file offset 0x{3:X})' -f $impRva, $impSize, $loc.Region, $loc.Limit)
+        }
+        $tableEnd = $loc.Offset + $impSize   # descriptors, including the terminator, must lie within the declared size
         $d = $loc.Offset; $nDesc = 0; $total = 0
         while ($true) {
-            if ($d + 20 -gt $loc.Limit) {
-                Fail 3 ('Import descriptor table is not terminated: entry {0} at 0x{1:X} would run past the end of {2} (0x{3:X})' -f ($nDesc + 1), $d, $loc.Region, $loc.Limit)
+            if ($d + 20 -gt $tableEnd) {
+                Fail 3 ('Import descriptor table is not terminated within the declared import directory size 0x{0:X}: entry {1} at 0x{2:X} would end at 0x{3:X}' -f $impSize, ($nDesc + 1), $d, ($d + 20))
             }
             $oft = U32 $d; $dts = U32 ($d + 4); $fwd = U32 ($d + 8); $nameRva = U32 ($d + 12); $ft = U32 ($d + 16)
             if (($oft -bor $dts -bor $fwd -bor $nameRva -bor $ft) -eq 0) { break }   # all five fields zero = terminator
@@ -375,10 +405,6 @@ try {
             '  original order: ' + (($entries | ForEach-Object { $_.Text }) -join ', ')
             '  sorted        : ' + ($sorted -join ', ')
             $d += 20
-        }
-        $used = $d + 20 - $loc.Offset
-        if ($impSize -gt 0 -and $used -gt $impSize) {
-            'NOTE: the terminating descriptor ends {0} bytes into the table, beyond the declared import directory size {1}' -f $used, $impSize
         }
         'Total imported functions: {0} from {1} DLL(s)' -f $total, $nDesc
     }
