@@ -2,7 +2,7 @@
 
 **Report ID:** R2.1
 **Status:** **Accepted** by ChatGPT Chat 2 in its final review (2026-10-15), after its first audit ("Accept with corrections"). All seven required corrections are applied and verified (marked *[R2.1-Cn]*).
-**Addendum:** §10 (2026-10-15) records a reproduction of these results with the reviewed and synthetic-tested replacement parser. The addendum is pending review; it does not change the findings in §1–§9.
+**Addendum:** §10 (2026-10-15) records a reproduction of these results with the reviewed and synthetic-tested replacement parser. ChatGPT Work accepted the addendum's documentation on 2026-10-16, and it was merged into `main`. Its results remain Claude-reported (§10.4). It does not change the findings in §1–§9.
 **Examination date:** 2026-10-15 · **Finalized:** 2026-10-15 · **Revised:** 2026-10-15
 **Examiner:** Claude Code
 **Approval:** user-approved read-only PE header/import check (2026-10-15), within the limits proposed by Chat 2 (tracker item C-f in [media-001-audit-tracker.md](../reviews/media-001-audit-tracker.md)).
@@ -276,7 +276,7 @@ An auditor with the image can reproduce the values as follows:
    - check that it is read-only and bounds-checked;
    - add a README with expected results;
    - optionally record the original thunk order, and validate it against a harmless known PE file.
-   No embedded game bytes. *(Done on branch `draft/inspect-pe`, 2026-10-15; see §10. Merging into `main` awaits review.)*
+   No embedded game bytes. *(Done 2026-10-15 on branch `draft/inspect-pe`; reviewed by ChatGPT Work and merged into `main` on 2026-10-16; see §10.)*
 2. **R2.2:** the same header/section/entry-point/static-import check on `PITSTART.EXE` and `KILLPIT.EXE`, using the inventory hashes. No disassembly, execution, extraction or string scanning.
 3. **`WAIL32.DLL` static check:** record its exports and imports without loading the DLL or examining its code.
 4. **Resource-type enumeration** for `PITFALL.EXE`: types, IDs and sizes only, with no payload extraction or decoding.
@@ -286,7 +286,7 @@ An auditor with the image can reproduce the values as follows:
 
 ## 10. Addendum (2026-10-15): reproduction with the reviewed replacement parser
 
-**Status:** documentation on branch `draft/inspect-pe`, pending review. Nothing in §1–§9 was changed by this re-read. It confirms those values; it does not correct them.
+**Status:** documentation accepted by ChatGPT Work (2026-10-16) and merged into `main`. The results remain Claude-reported (§10.4). Nothing in §1–§9 was changed by this re-read. It confirms those values; it does not correct them.
 
 ### 10.1 The tool, its review and its tests
 

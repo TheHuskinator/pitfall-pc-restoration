@@ -1,7 +1,7 @@
 # PROJECT STATUS — Pitfall: The Mayan Adventure (PC Restoration)
 
 **Status:** Planning and research  
-**Last updated:** 2026-10-15  
+**Last updated:** 2026-10-16  
 **Project target:** Faithful restoration of the Kinesoft Windows 95 PC edition for Windows 10/11, with an eventual browser port considered after the desktop restoration is stable.
 
 ## Goals and scope
@@ -61,20 +61,21 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - No DirectX DLL or `WAIL32.DLL` is statically imported. Run-time loading via `LoadLibraryA` is possible and untested.
   - Discrepancy D-EXE-1: the PE timestamp field is 22 days 23:52:45 **after** the disc's 1995-08-24 00:01:00 directory dates. Not interpreted.
   - **R2.1 audit (Chat 2, 2026-10-15):** "Accept with corrections". All seven corrections were applied, and the **final review verdict is ACCEPT**. Chat 2 confirmed the arithmetic and internal consistency only; the parser's reading of the bytes has not been independently reproduced.
-- **PE parser preserved and tested (branch `draft/inspect-pe`, not yet merged):**
+- **PE parser preserved and tested (developed on branch `draft/inspect-pe`; merged into `main` by fast-forward on 2026-10-16, user-approved):**
   - `tools/inspect-pe.ps1`, the reviewed and synthetic-tested replacement parser, is at commit `c389278`. ChatGPT Work did two source reviews and accepted it for testing.
   - Synthetic tests: **29/29 PASS** (user-approved run).
   - User-approved re-read of `PITFALL.EXE`: fingerprint matched; **all R2.1 values reproduced**, with display-order differences only. The original import order is now recorded (`executable.md` §10.3).
   - Work accepted this as a **Claude-reported reproduction**. Claude performed both examinations, so it is not an independent confirmation.
-  - The documentation for this step is committed on the draft branch (`21fa6a2`), pending review. It includes a repair of the garbled characters that commit `50cf7d0` introduced into the audit tracker (30 sequences across 22 lines).
-  - ChatGPT Work reviewed `21fa6a2`: **Accept with corrections**, documentation only, with no parser changes. The corrections are in the follow-up commit on the draft branch, pending review.
+  - The documentation for this step was committed as `21fa6a2`. It includes a repair of the garbled characters that commit `50cf7d0` introduced into the audit tracker (30 sequences across 22 lines).
+  - ChatGPT Work reviewed `21fa6a2`: **Accept with corrections**, documentation only, with no parser changes. The corrections are in `4ec4321`, which Work then reviewed: **ACCEPT**, no further corrections (2026-10-16).
+  - Known, documented, non-blocking: two script header comments are out of date (see `tools/README.md`). They are deferred to a separately reviewed comment-only update.
 
 **Next proposed tasks (each awaiting user decision):**
-1. Review the draft-branch documentation update, then decide whether to merge `draft/inspect-pe` into `main`.
-2. R2.2: the same read-only check on `PITSTART.EXE` and `KILLPIT.EXE`, separately scoped.
-3. Static exports/imports check of `WAIL32.DLL`.
-4. Resource-type enumeration for `PITFALL.EXE` (no extraction).
-5. Run-time dependencies: static string leads, or execution under its own approved test plan.
+1. R2.2: a separately scoped, read-only check of `PITSTART.EXE` and `KILLPIT.EXE`. Its brief will be proposed for approval first.
+2. Static exports/imports check of `WAIL32.DLL`.
+3. Resource-type enumeration for `PITFALL.EXE` (no extraction).
+4. Run-time dependencies: static string leads, or execution under its own approved test plan.
+5. Comment-only update to the two scripts' header comments (separately reviewed).
 
 **2026-10-14 — repository setup:** Added `CLAUDE.md` (permanent agent rules), `.gitignore` (blocks original game files, disc images, media, credentials, and build output), a git-ignored `private/` folder for original material, and a `docs/` structure (research, inventory, legal, decisions, technical, testing). Remote confirmed as `TheHuskinator/pitfall-pc-restoration` (private). The setup files were committed to GitHub; this earlier pending-push note was superseded on 2026-10-15.
 
@@ -195,17 +196,17 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 
 ## Immediate next actions
 
-**Current (2026-10-15)** — the authoritative technical list is *Next proposed tasks* in *Current project status* above:
-1. Review the draft-branch documentation (`21fa6a2` plus its correction commit), then the user decides whether to merge `draft/inspect-pe` into `main`.
-2. R2.2: a separately scoped, read-only check of `PITSTART.EXE` and `KILLPIT.EXE`. Fingerprints are verified first; the check covers signatures, headers, sections, entry points and static imports only; it stops on a mismatch or an unsupported format; and filename-based guesses stay hypotheses.
-3. Verify the Andy Glaister lead and draft—not send—an outreach note unless the user explicitly authorizes contact.
-4. Route reports through Chat 2 (research), Chat 3 (development handoff), Chat 4 (QA) and ChatGPT Work (audit) as appropriate, with Chat 1 coordinating. Obtain the applicable user approval before mounting, extraction, installation, game execution, tool installation or implementation.
-5. Do not commit to C++/SDL3 until the technical-discovery milestone produces a short recommendation.
+**Current (2026-10-16)** — the authoritative technical list is *Next proposed tasks* in *Current project status* above:
+1. R2.2: a separately scoped, read-only check of `PITSTART.EXE` and `KILLPIT.EXE`. Fingerprints are verified first; the check covers signatures, headers, sections, entry points and static imports only; it stops on a mismatch or an unsupported format; and filename-based guesses stay hypotheses.
+2. Verify the Andy Glaister lead and draft—not send—an outreach note unless the user explicitly authorizes contact.
+3. Route reports through Chat 2 (research), Chat 3 (development handoff), Chat 4 (QA) and ChatGPT Work (audit) as appropriate, with Chat 1 coordinating. Obtain the applicable user approval before mounting, extraction, installation, game execution, tool installation or implementation.
+4. Do not commit to C++/SDL3 until the technical-discovery milestone produces a short recommendation.
 
 **Completed (historical):**
 - 2026-10-15: first read-only media examination (`docs/technical/original-media-examination.md`), audited by Chat 2 and ChatGPT Work.
 - 2026-10-15: provenance reported by the user; real subfolder path adopted; read-only ISO 9660 directory inventory completed.
 - 2026-10-15: `PITFALL.EXE` header/import summary (R2.1), accepted by Chat 2. Reproduced with the reviewed replacement parser (§10 of `docs/technical/executable.md`).
+- 2026-10-16: PE parser milestone (`tools/inspect-pe.ps1`, its tests and documentation) accepted by ChatGPT Work. `draft/inspect-pe` was fast-forward merged into `main` (`50cf7d0` → `4ec4321`).
 - 2026-10-15: six original-port-analysis articles and the author's roadmap indexed with citations; reported findings extracted. Still open: validating them against local game files, and following up on private tools/permissions.
 
 ## Key risks
@@ -249,3 +250,4 @@ Each work session should leave the project easier to resume:
 | 2026-10-15 | Evaluate Claude Code + Ghidra + REA for investigative work. | Proposed tooling | Windows 32-bit x86 interoperability requires validation; nothing confirmed installed. |
 | 2026-10-15 | Claude Code primary; Chat 1 coordination, Chat 2 research review, Chat 3 development handoffs, Chat 4 QA; Codex / ChatGPT Work independent audit/backup. | User-approved | Responsibilities do not expand action permissions. |
 | 2026-10-15 | First examine `private/original-media/Pitfall.{img,sub,ccd,cue}` read-only and stop after a metadata/structure report. | User-approved task scope | Presence, provenance, permission for use, completeness, and release identity remain to be verified; no mounting, extraction, installation, or game execution. |
+| 2026-10-16 | Merge the reviewed PE parser milestone (`draft/inspect-pe`) into `main` by fast-forward, keeping every reviewed commit ID in `main`'s history. | User-approved | ChatGPT Work ACCEPT of `4ec4321`. Tool results remain Claude-reported; independent byte verification is still open. |
