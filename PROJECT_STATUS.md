@@ -48,11 +48,27 @@ Obtain a readable, authorized copy of the original PC game files, record source 
 
 - [ ] Confirm the local GitHub Desktop checkout matches `main` and verify original files are excluded from version control.
 - [ ] Add a root `README.md` with goals, phase, and document links.
-- [ ] Capture Chris outreach date/method and log historical-source citations.
+- [ ] Capture Chris outreach date/method; **historical source citations logged** in `docs/research/sources.md` (2026-10-15).
 - [ ] Recover or obtain authorized PC media; inventory versions, hashes, DLLs, `.PH` files, and CD audio.
 - [ ] Create GitHub issues for research, media recovery, rights, compatibility, and tool validation if desired.
 - [ ] Validate Claude Code / Ghidra / REA installation and x86 analysis support; do not assume tool readiness.
 - [ ] Evaluate Windows 11 native execution, compatibility mode and DxWnd in a documented test environment.
+
+## 2026-10-15 — Chris Heimlich research extraction
+
+**Completed documentation-only milestone:** Reviewed six original-port-analysis posts and the author's roadmap and recorded sources **S001-S007** in `docs/research/sources.md`. Added a research entry to `docs/research/research-log.md`, a technical summary at `docs/technical/ph-resource-formats.md`, and a prioritized outreach checklist at `docs/research/chris-heimlich-request-list.md`. The docs map and technical index link these materials.
+
+**High-value author-reported findings (NOT independently verified against original game files):**
+
+- `INIT.PH` shared sprite/sound segments and level-specific `.PH` resources; embedded WAV effects and CD-based music are described (S001-S003).
+- Two documented `4.V4` sprite formats; palette/index and transparency encoding; later interpretation of signed X/Y render offsets; 11,568 sprites reportedly extracted (S002, S003, S006).
+- Level backgrounds use 8×8 indexed-color tiles, a pool and reference matrix, vertical/horizontal flip flags and provisional priority semantics; animated tiles/parallax were not solved by the 2019 post (S004).
+- Dynamic/static/collision chunks use a 16×16 positional grid, a column-offset table, row/ID pairs, and `0xFF` column end markers. Published layout parser swaps 16-bit offsets, unlike the little-endian background reader; actual byte order requires testing (S005).
+- Chris describes a **private MATLAB extraction project and mapping spreadsheets** in S005/S006. Those private materials are **not in our possession** and may require permission for access/use.
+
+**Still open:** No executable, disc image, `.PH` files or private research code has been acquired or analyzed by us. No working parser/decoder has been developed. Seeking clarification or permission from Chris is a follow-up, not a prerequisite for studying the public format notes.
+
+**Next smallest technical task:** After obtaining lawful game files, hash and inventory them, validate one representative `.PH` sprite segment and background segment *read-only*, then attempt original-EXE Windows 11 compatibility testing. Consult `docs/technical/ph-resource-formats.md` for test cases.
 
 ## Evidence, leads, and uncertainties
 
@@ -60,7 +76,7 @@ Obtain a readable, authorized copy of the original PC game files, record source 
 | --- | --- | --- |
 | Target version | The intended reference is the Kinesoft Windows 95 PC edition. | Confirm exact release/region/build and obtain a lawful reference copy or media. |
 | Technical lead | C++ with SDL3 is a possible implementation candidate. | This is not a decision; assess compatibility, architecture, tooling, and asset format first. |
-| Historical research | Chris Heimlich's *The Modern Adventure* research is a useful lead. | Locate and review the relevant material; record citations and claims separately from verified facts. |
+| Historical research | Six technical posts and the author's roadmap indexed 2026-10-15; published PH-format observations extracted into `docs/technical/ph-resource-formats.md`. | Validate reported formats against authorized retail files; request his private MATLAB scripts and name maps with permission. |
 | Original developer lead | Andy Glaister is identified as an original Kinesoft developer. | Verify role/contact details and determine whether outreach is appropriate and successful. |
 | Communications | User reports awaiting Chris Heimlich's response to an email. | Email date, address, delivery, and response remain unverified in the project record; record details when confirmed. |
 | Materials | User reports owning a scratched original physical PC disc; its files cannot currently be read. | Recover the disc safely or obtain another authorized reference; inventory EXE, DLLs, `.PH` assets, CD audio, manuals, and hashes. |
@@ -89,7 +105,7 @@ Obtain a readable, authorized copy of the original PC game files, record source 
 
 1. Ask the user to confirm whether they have any original PC media, disc images, installed files, manuals, patches, screenshots, or recordings.
 2. Create a dated inventory of materials received; do not modify original source media.
-3. Collect and cite the relevant *The Modern Adventure* material, clearly labeling unverified historical statements.
+3. **Completed 2026-10-15:** Index six original-port-analysis articles and the author's roadmap with citations; extract reported findings. Next: validate using lawful local game files and follow up on private tools/permissions.
 4. Verify the Andy Glaister lead and draft—not send—an outreach note unless the user explicitly authorizes contact.
 5. Define a first research task: identify the exact executable/data layout and run behavior of a lawful reference copy.
 6. Do not commit to C++/SDL3 until the technical-discovery milestone produces a short recommendation.
