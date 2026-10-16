@@ -13,7 +13,9 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 ### Working approach
 
 - The user directs priorities and performs testing.
-- Claude Code/Codex performs implementation work, documentation, analysis, and technical investigation under the user's direction.
+- Claude Code is the primary implementation and reverse-engineering agent.
+- ChatGPT Chat 1 coordinates; Chat 2 reviews research; Chat 3 prepares development handoffs; Chat 4 handles QA planning and review. Codex / ChatGPT Work provides independent audit and backup support.
+- These roles operate under the user's direction and the approval rules in `CLAUDE.md`.
 - Preserve the original game's gameplay, presentation, audio, controls, timing, and content as closely as practical.
 - Treat a browser version as a later phase; it must not compromise the Windows restoration.
 
@@ -25,7 +27,7 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 ## Current project status
 
-The project is at the planning/research stage. The user reports owning an original physical PC disc, currently unreadable because of scratches. No readable reference installation, EXE, working build environment, or working restoration has yet been verified. No technical direction has been finalized.
+The project is at the planning/research stage, with Claude's first read-only media examination next. The user reports owning an original physical PC disc, currently unreadable because of scratches, and a four-file set intended for `private/original-media/`: `Pitfall.img`, `Pitfall.sub`, `Pitfall.ccd`, and `Pitfall.cue`. The local files have not been independently inspected in this audit; presence, provenance, permission for use, completeness, and exact release/region/build remain unverified. No readable reference installation, EXE, working build environment, or working restoration has yet been verified. No technical direction has been finalized.
 
 **2026-10-14 — repository setup:** Added `CLAUDE.md` (permanent agent rules), `.gitignore` (blocks original game files, disc images, media, credentials, and build output), a git-ignored `private/` folder for original material, and a `docs/` structure (research, inventory, legal, decisions, technical, testing). Remote confirmed as `TheHuskinator/pitfall-pc-restoration` (private). The setup files were committed to GitHub; this earlier pending-push note was superseded on 2026-10-15.
 
@@ -42,14 +44,14 @@ The project is at the planning/research stage. The user reports owning an origin
 
 ### Next smallest testable task
 
-Obtain a readable, authorized copy of the original PC game files, record source and hashes in `docs/inventory/materials-inventory.md`, and perform a **read-only executable/dependency inventory**. Only then attempt an isolated native Windows 11 compatibility baseline.
+Claude Code should read the repository instructions and rights policy, confirm the local checkout is current, verify all four `private/original-media/Pitfall.{img,sub,ccd,cue}` paths are ignored and no proprietary files are already tracked, then record filenames, byte sizes, and SHA-256 hashes. Inspect only descriptor text and headers/structure with existing trusted tools in read-only mode; report consistency, uncertainties, and a recommended next step. Record metadata and independently written findings in `docs/inventory/materials-inventory.md` and update this status file. Stop after the report. See `CLAUDE.md` for the complete first-task boundary.
 
 ### Remaining setup checklist
 
 - [ ] Confirm the local GitHub Desktop checkout matches `main` and verify original files are excluded from version control.
 - [ ] Add a root `README.md` with goals, phase, and document links.
 - [ ] Capture Chris outreach date/method; **historical source citations logged** in `docs/research/sources.md` (2026-10-15).
-- [ ] Recover or obtain authorized PC media; inventory versions, hashes, DLLs, `.PH` files, and CD audio.
+- [ ] Inventory the user-reported four-file media set read-only; establish provenance, permission for use, completeness, and release identity. DLL, `.PH`, and CD-audio inspection remains a later scoped task.
 - [ ] Create GitHub issues for research, media recovery, rights, compatibility, and tool validation if desired.
 - [ ] Validate Claude Code / Ghidra / REA installation and x86 analysis support; do not assume tool readiness.
 - [ ] Evaluate Windows 11 native execution, compatibility mode and DxWnd in a documented test environment.
@@ -66,9 +68,18 @@ Obtain a readable, authorized copy of the original PC game files, record source 
 - Dynamic/static/collision chunks use a 16×16 positional grid, a column-offset table, row/ID pairs, and `0xFF` column end markers. Published layout parser swaps 16-bit offsets, unlike the little-endian background reader; actual byte order requires testing (S005).
 - Chris describes a **private MATLAB extraction project and mapping spreadsheets** in S005/S006. Those private materials are **not in our possession** and may require permission for access/use.
 
-**Still open:** No executable, disc image, `.PH` files or private research code has been acquired or analyzed by us. No working parser/decoder has been developed. Seeking clarification or permission from Chris is a follow-up, not a prerequisite for studying the public format notes.
+**Still open:** The user now reports a four-file disc-image set (see current status), but it has not been independently inspected. No executable or `.PH` files have been verified or analyzed, and Chris's private research code is not in our possession. No working parser/decoder has been developed. Seeking clarification or permission from Chris is a follow-up, not a prerequisite for studying the public format notes.
 
-**Next smallest technical task:** After obtaining lawful game files, hash and inventory them, validate one representative `.PH` sprite segment and background segment *read-only*, then attempt original-EXE Windows 11 compatibility testing. Consult `docs/technical/ph-resource-formats.md` for test cases.
+**Later technical follow-up:** After the first read-only media report and approval of the next scoped task, consider executable/dependency inventory and validation of one representative `.PH` sprite and background segment. Consult `docs/technical/ph-resource-formats.md` for test cases. Original-EXE Windows 11 compatibility testing requires separate approval before execution.
+
+## 2026-10-15 — Agent responsibilities and first media examination
+
+- **User-approved responsibilities:** Claude Code is the primary implementation/reverse-engineering agent; ChatGPT Chat 1 coordinates, Chat 2 reviews research, Chat 3 prepares development handoffs, Chat 4 handles QA, and Codex / ChatGPT Work provides independent audit and backup. Role assignment grants no additional action permissions.
+- **Repository audit:** Reviewed `main` at `58de426df74d518774ac0ab5c88d34455426e3fd`. The complete tracked tree contains documentation and `.gitignore`, with no tracked `private/` paths or original-media files observed. The local checkout and private files were not inspected.
+- **Git exclusion verified from repository rules:** `/private/` covers `private/original-media/` and all contents; `*.img`, `*.sub`, `*.ccd`, and `*.cue` provide additional coverage. No `.gitignore` change is needed. Claude must still check the actual local ignore and tracked-file state before examination.
+- **First-task boundary:** Metadata, SHA-256 hashes, descriptor text, and header/structure inspection only. No media modification, mounting, extraction, game/installer execution, upload, tool installation, architecture choice, or implementation. Only metadata, hashes, and independently written findings belong in repository documentation.
+- **Approval preserved:** The user approved this two-file documentation update to `main`. That approval does not authorize future commits or pushes, contact, tools, or game execution. Each future push requires specific user approval under `CLAUDE.md`.
+- Earlier compatibility and tooling proposals remain later possibilities, not authorization to proceed. This first-media task supersedes the earlier immediate tasks to obtain files or begin executable/PH analysis.
 
 ## Evidence, leads, and uncertainties
 
@@ -79,7 +90,7 @@ Obtain a readable, authorized copy of the original PC game files, record source 
 | Historical research | Six technical posts and the author's roadmap indexed 2026-10-15; published PH-format observations extracted into `docs/technical/ph-resource-formats.md`. | Validate reported formats against authorized retail files; request his private MATLAB scripts and name maps with permission. |
 | Original developer lead | Andy Glaister is identified as an original Kinesoft developer. | Verify role/contact details and determine whether outreach is appropriate and successful. |
 | Communications | User reports awaiting Chris Heimlich's response to an email. | Email date, address, delivery, and response remain unverified in the project record; record details when confirmed. |
-| Materials | User reports owning a scratched original physical PC disc; its files cannot currently be read. | Recover the disc safely or obtain another authorized reference; inventory EXE, DLLs, `.PH` assets, CD audio, manuals, and hashes. |
+| Materials | User reports a scratched original physical PC disc and `Pitfall.img`, `Pitfall.sub`, `Pitfall.ccd`, and `Pitfall.cue` intended for `private/original-media/`. | Verify local presence, byte sizes, hashes, descriptor consistency, provenance, permission for use, completeness, and exact release identity. No file contents inspected in this audit. |
 
 ## Sources, ownership, and rights
 
@@ -103,11 +114,11 @@ Obtain a readable, authorized copy of the original PC game files, record source 
 
 ## Immediate next actions
 
-1. Ask the user to confirm whether they have any original PC media, disc images, installed files, manuals, patches, screenshots, or recordings.
-2. Create a dated inventory of materials received; do not modify original source media.
+1. Give Claude Code the first read-only media examination defined in `CLAUDE.md`; verify local file presence and Git exclusion before inspection.
+2. Record the four files' metadata, SHA-256 hashes, provenance as reported or verified, and descriptor/structure findings; do not modify original source media.
 3. **Completed 2026-10-15:** Index six original-port-analysis articles and the author's roadmap with citations; extract reported findings. Next: validate using lawful local game files and follow up on private tools/permissions.
 4. Verify the Andy Glaister lead and draft—not send—an outreach note unless the user explicitly authorizes contact.
-5. Define a first research task: identify the exact executable/data layout and run behavior of a lawful reference copy.
+5. Review Claude's report through Chat 2 (research), Chat 3 (next development handoff), and Chat 4 (QA) as appropriate, with Chat 1 coordinating. Obtain the applicable user approval before mounting, extraction, installation, game execution, tool installation, or implementation.
 6. Do not commit to C++/SDL3 until the technical-discovery milestone produces a short recommendation.
 
 ## Key risks
@@ -149,3 +160,5 @@ Each work session should leave the project easier to resume:
 | 2026-10-14 | Original/proprietary material kept only in git-ignored `private/`; docs hold metadata and hashes only. | Active | See `docs/legal/rights-and-provenance.md`. |
 | 2026-10-15 | Prioritize testing native Windows 11 compatibility of the original EXE before choosing full reimplementation. | Proposed workflow | DxWnd and targeted fixes to be evaluated; no engine or dependency selected. |
 | 2026-10-15 | Evaluate Claude Code + Ghidra + REA for investigative work. | Proposed tooling | Windows 32-bit x86 interoperability requires validation; nothing confirmed installed. |
+| 2026-10-15 | Claude Code primary; Chat 1 coordination, Chat 2 research review, Chat 3 development handoffs, Chat 4 QA; Codex / ChatGPT Work independent audit/backup. | User-approved | Responsibilities do not expand action permissions. |
+| 2026-10-15 | First examine `private/original-media/Pitfall.{img,sub,ccd,cue}` read-only and stop after a metadata/structure report. | User-approved task scope | Presence, provenance, permission for use, completeness, and release identity remain to be verified; no mounting, extraction, installation, or game execution. |
