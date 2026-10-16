@@ -1,7 +1,7 @@
 # R2.2 — `PITSTART.EXE` and `KILLPIT.EXE` static analysis: PE headers and static imports
 
 **Report ID:** R2.2
-**Status:** draft for independent audit by ChatGPT Chat 2. **Not committed.**
+**Status:** draft for independent audit by ChatGPT Chat 2. Committed on `main` (`323a03c`), pending that audit.
 **Examination date:** 2026-10-16
 **Examiner:** Claude Code (the only examiner; all results are Claude-reported)
 **Approval:** user-approved R2.2 scope (2026-10-16). It covers only these two files; the reviewed parser; fingerprints verified before parsing; signatures, headers, sections, entry points and static imports only; stop on a mismatch, unsupported format, malformed result or error.

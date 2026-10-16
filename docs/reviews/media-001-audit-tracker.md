@@ -111,7 +111,7 @@ Neither auditor had access to the disc image. Hashes, raw-sector observations, Q
 | --- | --- | --- |
 | R2.2-S | Scope proposed by Claude (only these two files; the reviewed parser; fingerprints verified first; headers, sections, entry points and static imports only; stop on mismatch, unsupported format, malformed result or error) | Approved by the user, 2026-10-16. Work had recommended the same boundaries (P8). |
 | R2.2-X | Examination | Pre-check passed (clean `main` at `29589a7`; parser blob `1299ce51…`; LF-normalized SHA-256 `81FDEB05…`). Both runs matched their fingerprints and gave `RESULT: OK`. No stop condition was triggered. No other files were read and no game code was executed. |
-| R2.2-R | Report `docs/technical/startup-executables.md` | Draft, uncommitted. **Awaiting Chat 2 audit.** |
+| R2.2-R | Report `docs/technical/startup-executables.md` | Draft, committed on `main` as `323a03c`. **Awaiting Chat 2 audit.** |
 
 ## Repository hygiene: tracker character-encoding repair (2026-10-15)
 

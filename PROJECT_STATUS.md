@@ -70,7 +70,7 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - ChatGPT Work reviewed `21fa6a2`: **Accept with corrections**, documentation only, with no parser changes. The corrections are in `4ec4321`, which Work then reviewed: **ACCEPT**, no further corrections (2026-10-16).
   - Known, documented, non-blocking: two script header comments are out of date (see `tools/README.md`). They are deferred to a separately reviewed comment-only update.
 
-- **R2.2 done 2026-10-16 (user-approved scope; draft report `docs/technical/startup-executables.md`, uncommitted, pending Chat 2 audit):**
+- **R2.2 done 2026-10-16 (user-approved scope; draft report `docs/technical/startup-executables.md`, committed on `main` as `323a03c`, pending Chat 2 audit):**
   - Both `PITSTART.EXE` and `ASSETS/KILLPIT.EXE` are PE32 x86 Windows GUI programs (subsystem 4.0, linker field 2.55). Fingerprints were verified before parsing; `RESULT: OK` for both.
   - `PITSTART.EXE`: 92 static imports from 6 DLLs, including `MSVFW32.dll!MCIWndCreateA` (Video for Windows), which `PITFALL.EXE` does not use. Its resource section is 96% of the file (contents not examined).
   - `KILLPIT.EXE`: 24 static imports, from KERNEL32 (23) and USER32 (`MessageBoxA`). It has no resources and no process-control imports, so its static imports do not support the filename guess that it "kills" the game process.
