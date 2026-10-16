@@ -27,7 +27,30 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 ## Current project status
 
-The project is at the planning/research stage, with Claude's first read-only media examination next. The user reports owning an original physical PC disc, currently unreadable because of scratches, and a four-file set intended for `private/original-media/`: `Pitfall.img`, `Pitfall.sub`, `Pitfall.ccd`, and `Pitfall.cue`. The local files have not been independently inspected in this audit; presence, provenance, permission for use, completeness, and exact release/region/build remain unverified. No readable reference installation, EXE, working build environment, or working restoration has yet been verified. No technical direction has been finalized.
+> **This section is the authoritative current state (updated 2026-10-15, after the Chat 2 and ChatGPT Work audits).** The dated sections further down are historical snapshots. Where they conflict with this section, this section wins.
+
+**Phase:** planning/research. No technical direction, toolchain or engine has been chosen.
+
+**Reference media — MEDIA-001**, at `private/original-media/Pitfall_The_Mayan_Adventure_ISO/` (git-ignored):
+
+- **Provenance — Reported (user):** made from a legitimate physical copy the user owned. The user also reports a scratched physical disc, currently unreadable.
+- **Verified (Claude, 2026-10-15; arithmetic independently confirmed by Chat 2 and ChatGPT Work):** a CloneCD-style raw image of 272,313 sectors. It is a single session: 1 Mode 1 data track plus 23 tracks declared as audio. CCD and CUE agree.
+- **Examiner-reported, not independently reproduced:**
+  - All 8,880 Mode 1 sectors pass header and EDC checks.
+  - The ISO 9660 volume `PITFALL` lists 40 files (38 in `ASSETS`, 2 at the root), including `PITFALL.EXE`, `WAIL32.DLL`, `INIT.PH` and `LEVEL00`–`LEVEL23.PH`.
+  - Per-file SHA-256 values are recorded in `docs/inventory/materials-inventory.md`.
+- **Open:**
+  - Exact release, region and revision.
+  - Who made the image, and when.
+  - Audio authenticity and completeness.
+  - ECC and Q-channel CRC validation.
+  - The track-2 index discrepancy (D2).
+  - The game's external dependencies.
+  - Independent reproduction of the EDC and listing results.
+
+**Not yet done:** no executable analysis, game execution, compatibility testing, working build environment or restoration code.
+
+**Next proposed task (awaiting user decision):** read-only PE header and static import-table summary of `ASSETS/PITFALL.EXE`, read in memory from the image, with boundaries as recommended by Chat 2 (see `docs/reviews/media-001-audit-tracker.md`). ChatGPT Work recommends first preserving a reviewable read-only verifier (see the tracker, item W6). The user decides the order.
 
 **2026-10-14 — repository setup:** Added `CLAUDE.md` (permanent agent rules), `.gitignore` (blocks original game files, disc images, media, credentials, and build output), a git-ignored `private/` folder for original material, and a `docs/` structure (research, inventory, legal, decisions, technical, testing). Remote confirmed as `TheHuskinator/pitfall-pc-restoration` (private). The setup files were committed to GitHub; this earlier pending-push note was superseded on 2026-10-15.
 
@@ -42,13 +65,13 @@ The project is at the planning/research stage, with Claude's first read-only med
 - Historical research: continue to evaluate Chris Heimlich's *The Modern Adventure* materials; user is awaiting a response. Verify communication details rather than declaring them sent in the evidence log. Also investigate the Andy Glaister lead independently without contacting anyone without authorization.
 - Other sources under consideration include The Collection Chamber's Windows 95/DOSBox-X package and a modern-Windows DxWnd guide. They are **leads**, not verified retail binaries or evidence of redistribution rights. Prefer the unmodified original EXE for native compatibility tests.
 
-### Next smallest testable task
+### Next smallest testable task (historical — completed 2026-10-15)
 
 Claude Code should read the repository instructions and rights policy, confirm the local checkout is current, verify all four `private/original-media/Pitfall.{img,sub,ccd,cue}` paths are ignored and no proprietary files are already tracked, then record filenames, byte sizes, and SHA-256 hashes. Inspect only descriptor text and headers/structure with existing trusted tools in read-only mode; report consistency, uncertainties, and a recommended next step. Record metadata and independently written findings in `docs/inventory/materials-inventory.md` and update this status file. Stop after the report. See `CLAUDE.md` for the complete first-task boundary.
 
 ### Remaining setup checklist
 
-- [ ] Confirm the local GitHub Desktop checkout matches `main` and verify original files are excluded from version control.
+- [x] Confirm the local GitHub Desktop checkout matches `main` and verify original files are excluded from version control. On 2026-10-15, local HEAD `d906553` equalled `origin/main` after a GitHub Desktop fetch; `git check-ignore` confirmed the four media files are ignored; no `private/` paths are tracked.
 - [ ] Add a root `README.md` with goals, phase, and document links.
 - [ ] Capture Chris outreach date/method; **historical source citations logged** in `docs/research/sources.md` (2026-10-15).
 - [x] Inventory the user-reported four-file media set read-only (done 2026-10-15). Provenance, permission for use, completeness, and release identity remain open. DLL, `.PH`, and CD-audio inspection remains a later scoped task.
@@ -68,7 +91,7 @@ Claude Code should read the repository instructions and rights policy, confirm t
 - Dynamic/static/collision chunks use a 16×16 positional grid, a column-offset table, row/ID pairs, and `0xFF` column end markers. Published layout parser swaps 16-bit offsets, unlike the little-endian background reader; actual byte order requires testing (S005).
 - Chris describes a **private MATLAB extraction project and mapping spreadsheets** in S005/S006. Those private materials are **not in our possession** and may require permission for access/use.
 
-**Still open:** The user now reports a four-file disc-image set (see current status), but it has not been independently inspected. No executable or `.PH` files have been verified or analyzed, and Chris's private research code is not in our possession. No working parser/decoder has been developed. Seeking clarification or permission from Chris is a follow-up, not a prerequisite for studying the public format notes.
+**Still open (historical; the disc image was subsequently examined on 2026-10-15 — see Current project status):** The user now reports a four-file disc-image set, but it has not been independently inspected. No executable or `.PH` files have been verified or analyzed, and Chris's private research code is not in our possession. No working parser/decoder has been developed. Seeking clarification or permission from Chris is a follow-up, not a prerequisite for studying the public format notes.
 
 **Later technical follow-up:** After the first read-only media report and approval of the next scoped task, consider executable/dependency inventory and validation of one representative `.PH` sprite and background segment. Consult `docs/technical/ph-resource-formats.md` for test cases. Original-EXE Windows 11 compatibility testing requires separate approval before execution.
 
@@ -95,20 +118,23 @@ Full report: `docs/technical/original-media-examination.md`. Hashes: `docs/inven
 - **Discrepancies:**
   - Both descriptors omit track 2's INDEX 00, while the (unvalidated) subchannel shows a 149-sector track-2 pregap. The 150 sectors involved are all zero.
   - Pregaps for tracks 3–24 are 148 sectors, consistent across all sources.
-- **Unknown:** who made the image and when (file timestamps 2007-03-31 — weak evidence), release/region/revision, audio authenticity/completeness, and data-sector error status (EDC/ECC not checked).
+- **Unknown at the time:** who made the image and when (file timestamps 2007-03-31 — weak evidence), release/region/revision, audio authenticity/completeness, and data-sector error status (EDC/ECC not checked). *EDC was later reported passing for all 8,880 Mode 1 sectors; see the next section.*
 - **Next smallest proposed task (needs user approval):** a read-only ISO 9660 directory inventory of track 1. It would record names, sizes, dates and in-memory SHA-256 per file, plus volume descriptor fields, with no mounting or extraction to disk. Optionally it could also decode the Media Catalog Number and validate Q CRCs.
 
 ## 2026-10-15 — Data-track file inventory (user-approved)
 
 Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/materials-inventory.md`.
 
-- **Verified:**
-  - All 8,880 data-track sectors pass header and EDC checks, so the data track is intact.
+- **Examiner-reported (not independently reproduced):**
+  - All 8,880 Mode 1 sectors (LBA 0–8879) pass header and EDC checks. This is strong consistency evidence, not proof of bit-perfect equivalence or authenticity. The zero-filled sectors 8880–9029 were not EDC-checked, and ECC was not validated.
   - The ISO 9660 volume is `PITFALL`, with no Joliet descriptor and blank publisher/date fields.
-  - It holds 40 files, all dated 1995-08-24: `ASSETS/PITFALL.EXE`, `WAIL32.DLL`, `INIT.PH`, `LEVEL00`–`LEVEL23.PH`, `INTRO.AVI`, `KILLPIT.EXE`, `PITSTART.WAV`, four `.HLP` and four `.WRI` files, plus root `PITSTART.EXE` and `AUTORUN.INF`.
+  - It holds 40 files (38 in `ASSETS`, 2 at the root), all with directory timestamps of 1995-08-24 (not a verified release date): `ASSETS/PITFALL.EXE`, `WAIL32.DLL`, `INIT.PH`, `LEVEL00`–`LEVEL23.PH`, `INTRO.AVI`, `KILLPIT.EXE`, `PITSTART.WAV`, four `.HLP` and four `.WRI` files, plus root `PITSTART.EXE` and `AUTORUN.INF`.
   - Every file was hashed in memory. Nothing was extracted, opened or executed.
 - **Matches research:** `PITFALL.EXE`, `INIT.PH`, the `LEVEL*.PH` naming and `WAIL32.DLL` are all present, as S001 and the request checklist describe.
-- **New observations:** there are 24 level files, no installer, and only one DLL on the disc.
+- **New observations:**
+  - There are 24 level files.
+  - No conventionally named installer is listed. Launcher and installation behavior is untested.
+  - `WAIL32.DLL` is the only `.DLL` listed. External dependencies remain unknown.
 - **Still unknown:** exact release, region and revision. The volume metadata is blank, so this needs a hash comparison with another known copy or markings on the physical disc/box.
 - **Next proposed task (needs approval):** a read-only header and import-table summary of `ASSETS/PITFALL.EXE`, read in memory from the image. It would show which Windows/DirectX components the game needs before any compatibility testing.
 
@@ -121,7 +147,7 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 | Historical research | Six technical posts and the author's roadmap indexed 2026-10-15; published PH-format observations extracted into `docs/technical/ph-resource-formats.md`. | Validate reported formats against authorized retail files; request his private MATLAB scripts and name maps with permission. |
 | Original developer lead | Andy Glaister is identified as an original Kinesoft developer. | Verify role/contact details and determine whether outreach is appropriate and successful. |
 | Communications | User reports awaiting Chris Heimlich's response to an email. | Email date, address, delivery, and response remain unverified in the project record; record details when confirmed. |
-| Materials | User reports a scratched original physical PC disc. Four-file image set MEDIA-001, reported by the user as made from their own legitimate physical copy, present in `private/original-media/Pitfall_The_Mayan_Adventure_ISO/`; sizes, hashes and structure verified 2026-10-15 (single-session, 1 data + 23 audio tracks). | Provenance, permission for use, completeness, exact release identity, audio authenticity and data error status remain unverified. |
+| Materials | User reports a scratched original physical PC disc. Four-file image set MEDIA-001, reported by the user as made from their own legitimate physical copy, present in `private/original-media/Pitfall_The_Mayan_Adventure_ISO/`.<br>• Verified 2026-10-15: sizes, hashes and structure (single session, 1 data + 23 audio tracks).<br>• Reported: all Mode 1 sectors pass EDC.<br>• Reported: a 40-file ISO listing. | Exact release identity, completeness, audio authenticity, ECC/Q-CRC status and independent reproduction of the EDC and listing results remain open. Provenance is user-reported. |
 
 ## Sources, ownership, and rights
 

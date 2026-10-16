@@ -8,6 +8,7 @@
 | [`decisions/`](decisions/) | One file per approved technical or project decision ("architecture decision records"). |
 | [`technical/`](technical/) | Findings about how the original game works: install layout, executable, data file formats, dependencies. |
 | [`testing/`](testing/) | Test plans, and the template the user fills in after playtesting a build. |
+| [`reviews/`](reviews/) | Independent audits of agent work and the status of each recommendation. |
 
 ## Research now available
 

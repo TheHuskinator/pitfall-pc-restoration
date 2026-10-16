@@ -7,7 +7,7 @@ Findings about how the original Kinesoft Windows 95 build works.
 - [ph-resource-formats.md](ph-resource-formats.md) — published observations from Chris Heimlich's research about `.PH` segments, sprite encoding, backgrounds, and level entity/collision data. **Reported, not validated** against our own game files. See [sources](../research/sources.md).
 
 - [original-media-examination.md](original-media-examination.md) — **Verified** structure of disc image MEDIA-001: single-session mixed-mode, 1 data track + 23 audio tracks.
-- [disc-contents.md](disc-contents.md) — **Verified** ISO 9660 contents of the data track (40 files, all dated 1995-08-24), with full-sector EDC integrity check.
+- [disc-contents.md](disc-contents.md) — ISO 9660 contents of the data track: 40 files, with directory timestamps of 1995-08-24. All 8,880 Mode 1 sectors are reported to pass header/EDC checks (not independently reproduced).
 
 ## Planned technical investigations (create pages when evidence arrives)
 

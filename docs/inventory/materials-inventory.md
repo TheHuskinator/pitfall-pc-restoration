@@ -31,7 +31,8 @@ A record of original materials the user has supplied. **The files themselves sta
 How this was made:
 - Read from the ISO 9660 file system on track 1 of MEDIA-001a on 2026-10-15.
 - Each file was hashed in memory; **no file was extracted**.
-- Volume ID `PITFALL`. Every record is dated 1995-08-24 00:01:00 (GMT+0). All data sectors passed EDC.
+- Volume ID `PITFALL`. Every directory record carries the timestamp 1995-08-24 00:01:00 (GMT+0); this is not a verified release date.
+- All 8,880 Mode 1 sectors (LBA 0–8879) were reported to pass header and EDC checks. This has not been independently reproduced.
 - Interpretation: [disc-contents.md](../technical/disc-contents.md).
 
 Table conventions: "Extent" is the starting 2,048-byte block (equal to the disc LBA). ISO version suffixes (`;1`) are omitted.
