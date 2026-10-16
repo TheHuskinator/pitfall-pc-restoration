@@ -1,7 +1,19 @@
 # Sources
 
-One row per source. Reference sources from the research log by their ID (S001, S002, ...).
+One row per source. Reference sources from the research log and technical notes by ID (S001, S002, ...).
+
+**Evidence convention:** *Verified publication* means the linked page was reviewed on the access date; the author's claims about extracted assets and decoded formats remain **reported research, not independently verified against our own retail files**. We have not obtained or tested the source code or proprietary game data.
 
 | ID | Title | Author / Publisher | Type | URL or location | Date accessed | Notes / reliability |
 | --- | --- | --- | --- | --- | --- | --- |
-| | | | | | | |
+| S001 | Original Sound Effects and Sprites Located, Sound Effects Dumped (2019-10-17) | Chris Heimlich / Pitfall: The Modern Adventure | Primary research progress report | https://pitfalltma.wordpress.com/2019/10/17/original-sound-effects-and-sprites-located/ | 2026-10-15 | Describes INIT.PH, chunk lengths, embedded WAV, sprite signature, Red Book CD audio. Author-reported findings; not tested here. |
+| S002 | Sprite Format Reverse Engineered, Common Sprites Dumped (2019-10-26) | Chris Heimlich / Pitfall: The Modern Adventure | Technical write-up and MATLAB excerpts | https://pitfalltma.wordpress.com/2019/10/26/sprite-format-reverse-engineered-common-sprites-dumped/ | 2026-10-15 | Two sprite segment variants, header fields, palettes, row markers; early row-decoding description later refined in S003. |
+| S003 | Sprite Format Interpretation Updated, Level Specific Sprites Dumped (2019-11-04) | Chris Heimlich / Pitfall: The Modern Adventure | Technical write-up and MATLAB decoder | https://pitfalltma.wordpress.com/2019/11/04/sprite-format-interpretation-updated-level-specific-sprites-dumped/ | 2026-10-15 | Updated row algorithm, 0x7D wide-sprite marker, source listing; author reports 11,568 sprites extracted. |
+| S004 | Level Background Art Format Mostly Cracked, Some Level Layout Data Stumbled Upon (2019-11-27) | Chris Heimlich / Pitfall: The Modern Adventure | Technical write-up and MATLAB decoder | https://pitfalltma.wordpress.com/2019/11/27/level-background-art-format-mostly-cracked-some-level-layout-data-stumbled-upon/ | 2026-10-15 | 8x8 tiles, palette and pool offsets, 16-bit tile reference flags; parallax/animation and some priority behavior unresolved. |
+| S005 | Level Dynamic, Static, and Collision Data Format Mostly Reversed (2020-02-04) | Chris Heimlich / Pitfall: The Modern Adventure | Technical write-up and MATLAB parser | https://pitfalltma.wordpress.com/2020/02/04/level-dynamicstatic-and-collision-data-format-mostly-reversed-dynamic-data-partially-mapped/ | 2026-10-15 | 16x16 entity grid, column offsets, row/ID pairs and spreadsheet names; incomplete semantics and grid alignment. |
+| S006 | Technical Cleanup/Restructuring, All .PH Files Fully Parsable, Final Unknown Portion of Sprite Format Solved (2021-02-18) | Chris Heimlich / Pitfall: The Modern Adventure | Research status update | https://pitfalltma.wordpress.com/2021/02/18/technical-cleanup-restructuring-all-ph-files-fully-parsable-final-unknown-portion-of-sprite-format-solved/ | 2026-10-15 | Reports consolidated private MATLAB project and master extraction script; identifies signed sprite X/Y render offsets. Private repo not accessed. |
+| S007 | Roadmap | Chris Heimlich / Pitfall: The Modern Adventure | Author-maintained research roadmap | https://pitfalltma.wordpress.com/roadmap/ | 2026-10-15 | Useful context for claimed task progress only; percentages do not establish independent completion or current private progress. |
+
+**Related local notes:** [2026-10-15 research log](research-log.md), [format extraction](../technical/ph-resource-formats.md), [contact/request checklist](chris-heimlich-request-list.md).
+
+**Rights:** Links are for research and attribution. Do not copy original game assets, proprietary binaries, complete third-party source code, or images into this repository. Any use/adaptation of scripts should be subject to applicable license or explicit permission.
