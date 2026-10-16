@@ -9,10 +9,11 @@ Findings about how the original Kinesoft Windows 95 build works.
 - [original-media-examination.md](original-media-examination.md) — **Verified** structure of disc image MEDIA-001: single-session mixed-mode, 1 data track + 23 audio tracks.
 - [disc-contents.md](disc-contents.md) — ISO 9660 contents of the data track: 40 files, with directory timestamps of 1995-08-24. All 8,880 Mode 1 sectors are reported to pass header/EDC checks (not independently reproduced).
 
+- [executable.md](executable.md) — **Verified** PE header and static imports of `ASSETS/PITFALL.EXE`: 32-bit x86 Windows GUI program, PE timestamp field 1995-09-15 (actual build time not established); six standard Windows DLLs in its static imports (no DirectX or `WAIL32.DLL` in static imports; run-time loading untested).
+
 ## Planned technical investigations (create pages when evidence arrives)
 
 - `install-layout.md` — what the installer puts where; files on the disc vs. on the hard drive.
-- `executable.md` — the main program: size, hashes, required Windows components (e.g. DirectX version), imported DLLs.
 - `data-formats.md` — structure of data files (graphics, levels, audio, video), described in our own words.
 - `compatibility.md` — how the original behaves on Windows 10/11 today, and what breaks.
 

@@ -50,7 +50,21 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 **Not yet done:** no executable analysis, game execution, compatibility testing, working build environment or restoration code.
 
-**Next proposed task (awaiting user decision):** read-only PE header and static import-table summary of `ASSETS/PITFALL.EXE`, read in memory from the image, with boundaries as recommended by Chat 2 (see `docs/reviews/media-001-audit-tracker.md`). The read-only verifier ChatGPT Work recommended (tracker item W8) was added and run on 2026-10-15 (`tools/verify-media001.ps1`): all checks pass, and the negative test fails as designed.
+**Done 2026-10-15:**
+- The read-only verifier `tools/verify-media001.ps1` (tracker item W8) passes all checks, and its negative test fails as designed.
+- Read-only PE header and static import summary of `ASSETS/PITFALL.EXE` (`docs/technical/executable.md`):
+  - 32-bit x86 Windows GUI program (subsystem 4.0). Its PE timestamp field decodes to 1995-09-15 23:53:45 UTC; the actual build time is not established.
+  - 6 statically imported DLLs, 180 functions, all standard Windows: KERNEL32, USER32, GDI32, WINMM, ADVAPI32 and COMCTL32.
+  - No DirectX DLL or `WAIL32.DLL` is statically imported. Run-time loading via `LoadLibraryA` is possible and untested.
+  - Discrepancy D-EXE-1: the PE timestamp field is 22 days 23:52:45 **after** the disc's 1995-08-24 00:01:00 directory dates. Not interpreted.
+  - **R2.1 audit (Chat 2, 2026-10-15):** "Accept with corrections". All seven corrections were applied, and the **final review verdict is ACCEPT**. Chat 2 confirmed the arithmetic and internal consistency only; the parser's reading of the bytes has not been independently reproduced.
+
+**Next proposed tasks, in Chat 2's recommended order (each awaiting user decision):**
+1. Review and preserve the read-only PE parser in `tools/`.
+2. R2.2: the same check on `PITSTART.EXE` and `KILLPIT.EXE`.
+3. Static exports/imports check of `WAIL32.DLL`.
+4. Resource-type enumeration for `PITFALL.EXE` (no extraction).
+5. Run-time dependencies: static string leads, or execution under its own approved test plan.
 
 **2026-10-14 — repository setup:** Added `CLAUDE.md` (permanent agent rules), `.gitignore` (blocks original game files, disc images, media, credentials, and build output), a git-ignored `private/` folder for original material, and a `docs/` structure (research, inventory, legal, decisions, technical, testing). Remote confirmed as `TheHuskinator/pitfall-pc-restoration` (private). The setup files were committed to GitHub; this earlier pending-push note was superseded on 2026-10-15.
 
@@ -136,7 +150,7 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
   - No conventionally named installer is listed. Launcher and installation behavior is untested.
   - `WAIL32.DLL` is the only `.DLL` listed. External dependencies remain unknown.
 - **Still unknown:** exact release, region and revision. The volume metadata is blank, so this needs a hash comparison with another known copy or markings on the physical disc/box.
-- **Next proposed task (needs approval):** a read-only header and import-table summary of `ASSETS/PITFALL.EXE`, read in memory from the image. It would show which Windows/DirectX components the game needs before any compatibility testing.
+- **Next proposed task (needs approval):** a read-only header and import-table summary of `ASSETS/PITFALL.EXE`, read in memory from the image. *(Historical: completed 2026-10-15; see Current project status.)*
 
 ## Evidence, leads, and uncertainties
 
