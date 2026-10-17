@@ -49,7 +49,7 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - Independent reproduction of the EDC and listing results. These are now reproducible with `tools/verify-media001.ps1`. Claude's second run passed every check on 2026-10-15, but that is not an independent run.
 
 **Not yet done:**
-- executable analysis beyond static PE headers and imports of `PITFALL.EXE` (no disassembly, strings, resources, or other executables);
+- executable analysis beyond static PE headers and imports of `PITFALL.EXE`, `PITSTART.EXE` and `KILLPIT.EXE` (no disassembly, strings, resources, exports, or other executables such as `WAIL32.DLL`);
 - game execution and compatibility testing;
 - a working build environment or restoration code.
 
@@ -70,15 +70,15 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - ChatGPT Work reviewed `21fa6a2`: **Accept with corrections**, documentation only, with no parser changes. The corrections are in `4ec4321`, which Work then reviewed: **ACCEPT**, no further corrections (2026-10-16).
   - Known, documented, non-blocking: two script header comments are out of date (see `tools/README.md`). They are deferred to a separately reviewed comment-only update.
 
-- **R2.2 done 2026-10-16 (user-approved scope; draft report `docs/technical/startup-executables.md`, committed on `main` as `323a03c`, pending Chat 2 audit):**
+- **R2.2 done 2026-10-16** (user-approved scope; report `docs/technical/startup-executables.md`, committed on `main` as `323a03c` and `e08d2dc`). Chat 2 audit: **Accept with corrections**, documentation only. The corrections are committed on `main` in the commit that follows `e08d2dc`, pending review:
   - Both `PITSTART.EXE` and `ASSETS/KILLPIT.EXE` are PE32 x86 Windows GUI programs (subsystem 4.0, linker field 2.55). Fingerprints were verified before parsing; `RESULT: OK` for both.
-  - `PITSTART.EXE`: 92 static imports from 6 DLLs, including `MSVFW32.dll!MCIWndCreateA` (Video for Windows), which `PITFALL.EXE` does not use. Its resource section is 96% of the file (contents not examined).
-  - `KILLPIT.EXE`: 24 static imports, from KERNEL32 (23) and USER32 (`MessageBoxA`). It has no resources and no process-control imports, so its static imports do not support the filename guess that it "kills" the game process.
+  - `PITSTART.EXE`: 92 static imports from 6 DLLs, including `MSVFW32.dll!MCIWndCreateA` (Video for Windows). That DLL is absent from `PITFALL.EXE`'s recorded static imports. Its `.rsrc` section is 96% of the file (contents not examined).
+  - `KILLPIT.EXE`: 24 static imports, from KERNEL32 (23) and USER32 (`MessageBoxA`). It declares no PE Resource directory and has no `.rsrc` section. It has no static imports of `OpenProcess` or `TerminateProcess`; its `ExitProcess` ends only its own process. Its static imports therefore do not support the filename guess that it "kills" the game process. Actual behavior is not tested.
   - Discrepancy D-EXE-2: PE timestamp fields of 1995-09-16 (`PITSTART.EXE`) and 1995-07-26 (`KILLPIT.EXE`), against the disc's 1995-08-24 directory date. Not interpreted.
   - All results are Claude-reported; roles are hypotheses only.
 
 **Next proposed tasks (each awaiting user decision):**
-1. Chat 2 audit of the R2.2 report, then commit on the user's instruction.
+1. Review the R2.2 documentation corrections (Chat 2: Accept with corrections). R2.2 itself is already committed; committing and pushing the corrections are the user's decisions.
 2. Static exports/imports check of `WAIL32.DLL`. This needs export-table support in a reviewed tool change.
 3. Resource-type enumeration for `PITFALL.EXE` and `PITSTART.EXE` (no extraction).
 4. Run-time dependencies: static string leads, or execution under its own approved test plan.
@@ -204,7 +204,7 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 ## Immediate next actions
 
 **Current (2026-10-16)** — the authoritative technical list is *Next proposed tasks* in *Current project status* above:
-1. Chat 2 audit of R2.2 (`docs/technical/startup-executables.md`). The examination itself was done 2026-10-16 within the approved scope.
+1. Review the documentation corrections from Chat 2's R2.2 audit (Accept with corrections). The examination was done and committed on 2026-10-16 within the approved scope.
 2. Verify the Andy Glaister lead and draft—not send—an outreach note unless the user explicitly authorizes contact.
 3. Route reports through Chat 2 (research), Chat 3 (development handoff), Chat 4 (QA) and ChatGPT Work (audit) as appropriate, with Chat 1 coordinating. Obtain the applicable user approval before mounting, extraction, installation, game execution, tool installation or implementation.
 4. Do not commit to C++/SDL3 until the technical-discovery milestone produces a short recommendation.

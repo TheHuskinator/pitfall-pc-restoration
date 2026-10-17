@@ -1,7 +1,7 @@
 # R2.2 — `PITSTART.EXE` and `KILLPIT.EXE` static analysis: PE headers and static imports
 
 **Report ID:** R2.2
-**Status:** draft for independent audit by ChatGPT Chat 2. Committed on `main` (`323a03c`), pending that audit.
+**Status:** committed on `main` (`323a03c`, `e08d2dc`). Audited by ChatGPT Chat 2 (2026-10-16): **Accept with corrections**. The documentation corrections are applied, marked *[R2.2-Cn]*, and pending review.
 **Examination date:** 2026-10-16
 **Examiner:** Claude Code (the only examiner; all results are Claude-reported)
 **Approval:** user-approved R2.2 scope (2026-10-16). It covers only these two files; the reviewed parser; fingerprints verified before parsing; signatures, headers, sections, entry points and static imports only; stop on a mismatch, unsupported format, malformed result or error.
@@ -26,13 +26,13 @@
 - **Both files are 32-bit Windows programs (PE32, x86), marked as Windows GUI programs.** **Verified.** Neither is a 16-bit or DOS program.
 - **`PITSTART.EXE`:**
   - It statically imports 92 functions from 6 Windows DLLs. **Verified.**
-  - One DLL is not used by `PITFALL.EXE`: `MSVFW32.dll` (Video for Windows), from which it imports only `MCIWndCreateA`. **Verified.**
+  - One DLL, `MSVFW32.dll` (Video for Windows), is absent from `PITFALL.EXE`'s recorded static imports. `PITSTART.EXE` imports only `MCIWndCreateA` from it. **Verified.** *[R2.2-C1]*
   - About 96% of its bytes are in its resource section. Those resources were **not examined**.
 - **`KILLPIT.EXE`:**
   - A small program that imports 24 functions from just 2 DLLs: 23 from KERNEL32 and `MessageBoxA` from USER32. **Verified.**
-  - It has no resource section. **Verified.**
+  - It declares no PE Resource directory and has no section named `.rsrc`. **Verified.** *[R2.2-C4]*
   - Every function it imports also appears in `PITFALL.EXE`'s imports. **Verified.**
-- **Not established:** what either program does. Interpretations from function names are labeled **Assumption** in §5. Nothing was run, and nothing in this report is a compatibility result.
+- **Not established:** what either program does. Interpretations from function names are labeled **Assumption** in §5. No original game code was executed; only the read-only parser was run. *[R2.2-C2]* Nothing in this report is a compatibility result.
 
 ## 1. Scope and method
 
@@ -44,7 +44,7 @@
 **Runs** (Windows PowerShell 5.1.26100.9444, `-NoProfile -NonInteractive`), in this order:
 1. `inspect-pe.ps1 -Image <MEDIA-001 image> -Extent 8449 -Size 570368 -ExpectedSha256 601FA7E7…0C0257`
    - fingerprint matched before parsing; `RESULT: OK`, exit code 0.
-2. `inspect-pe.ps1 -Image <MEDIA-001 image> -Extent 4214 -Size 11776 -ExpectedSha256 5807EA86…ADE3A`
+2. `inspect-pe.ps1 -Image <MEDIA-001 image> -Extent 4214 -Size 11776 -ExpectedSha256 5807EA86…B4AF6` *[R2.2-C3: the abbreviation previously ended in a mistyped `…ADE3A`; the full value is in the subject table]*
    - fingerprint matched before parsing; `RESULT: OK`, exit code 0.
 
 (The second command used the full 64-character hash shown in the subject table; both are abbreviated here.)
@@ -202,7 +202,7 @@ Only two are non-empty:
 | Import | `0x6000` | `0x2B4` | exactly `.idata`'s VirtualSize |
 | Base relocation | `0x7000` | `0x1E8` | within `.reloc` |
 
-All others are empty. In particular, there is **no Resource directory** (no icons, dialogs or other Windows resources), and no security directory.
+All others are empty. In particular, **no PE Resource directory is declared**, no section is named `.rsrc`, and there is no security directory. *[R2.2-C4]*
 
 ### 3.3 Sections
 
@@ -293,7 +293,8 @@ Functions in **original lookup-table order**:
 - `PITSTART.EXE` imports nothing from COMCTL32.
 - `KILLPIT.EXE` imports nothing from ADVAPI32, COMCTL32, GDI32 or WINMM.
 - Of `KILLPIT.EXE`'s KERNEL32 imports, only `Sleep` is absent from `PITSTART.EXE`'s list.
-- **Notable absences (Verified for static imports only):** neither file statically imports `LoadLibraryA` or `GetProcAddress`, which `PITFALL.EXE` does. Neither imports any DirectX DLL, `WAIL32.DLL`, or process-control functions such as `OpenProcess` or `TerminateProcess`.
+- **Notable absences (Verified for static imports only):** neither file statically imports `LoadLibraryA` or `GetProcAddress`, which `PITFALL.EXE` does. Neither imports any DirectX DLL or `WAIL32.DLL`, and neither statically imports `OpenProcess` or `TerminateProcess`. *[R2.2-C5]*
+- **Process-related imports that *are* present:** both import `ExitProcess`, which ends the calling process itself, and `PITSTART.EXE` imports `CreateProcessA`. What either program actually does with them is **Not tested**.
 
 ## 5. Interpretation
 
@@ -301,28 +302,40 @@ Everything here beyond the "Verified" facts is interpretation. None of it is a c
 
 | # | Statement | Label |
 | --- | --- | --- |
-| J1 | Both files are 32-bit x86 Windows GUI programs with subsystem version 4.0, the same build profile as `PITFALL.EXE`. Both use linker version field 2.55. | Fields: **Verified**. A shared toolchain: **Assumption** (field values only) |
+| J1 | Both files are 32-bit x86 Windows GUI programs with subsystem version 4.0 and linker version field 2.55, matching `PITFALL.EXE` in these selected header fields. | Fields: **Verified**. A shared toolchain: **Assumption** (field values only) |
 | J2 | `PITSTART.EXE`'s imports would let it start another program (`CreateProcessA`), copy and delete files (`CopyFileA`, `DeleteFileA`, `SetFileAttributesA`), look for files (`FindFirstFileA`/`FindClose`), use the Windows, system and temp directories, and create, enumerate, change and delete registry keys. This is consistent with a launcher or setup role (e.g. preparing files or settings, then starting `PITFALL.EXE`). | Imports: **Verified**. Role: **Assumption**. Behavior: **Not tested** |
-| J3 | `MSVFW32.dll!MCIWndCreateA` creates a Video for Windows MCI playback window. This is consistent with `PITSTART.EXE` playing video, possibly the disc's `ASSETS/INTRO.AVI`. `sndPlaySoundA` is consistent with playing a sound file, possibly `ASSETS/PITSTART.WAV`. | Imports: **Verified**. Which files are played: **Assumption**. Not tested |
-| J4 | `PITSTART.EXE`'s resource section is 536 KiB of a 557 KiB file. Its contents (e.g. bitmaps, dialogs) are unknown. | Size: **Verified**. Contents: **Not tested** |
-| J5 | `KILLPIT.EXE`'s imports support file deletion (`DeleteFileA`, `SetFileAttributesA`), locating the system and temp directories, waiting (`Sleep`) and showing a message box. They include **no** process-control, window-finding or registry functions, and no run-time library loading through `LoadLibraryA`/`GetProcAddress`. So **its static imports do not support the filename-based guess that it terminates the game process**. Whatever "KILL" refers to, a file-deletion or clean-up role is equally consistent with these imports. | Imports and absences: **Verified**. Role: **Assumption**. Behavior: **Not tested** |
-| J6 | Without `LoadLibraryA`/`GetProcAddress`, ordinary run-time loading of extra libraries is less likely for both files than for `PITFALL.EXE`. Other mechanisms cannot be excluded statically. | **Assumption** |
-| J7 | Image version 0.0 (versus 1.0 for `PITFALL.EXE`) and the differing timestamp fields show that the three were not built with identical settings or at the same recorded time. The significance is unknown. | Field values: **Verified**. Significance: **Not tested** |
+| J3 | **API semantics** (*Reported*: Microsoft's documentation of `MCIWndCreateA`, <https://learn.microsoft.com/en-us/windows/win32/api/vfw/nf-vfw-mciwndcreatea>, as cited by Chat 2's audit; not re-fetched): `MCIWndCreateA` creates an MCI window that can open and play media such as AVI files. **Observation:** `PITSTART.EXE` imports it. **Hypothesis:** `PITSTART.EXE` plays video, possibly the disc's `ASSETS/INTRO.AVI`. Likewise, `sndPlaySoundA` could play a sound file, possibly `ASSETS/PITSTART.WAV`. | Import: **Verified**. API meaning: **Reported**. Which files, if any, are played: **Assumption**. Behavior: **Not tested** |
+| J4 | `PITSTART.EXE`'s `.rsrc` section has a raw size of 549,376 bytes (≈ 536.5 KiB) in a 570,368-byte (≈ 557.0 KiB) file. Its declared Resource directory size is 548,944 bytes (≈ 536.1 KiB). Its contents (e.g. bitmaps, dialogs) are unknown. | Sizes: **Verified**. Contents: **Not tested** |
+| J5 | `KILLPIT.EXE`'s static imports include functions for deleting files (`DeleteFileA`, `SetFileAttributesA`), locating the system and temp directories, waiting (`Sleep`), showing a message box, and ending its own process. That last function, `ExitProcess`, ends only the calling process (*Reported*: Microsoft documentation, <https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-exitprocess>, as cited by Chat 2). They include no static imports of `OpenProcess` or `TerminateProcess`, no window-finding functions such as `FindWindowA`, no ADVAPI32 (registry) functions, and neither `LoadLibraryA` nor `GetProcAddress`. So **its static imports do not support the filename-based guess that it terminates the game process**. Static imports cannot show run-time behavior, so they do not rule it out either. A file-deletion or clean-up role is also consistent with these imports. *[R2.2-C5]* | Imports and absences: **Verified** (static imports only). Role: **Assumption**. Termination or any other behavior: **Not tested** |
+| J6 | Neither file statically imports `LoadLibraryA` or `GetProcAddress`. Whether either file loads libraries at run time is not established. *[R2.2-C6]* | Absence: **Verified** (static imports only). Run-time loading: **Not tested** |
+| J7 | The recorded image-version fields (0.0 for both files, 1.0 for `PITFALL.EXE`) and the timestamp fields differ among the three files. Actual build settings, chronology, and the reasons for the differences are not established. *[R2.2-C7]* | Field values: **Verified**. Build settings, chronology, reasons: **Not tested** |
 
 ### Questions for later testing (hypotheses only)
 
 | # | Question | Basis |
 | --- | --- | --- |
-| Q9 | Is Video for Windows (`MSVFW32.dll`, `MCIWndCreateA`) present and functional on Windows 10/11 for this AVI? | J3 |
-| Q10 | Which files does `PITSTART.EXE` copy or delete, which registry keys does it create, enumerate or delete, and which program does it start? | J2 |
-| Q11 | Do those file and registry operations need permissions that modern Windows restricts (e.g. writing to the Windows or system directory)? | J2 |
-| Q12 | What does `KILLPIT.EXE` delete, and when is it run? | J5 |
+| Q9 | If `PITSTART.EXE` uses `MCIWndCreateA` to play video (for example `INTRO.AVI`), is Video for Windows (`MSVFW32.dll`) present and functional for it on Windows 10/11? | J3 |
+| Q10 | At run time, does `PITSTART.EXE` copy or delete files, create, enumerate or delete registry keys, or start another program? If so, which? | J2 |
+| Q11 | If it performs such file or registry operations, do they need permissions that modern Windows restricts (e.g. writing to the Windows or system directory)? | J2 |
+| Q12 | Does `KILLPIT.EXE` delete files at run time? If so, which ones, and when or by what is it run? | J5 |
 | Q13 | What do `PITSTART.EXE`'s resources contain? This would be a read-only resource-type listing, separately scoped. | J4 |
 
 ## 6. Evidence limits
 
-- **Claude-reported:** every value in §2–§4 was produced by the reviewed and synthetic-tested replacement parser (`tools/inspect-pe.ps1`, blob `1299ce51…`), run by Claude. The fingerprints were checked by the parser before parsing.
-- **Not independent:** no independent party has reproduced these results. A reviewer can recompute the arithmetic from this report, but cannot check the bytes without the image.
+The values in this report come from three kinds of source *[R2.2-C8]*:
+
+1. **New parser observations (Claude-reported, this examination):**
+   - every header, directory, section, entry-point and import value for `PITSTART.EXE` and `KILLPIT.EXE` in §2–§3, and in their columns of §4.1;
+   - the source is the reviewed and synthetic-tested replacement parser (`tools/inspect-pe.ps1`, blob `1299ce51…`), run by Claude, with fingerprints checked by the parser before parsing.
+2. **Earlier reports, reused here:**
+   - the `PITFALL.EXE` values and import lists (R2.1, [`executable.md`](executable.md), accepted by Chat 2);
+   - the ISO directory date 1995-08-24 00:01:00 ([`disc-contents.md`](disc-contents.md), examiner-reported).
+3. **Derivations a reviewer can recompute from this report:**
+   - the consistency arithmetic in §2.5 and §3.5;
+   - the timestamp differences in §4.2;
+   - the import set comparisons in §4.3.
+
+**Not independent:** no independent party has reproduced the parser observations. Chat 2's audit (2026-10-16) recomputed the derivations and checked agreement with the committed documents, but did not inspect the bytes.
 - **Mapping policy:** the parser bounds address mapping by VirtualSize. That is the tool's policy, not a claim about Windows loader behavior.
 
 ## 7. Not tested / out of scope
@@ -334,6 +347,8 @@ Everything here beyond the "Verified" facts is interpretation. None of it is a c
 - Presence and behavior of the imported functions on Windows 10/11, including `MSVFW32.dll`.
 - `WAIL32.DLL`, `.PH` files and other disc files (not read).
 - Comparison with other copies of these files (no reference hashes are available).
+- Transitive dependencies: libraries that the imported DLLs themselves load.
+- Whether any imported function is actually called. A static import list shows what the program links to, not what it uses at run time.
 - Independent reproduction by another party.
 
 ## 8. Reproduction and proposed follow-ups

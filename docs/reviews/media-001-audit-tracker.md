@@ -86,7 +86,7 @@ Neither auditor had access to the disc image. Hashes, raw-sector observations, Q
 | R2.1-O1 | §8 additions: no independent PE parser or known-PE validation; no current-Windows export comparison; no certificate table declared; indirect dependencies unknown | Applied: §8 |
 | R2.1-O2 | Research notes on COMCTL32 ordinal resolution and legacy WinHelp availability | Applied as hypotheses Q7, Q8 |
 | R2.1-O3 | Record the original thunk order; validate the parser against a harmless known PE; distinguish names from ordinals in future comparisons | **Done 2026-10-15; merged into `main` 2026-10-16:**<br>• original order recorded in `executable.md` §10.3;<br>• parser validated against 29 synthetic PE32 files;<br>• the tool tracks name and ordinal entries separately. |
-| R2.1-N | Next-task order: parser → R2.2 (`PITSTART.EXE`, `KILLPIT.EXE`) → `WAIL32.DLL` → resources → run-time dependencies | Parser step done (see below). R2.2 is next, awaiting user decision. |
+| R2.1-N | Next-task order: parser → R2.2 (`PITSTART.EXE`, `KILLPIT.EXE`) → `WAIL32.DLL` → resources → run-time dependencies | Parser step done (see below). R2.2 done 2026-10-16 (see the R2.2 section). `WAIL32.DLL`, resources and run-time dependencies remain proposals. |
 
 ## PE parser review, tests and R2.1 reproduction (ChatGPT Work, 2026-10-15)
 
@@ -110,8 +110,9 @@ Neither auditor had access to the disc image. Hashes, raw-sector observations, Q
 | Step | What happened | Outcome |
 | --- | --- | --- |
 | R2.2-S | Scope proposed by Claude (only these two files; the reviewed parser; fingerprints verified first; headers, sections, entry points and static imports only; stop on mismatch, unsupported format, malformed result or error) | Approved by the user, 2026-10-16. Work had recommended the same boundaries (P8). |
-| R2.2-X | Examination | Pre-check passed (clean `main` at `29589a7`; parser blob `1299ce51…`; LF-normalized SHA-256 `81FDEB05…`). Both runs matched their fingerprints and gave `RESULT: OK`. No stop condition was triggered. No other files were read and no game code was executed. |
-| R2.2-R | Report `docs/technical/startup-executables.md` | Draft, committed on `main` as `323a03c`. **Awaiting Chat 2 audit.** |
+| R2.2-X | Examination | Pre-check passed (clean `main` at `29589a7`; parser blob `1299ce51…`; LF-normalized SHA-256 `81FDEB05…`). Both runs matched their fingerprints and gave `RESULT: OK`. No stop condition was triggered. No other game files were read and no original game code was executed. |
+| R2.2-R | Report `docs/technical/startup-executables.md` | Committed on `main` as `323a03c`, with a status-line fix in `e08d2dc`. |
+| R2.2-A | Chat 2 audit of `e08d2dc` (2026-10-16) | **Accept with corrections.**<br>• Confirmed: identity, both files' headers and consistency arithmetic, import counts and thunk ranges, the R2.1 comparison sets, and the D-EXE-2 durations.<br>• Required, documentation only: the abbreviated KILLPIT hash in §1 (`…ADE3A` → `…B4AF6`); "not used by PITFALL" → absent from its recorded static imports; "nothing was run" → no original game code was executed; resource wording limited to the declared directory and section; process-control absence narrowed to `OpenProcess`/`TerminateProcess` (noting `ExitProcess` and `CreateProcessA`); J6 likelihood claim removed; J7 limited to differing fields; §6 sources separated; matching fixes in `PROJECT_STATUS.md` and this tracker.<br>• Optional, also applied: conditional Q9–Q12; J1 wording; J4 raw vs directory size; separate citation of API semantics; §7 additions.<br>• Corrections are committed on `main` in the commit that follows `e08d2dc` (tagged *[R2.2-C1]*–*[R2.2-C8]*), **pending review**. No parser change or game-file read was needed. |
 
 ## Repository hygiene: tracker character-encoding repair (2026-10-15)
 
