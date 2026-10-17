@@ -309,6 +309,27 @@ The mocks model real getter failures through getter methods. That this matches l
   - The real system readers, `Start-Process`, the waiting loop and the top-level exit path run for the first time on the launch day (see *Not tested* above).
 - **Not done:** no game launch, restaging, installation, compatibility change or new investigation.
 
+#### Baseline 1 result and Work review (2026-10-17)
+
+- **Run:** the user approved and ran exactly one supervised launch with the installed helper (run `baseline-20261017-033013`, kept local). Report: [existing-account-baseline-1.md](docs/testing/existing-account-baseline-1.md).
+- **Result:**
+  - The 256-colour warning appeared, then a CD-ROM message; after that message was dismissed, the game closed by itself (reported).
+  - The process ended with exit code 0 about 13.5 seconds after it started (verified). No game crash events were found in the observed window.
+  - The only difference found in the captured observations was Windows' `MuiCache` record for the program.
+- **Work verdict: ACCEPT with minor documentation corrections**, applied in the published report:
+  - the CD-ROM check is the leading **suspected** blocker, not a proven cause;
+  - a deliberate programmed exit is an inference;
+  - the unchanged DirectInput record does not establish whether input set-up occurred;
+  - the displayed 13 seconds is clarified against the timestamps (whole-second display of 13.54 s).
+- **Next step (Work):** one **unchanged confirmation launch** to capture the exact wording, title, buttons and order of the 256-colour and CD-ROM dialogs. Work's assignment states it is the confirmation run Work already recommended, not an additional authorization. Conditions:
+  - same helper revision 2, account, working copy and `ASSETS` working directory;
+  - unelevated, offline, Defender on, no compatibility settings;
+  - before and after observations;
+  - the user launches and observes; at most 10 minutes, with the usual stop conditions;
+  - no second launch, setting change, launcher, mounting, extraction, download, installation or replacement DLL.
+- **No static-analysis project:** the reviewed PE inspector cannot establish the CD-check control flow.
+- The result is to be delivered as a sanitized report in a new dated `private/work-review/` batch.
+
 #### Next run — proposed, pending explicit user approval
 
 - **Subject:** exactly one `ASSETS\PITFALL.EXE` launch from the already staged copy, under the existing account, unelevated, with `ASSETS` explicitly set as the working directory. No Windows 95 mode, reduced-colour setting, wrapper, replacement DLL, launcher or installer in this baseline.
@@ -453,7 +474,7 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 **Current (2026-10-16):** follow *Next milestone: one attributable baseline in the existing Windows account* above.
 1. Preserve the completed separate-account exploratory session. Work reviewed it with evidence-limit corrections; no need to redo staging or WAIL32 analysis.
 2. ~~Claude completes the narrowly scoped account/privacy helper adaptation and read-only preflight, without requiring a separate Windows account.~~ Done: helper revision 2 accepted by Work and installed with a verified fingerprint (2026-10-17).
-3. Obtain explicit approval for the single existing-account baseline, then record that run before selecting any compatibility change.
+3. ~~Obtain explicit approval for the single existing-account baseline, then record that run before selecting any compatibility change.~~ Done 2026-10-17: baseline 1 run and accepted by Work. **Current:** one unchanged confirmation launch to capture the exact dialog text (see *Baseline 1 result and Work review*).
 4. Keep Defender enabled, originals read-only and personal data out of reports. Defer tooling, mounting/conversion and deeper reverse engineering until evidence justifies them.
 
 **Completed (historical):**
@@ -518,3 +539,4 @@ Each work session should leave the project easier to resume:
 | 2026-10-16 | Review exploratory session 1 and select one attributable existing-account baseline. | Work review and delegated preparation assignment | Evidence-limit corrections applied to the report; faults are not causally attributed. Helper adaptation/read-only preflight authorized, no new game launch or media conversion. |
 | 2026-10-17 | Accept `baseline-run.ps1` revision 2 (`B9B56E5E…DEE2`) for one supervised existing-account baseline; install it to `C:\PitfallTest\tools`. | Work review (delegated) | Source acceptance only. The 10-minute limit is a reminder, not an automatic stop; exit code 0 does not mean gameplay worked. The launch itself still needs the user's explicit approval. |
 | 2026-10-17 | Deliver files for Work's review through the git-ignored `private/work-review/` folder. | User request | Claude-written files only; dated batches, fingerprints listed in its README, never edited after listing. |
+| 2026-10-17 | Accept existing-account baseline 1; next, one unchanged confirmation launch to capture the exact dialog text. | Work review (delegated) after the user-approved run | CD-ROM check is the leading suspected blocker, not a proven cause. No static-analysis project. The confirmation run is launched and observed by the user. |
