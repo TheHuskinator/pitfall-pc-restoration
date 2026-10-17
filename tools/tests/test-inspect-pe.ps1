@@ -62,6 +62,12 @@
       target classification: beyond SizeOfImage (fail), unmapped,
         header area                                                   -> T55, T56, T57
       duplicate names (note)                                          -> T58
+    Coverage of Work's source review of the export draft (commit 4c1d42c):
+      export directory entry: absent (no entry / both zero) vs exactly one zero -> T60-T63
+      zero RVA for a mandatory reference is MALFORMED, not header text:
+        DLL name, address table, name pointer table, ordinal table, a name entry -> T64-T68
+      zero-count tables with zero RVAs remain valid                   -> T69, T70
+      unterminated DLL name; truncated name pointer and ordinal tables -> T71-T73
 
     Synthetic disc images are pre-filled with 0xEE marker bytes. A read from the
     wrong sector position would therefore pull in marker bytes and fail the SHA-256 check.
@@ -326,6 +332,40 @@ $tests = @(
     @{ Id = 'T59'; Desc = 'a name that refers to an unused address-table entry is noted'; Exit = 0; Build = $exp; Mutate = { param($b) W16 $b 0x650 2 }
        Expect = @('ordinal 3: unused (address 0); names: DataItem', 'NOTE: export name(s) DataItem refer to the unused address-table entry for ordinal 3',
                   'ordinal 5: RVA 0x00004000 -> section .bss [UDATA R W] (no stored bytes); names: (none)', 'RESULT: OK') }
+
+    # ---- Export corrections from Work's review of 4c1d42c (T60-T73) ----
+    @{ Id = 'T60'; Desc = 'export directory RVA 0 with non-zero size is inconsistent'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0xB8 0 }
+       Expect = @('RESULT: MALFORMED', 'Export directory entry is inconsistent: RVA 0x0, size 0x160'); Reject = @('(no export directory)') }
+    @{ Id = 'T61'; Desc = 'export directory non-zero RVA with size 0 is inconsistent'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0xBC 0 }
+       Expect = @('RESULT: MALFORMED', 'Export directory entry is inconsistent: RVA 0x3000, size 0x0') }
+    @{ Id = 'T62'; Desc = 'export directory RVA and size both 0 is absent'; Exit = 0; Build = $exp; Mutate = { param($b) W32 $b 0xB8 0; W32 $b 0xBC 0 }
+       Expect = @('(no export directory)', 'RESULT: OK'); Reject = @('Export directory:') }
+    @{ Id = 'T63'; Desc = 'no data-directory entries at all: imports and exports absent'; Exit = 0; Build = $exp; Mutate = { param($b) W32 $b (0x58 + 92) 0 }
+       Expect = @('NumberOfRvaAndSizes=0', '(no import directory)', '(no export directory)', 'RESULT: OK') }
+    @{ Id = 'T64'; Desc = 'export DLL-name RVA 0 is missing, not header text'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x60C 0 }
+       Expect = @('RESULT: MALFORMED', 'export DLL name: RVA is 0 (missing mandatory reference)'); Reject = @('DLL name     : MZ') }
+    @{ Id = 'T65'; Desc = 'export name-pointer entry 0 is missing, not header text'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x63C 0 }
+       Expect = @('RESULT: MALFORMED', 'export name 1: name RVA is 0 (missing mandatory reference)'); Reject = @('names: MZ') }
+    @{ Id = 'T66'; Desc = 'address table RVA 0 with NumberOfFunctions > 0'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x61C 0 }
+       Expect = @('RESULT: MALFORMED', 'export address table: RVA is 0 (missing mandatory reference) but NumberOfFunctions is 5') }
+    @{ Id = 'T67'; Desc = 'name pointer table RVA 0 with NumberOfNames > 0'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x620 0 }
+       Expect = @('RESULT: MALFORMED', 'export name pointer table: RVA is 0 (missing mandatory reference) but NumberOfNames is 4') }
+    @{ Id = 'T68'; Desc = 'ordinal table RVA 0 with NumberOfNames > 0'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x624 0 }
+       Expect = @('RESULT: MALFORMED', 'export ordinal table: RVA is 0 (missing mandatory reference) but NumberOfNames is 4') }
+    @{ Id = 'T69'; Desc = 'no names: zero name-table RVAs are valid'; Exit = 0; Build = $exp
+       Mutate = { param($b) W32 $b 0x618 0; W32 $b 0x620 0; W32 $b 0x624 0 }
+       Expect = @('NumberOfFunctions=5 NumberOfNames=0 AddressOfFunctions=0x3028 AddressOfNames=0x0 AddressOfNameOrdinals=0x0',
+                  ($text1 + '; names: (none)'), 'Total exports: 5 address-table entries (targets 3, forwarders 1, unused 1); names 0', 'RESULT: OK') }
+    @{ Id = 'T70'; Desc = 'empty export table: zero counts and zero table RVAs are valid'; Exit = 0; Build = $exp
+       Mutate = { param($b) W32 $b 0x614 0; W32 $b 0x618 0; W32 $b 0x61C 0; W32 $b 0x620 0; W32 $b 0x624 0 }
+       Expect = @('DLL name     : TESTEXP.DLL', 'Total exports: 0 address-table entries (targets 0, forwarders 0, unused 0); names 0', 'RESULT: OK') }
+    @{ Id = 'T71'; Desc = 'export DLL name with no terminating zero before the section end'; Exit = 3; Build = $exp
+       Mutate = { param($b) W32 $b 0x60C 0x31F8; for ($k = 0x7F8; $k -lt 0x800; $k++) { $b[$k] = 0x58 } }
+       Expect = @('RESULT: MALFORMED', 'export DLL name: no terminating zero byte') }
+    @{ Id = 'T72'; Desc = 'name pointer table truncated by the section end'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x620 0x31F8 }
+       Expect = @('RESULT: MALFORMED', 'Export name pointer table (4 entries at RVA 0x31F8) runs past the stored data') }
+    @{ Id = 'T73'; Desc = 'ordinal table truncated by the section end'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x624 0x31FC }
+       Expect = @('RESULT: MALFORMED', 'Export ordinal table (4 entries at RVA 0x31FC) runs past the stored data') }
 )
 
 # ---------------------------------------------------------------- runner

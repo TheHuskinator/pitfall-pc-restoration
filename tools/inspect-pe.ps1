@@ -41,6 +41,15 @@
         arithmetic done in 64 bits. Every name's ordinal-table index must be below
         NumberOfFunctions. Several names may share one index (aliases), so having
         more names than functions is valid.
+      - The export data-directory entry is absent when it does not exist or when
+        its RVA and size are both zero. Exactly one zero is MALFORMED.
+      - Missing mandatory references are MALFORMED rather than mapped. That means
+        a zero RVA for: the library name; the address table when NumberOfFunctions
+        > 0; the name pointer or ordinal table when NumberOfNames > 0; or any entry
+        of the name pointer table. Zero-count tables may have zero RVAs, and an
+        address-table entry of 0 is a valid "unused" entry. This is this
+        inspector's strict validation policy, not a claim about which files
+        Windows itself accepts or rejects.
       - Forwarders (an address-table RVA inside the export directory's own range)
         must be printable strings of the form DLL.Name or DLL.#ordinal, split at
         the last '.'. Both parts must be non-empty, and the ordinal must be decimal
@@ -457,7 +466,11 @@ try {
 
     # ---- Exports (a separate, added section; all output above is unchanged) ----
     '=== EXPORTS'
-    if (-not $dirs.ContainsKey(0) -or $dirs[0][0] -eq 0) { '(no export directory)' }
+    # Absent = no data-directory entry 0, or RVA and size both zero. Exactly one zero is inconsistent.
+    if (-not $dirs.ContainsKey(0) -or ($dirs[0][0] -eq 0 -and $dirs[0][1] -eq 0)) { '(no export directory)' }
+    elseif ($dirs[0][0] -eq 0 -or $dirs[0][1] -eq 0) {
+        Fail 3 ('Export directory entry is inconsistent: RVA 0x{0:X}, size 0x{1:X} (exactly one of them is zero)' -f $dirs[0][0], $dirs[0][1])
+    }
     else {
         $expRva = $dirs[0][0]; $expSize = $dirs[0][1]
         $expEnd = $expRva + $expSize                     # 64-bit arithmetic: cannot wrap around
@@ -474,6 +487,8 @@ try {
         $eBase = U32 ($x + 16); $nFunc = U32 ($x + 20); $nNames = U32 ($x + 24)
         $eatRva = U32 ($x + 28); $nptRva = U32 ($x + 32); $otRva = U32 ($x + 36)
         'Export directory: RVA 0x{0:X}, size 0x{1:X}, in {2}' -f $expRva, $expSize, $el.Region
+        # Strict-validation policy: a zero RVA for a mandatory export reference is missing, not "the header".
+        if ($eNameRva -eq 0) { Fail 3 'export DLL name: RVA is 0 (missing mandatory reference)' }
         $nl = Resolve-Rva $eNameRva 'export DLL name'
         'DLL name     : ' + (Read-CString $nl.Offset $nl.Limit 'export DLL name')
         'Characteristics=0x{0:X} TimeDateStamp=0x{1:X8} (field decodes to {2:yyyy-MM-dd HH:mm:ss} UTC) Version={3}.{4} OrdinalBase={5}' -f `
@@ -490,6 +505,7 @@ try {
         # Metadata tables: each must be readable from one stored region.
         $eat = 0L; $npt = 0L; $ot = 0L
         if ($nFunc -gt 0) {
+            if ($eatRva -eq 0) { Fail 3 ('export address table: RVA is 0 (missing mandatory reference) but NumberOfFunctions is {0}' -f $nFunc) }
             $tl = Resolve-Rva $eatRva 'export address table'
             if ($tl.Offset + 4 * $nFunc -gt $tl.Limit) {
                 Fail 3 ('Export address table ({0} entries at RVA 0x{1:X}) runs past the stored data of {2}' -f $nFunc, $eatRva, $tl.Region)
@@ -497,6 +513,8 @@ try {
             $eat = $tl.Offset
         }
         if ($nNames -gt 0) {
+            if ($nptRva -eq 0) { Fail 3 ('export name pointer table: RVA is 0 (missing mandatory reference) but NumberOfNames is {0}' -f $nNames) }
+            if ($otRva -eq 0) { Fail 3 ('export ordinal table: RVA is 0 (missing mandatory reference) but NumberOfNames is {0}' -f $nNames) }
             $tl = Resolve-Rva $nptRva 'export name pointer table'
             if ($tl.Offset + 4 * $nNames -gt $tl.Limit) {
                 Fail 3 ('Export name pointer table ({0} entries at RVA 0x{1:X}) runs past the stored data of {2}' -f $nNames, $nptRva, $tl.Region)
@@ -516,7 +534,9 @@ try {
             $what = 'export name {0}' -f ($i + 1)
             $idx = U16 ($ot + 2 * $i)
             if ($idx -ge $nFunc) { Fail 3 ('{0}: ordinal-table index {1} is not below NumberOfFunctions {2}' -f $what, $idx, $nFunc) }
-            $nr = Resolve-Rva (U32 ($npt + 4 * $i)) $what
+            $nameRvaI = U32 ($npt + 4 * $i)
+            if ($nameRvaI -eq 0) { Fail 3 ('{0}: name RVA is 0 (missing mandatory reference)' -f $what) }
+            $nr = Resolve-Rva $nameRvaI $what
             $nm = Read-CString $nr.Offset $nr.Limit $what
             if ($seen.ContainsKey($nm)) { 'NOTE: duplicate export name {0} (name entries {1} and {2})' -f $nm, $seen[$nm], ($i + 1) }
             else { $seen[$nm] = $i + 1 }

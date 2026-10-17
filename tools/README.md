@@ -58,7 +58,7 @@ A run by the same examiner is a reproducibility check, not an independent confir
 
 ## `inspect-pe.ps1` — read-only PE32 header/import/export inspector
 
-> **Draft status (branch `draft/inspect-pe-exports`, 2026-10-16):** the export-table support and the export tests described below are an **unreviewed, never-run draft**. They await ChatGPT Work's source review, and running the tests needs the user's separate authorization. Everything else in this section describes the reviewed and tested version at `c389278`.
+> **Draft status (branch `draft/inspect-pe-exports`, 2026-10-16):** the export-table support and the export tests described below are a **never-run draft**. Work's source review of `4c1d42c` gave "Accept with corrections"; this revision applies those corrections and awaits Work's review. Running the tests needs approval (from the user, or by a Work recommendation under delegated approval). Everything else in this section describes the reviewed and tested version at `c389278`.
 
 **Purpose:** report a 32-bit Windows program's (PE32) headers, sections, entry point and static imports, in original and sorted order, and (draft) its export table. It is the reviewed and synthetic-tested replacement for the session-local parser behind report R2.1 ([docs/technical/executable.md](../docs/technical/executable.md)). Review history: [audit tracker](../docs/reviews/media-001-audit-tracker.md).
 
@@ -111,6 +111,14 @@ A run by the same examiner is a reproducibility check, not an independent confir
   - the library name, address table, name pointer table, ordinal table and every name are all bounds-checked;
   - counts are capped at 65,536, and arithmetic is done in 64 bits;
   - each name's ordinal-table index must be below `NumberOfFunctions`.
+- **Directory entry:** absent when data-directory entry 0 doesn't exist or its RVA and size are both zero. If exactly one of the two is zero, the file is malformed.
+- **Missing mandatory references are malformed, not read as header text** (strict validation policy of this inspector, not a claim about what Windows accepts):
+  - a zero RVA for the library name;
+  - a zero RVA for the address table when there are functions;
+  - a zero RVA for the name pointer or ordinal table when there are names;
+  - a zero entry in the name pointer table.
+  
+  Tables with a count of zero may have zero RVAs. An address-table entry of 0 is a valid "unused" entry.
 - **Aliases are valid:** several names may share one entry, so there can be more names than functions.
 - **Forwarders:** an address inside the export directory's own range is a forwarder. It must be a printable `DLL.Name` or `DLL.#ordinal` string (split at the last `.`; ordinal decimal 0–65535). Its terminating zero must lie inside the export directory range.
 - **Targets are classified, not read** (this tool's policy):
@@ -137,13 +145,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\tests\test-inspect-pe.
 ```
 
 **What they do:**
-- **Draft:** the script now defines 59 cases: the 29 reviewed cases T01–T29, unchanged, plus 30 export cases T30–T59, which have not been run or reviewed. The description below covers the reviewed 29.
+- **Draft:** the script now defines 73 cases: the 29 reviewed cases T01–T29, unchanged, plus 44 export cases, which have not been run. They are T30–T59 from the first draft (`4c1d42c`, source-reviewed by Work) and T60–T73, added for Work's corrections. The description below covers the reviewed 29.
 - 29 synthetic test cases. Each builds a harmless test file from scratch in memory, with no game data and no system files. Some are valid; most are deliberately malformed or unsupported (truncated, out of range, unterminated, overlapping, wrong format, and so on).
 - Each test file is **written to a new temporary folder on disk**, and the inspector is run against it in a separate process. The test checks the exit code and key output lines.
 - They cover every finding from both of ChatGPT Work's reviews (the mapping is in the script's header comment), plus image mode across several sectors, with marker bytes so that a misplaced read would fail the fingerprint check.
 - The temporary folder is deleted afterwards.
 
-**Expected result:** 29 `PASS` lines, then `RESULT: all 29 tests passed`, exit code `0` (reviewed version at `c389278`). For the draft, the expectation is 59 `PASS` lines and `RESULT: all 59 tests passed`. This is untested until a run is authorized.
+**Expected result:** 29 `PASS` lines, then `RESULT: all 29 tests passed`, exit code `0` (reviewed version at `c389278`). For the draft, the expectation is 73 `PASS` lines and `RESULT: all 73 tests passed`. This is untested until a run is authorized.
 
 **Line endings:** Git's `core.autocrlf=true` setting can write CRLF line endings into checked-out copies of files committed with LF, so the SHA-256 of a checked-out copy can differ from the reviewed value.
 - **Committed content:** to compare it, use the Git blob ID (`git hash-object`, which applies Git's normalization).
