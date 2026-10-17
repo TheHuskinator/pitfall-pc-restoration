@@ -295,6 +295,20 @@ The mocks model real getter failures through getter methods. That this matches l
 
 **Readiness recommendation:** revision 2 is ready for Work's **independent source review**, not yet for use. After Work accepts it, Claude copies it to `C:\PitfallTest\tools`, verifies the fingerprint and asks the user for the separate, explicit approval of the first existing-account launch.
 
+#### Work review of revision 2 and installation (2026-10-17)
+
+- **Work verdict: ACCEPT** of `baseline-run.ps1` revision 2 for **one supervised existing-account baseline**, subject to the user's explicit launch approval. Passed on by the user.
+  - Work checked both submitted scripts against their SHA-256 fingerprints in the local review folder.
+  - Work confirmed that the review documentation was committed and pushed at `c972450`.
+  - The 104/104 synthetic test result remains Claude-reported. Work's acceptance is a source review, not an independent run of the helper.
+- **Review delivery:** from this batch on, files for Work's review are placed in the git-ignored `private/work-review/<date-topic>/`. Its `README.md` lists each batch with its fingerprints and status. Batches are never edited after listing; only Claude-written files go there, never game material, raw logs or personal data (user request, 2026-10-17).
+- **Installed** *(verified by Claude)*: the reviewed copy was copied to `C:\PitfallTest\tools\baseline-run.ps1` with a copy that refuses to overwrite; no file of that name existed there before. Installed SHA-256 `B9B56E5E18088DD8EEE7B400E056CB674DB8D04EED25B432A349D7DE5575DEE2` (43,699 bytes) matches the reviewed file. The tools folder now holds this helper and the earlier separate-account `snapshot-test.ps1`, unchanged.
+- **Operating limitations (from Work's review):**
+  - **The 10-minute limit is a reminder, not an automatic stop.** The helper never ends the game. The user must watch the run and end only the identified `PITFALL.EXE` process if a stop condition is met or the limit is reached.
+  - **Helper exit code 0 does not mean the game worked.** `SNAPSHOT RESULT: COMPLETE` means the helper's own observations succeeded. Whether the game reached graphics, input or gameplay is scored separately from the user's observations.
+  - The real system readers, `Start-Process`, the waiting loop and the top-level exit path run for the first time on the launch day (see *Not tested* above).
+- **Not done:** no game launch, restaging, installation, compatibility change or new investigation.
+
 #### Next run — proposed, pending explicit user approval
 
 - **Subject:** exactly one `ASSETS\PITFALL.EXE` launch from the already staged copy, under the existing account, unelevated, with `ASSETS` explicitly set as the working directory. No Windows 95 mode, reduced-colour setting, wrapper, replacement DLL, launcher or installer in this baseline.
@@ -438,7 +452,7 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 
 **Current (2026-10-16):** follow *Next milestone: one attributable baseline in the existing Windows account* above.
 1. Preserve the completed separate-account exploratory session. Work reviewed it with evidence-limit corrections; no need to redo staging or WAIL32 analysis.
-2. Claude completes the narrowly scoped account/privacy helper adaptation and read-only preflight, without requiring a separate Windows account.
+2. ~~Claude completes the narrowly scoped account/privacy helper adaptation and read-only preflight, without requiring a separate Windows account.~~ Done: helper revision 2 accepted by Work and installed with a verified fingerprint (2026-10-17).
 3. Obtain explicit approval for the single existing-account baseline, then record that run before selecting any compatibility change.
 4. Keep Defender enabled, originals read-only and personal data out of reports. Defer tooling, mounting/conversion and deeper reverse engineering until evidence justifies them.
 
@@ -502,3 +516,5 @@ Each work session should leave the project easier to resume:
 | 2026-10-16 | Accept staging revision 3 and snapshot helper revision 2 for the bounded first launch; the user authorizes correcting the helper's expected account to `Pitfall Test` (revision 3). | Work review (delegated) + user authorization | Source acceptance only; nothing run. The test environment, the working-copy exception, staging, the preflight and the launch attempts still await the user's single approval. |
 | 2026-10-16 | Use the existing account, unelevated, for the next planned test; separate account no longer required absent a specific technical need. | User direction | Preserve session 1 and existing working copy. Defender remains enabled; no full personal-registry export. First launch in changed environment still requires explicit approval. |
 | 2026-10-16 | Review exploratory session 1 and select one attributable existing-account baseline. | Work review and delegated preparation assignment | Evidence-limit corrections applied to the report; faults are not causally attributed. Helper adaptation/read-only preflight authorized, no new game launch or media conversion. |
+| 2026-10-17 | Accept `baseline-run.ps1` revision 2 (`B9B56E5E…DEE2`) for one supervised existing-account baseline; install it to `C:\PitfallTest\tools`. | Work review (delegated) | Source acceptance only. The 10-minute limit is a reminder, not an automatic stop; exit code 0 does not mean gameplay worked. The launch itself still needs the user's explicit approval. |
+| 2026-10-17 | Deliver files for Work's review through the git-ignored `private/work-review/` folder. | User request | Claude-written files only; dated batches, fingerprints listed in its README, never edited after listing. |
