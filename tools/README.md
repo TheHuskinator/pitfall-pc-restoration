@@ -56,15 +56,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify-media001.ps1 -E
 
 A run by the same examiner is a reproducibility check, not an independent confirmation. A run by someone else with their own copy of the image would be.
 
-## `inspect-pe.ps1` — read-only PE32 header/import inspector
+## `inspect-pe.ps1` — read-only PE32 header/import/export inspector
 
-**Purpose:** report a 32-bit Windows program's (PE32) headers, sections, entry point and static imports, in original and sorted order. It is the reviewed and synthetic-tested replacement for the session-local parser behind report R2.1 ([docs/technical/executable.md](../docs/technical/executable.md)). Review history: [audit tracker](../docs/reviews/media-001-audit-tracker.md).
+> **Draft status (branch `draft/inspect-pe-exports`, 2026-10-16):** the export-table support and the export tests described below are an **unreviewed, never-run draft**. They await ChatGPT Work's source review, and running the tests needs the user's separate authorization. Everything else in this section describes the reviewed and tested version at `c389278`.
+
+**Purpose:** report a 32-bit Windows program's (PE32) headers, sections, entry point and static imports, in original and sorted order, and (draft) its export table. It is the reviewed and synthetic-tested replacement for the session-local parser behind report R2.1 ([docs/technical/executable.md](../docs/technical/executable.md)). Review history: [audit tracker](../docs/reviews/media-001-audit-tracker.md).
 
 **Safety:**
 - Opens its input read-only.
 - Never writes, executes, disassembles or extracts anything.
 - In image mode, verifies the file's SHA-256 before parsing.
-- Prints only header values, offsets, hashes and import names/ordinals.
+- Prints only header values, offsets, hashes, and import and export names, ordinals and forwarder strings.
 
 **Input modes:**
 - `-Path <file>`: a standalone file. Used by the tests.
@@ -92,9 +94,29 @@ A run by the same examiner is a reproducibility check, not an independent confir
 
 **Address-mapping policy:** this tool bounds section mapping by `VirtualSize`. That is the tool's deliberate, stricter policy, not a claim that it reproduces the Windows loader exactly.
 
-**Known comment inaccuracies in the scripts:** these are left unchanged so that the reviewed script blobs stay intact. They are to be fixed in a later, separately reviewed comment-only update.
-- `inspect-pe.ps1`'s header comment says the import directory must lie "inside one section's stored data". The code also accepts the header region, as described above.
-- Both scripts' header comments still say "DRAFT … not yet executed". Both have since been run; see *Runs so far*.
+### Exports (draft)
+
+**Output:**
+- A separate `=== EXPORTS` section comes **after** the static-import section. Every existing header and import line, and every exit-code meaning, is unchanged; the export section is purely added.
+- A file with no export directory prints `(no export directory)`. For the R2.1 and R2.2 files, which have no export directory, that is expected to be the only difference (not yet verified by a run).
+- The section shows the export directory location, the library name, the directory fields, then one line per address-table entry in original order. For example:
+  - `ordinal 1: RVA 0x00001000 -> section .text [CODE X R] (stored bytes); names: Alpha, AlphaAlias`
+  - `ordinal 3: unused (address 0); names: (none)`
+  - `ordinal 4: forwarder -> OTHER.Func; names: Fwd`
+- It ends with a `Total exports:` line. `NOTE:` lines mark observations that are not errors: a non-zero reserved flags field, an ordinal above 65535, duplicate names, or a name that refers to an unused entry.
+
+**Rules:**
+- **Metadata must be readable from stored data:**
+  - the export directory must be at least 40 bytes, in one stored region, and within `SizeOfImage`;
+  - the library name, address table, name pointer table, ordinal table and every name are all bounds-checked;
+  - counts are capped at 65,536, and arithmetic is done in 64 bits;
+  - each name's ordinal-table index must be below `NumberOfFunctions`.
+- **Aliases are valid:** several names may share one entry, so there can be more names than functions.
+- **Forwarders:** an address inside the export directory's own range is a forwarder. It must be a printable `DLL.Name` or `DLL.#ordinal` string (split at the last `.`; ordinal decimal 0–65535). Its terminating zero must lie inside the export directory range.
+- **Targets are classified, not read** (this tool's policy):
+  - an address may be in the header area, or in a section (whose flags are shown, and whether the address has stored bytes), or "unmapped/unclassified; loader validity not established";
+  - only an address at or beyond `SizeOfImage` is malformed;
+  - section flags are observations, not proof that an export is code rather than data.
 
 ### Run (MEDIA-001 `PITFALL.EXE`)
 
@@ -115,12 +137,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\tests\test-inspect-pe.
 ```
 
 **What they do:**
+- **Draft:** the script now defines 59 cases: the 29 reviewed cases T01–T29, unchanged, plus 30 export cases T30–T59, which have not been run or reviewed. The description below covers the reviewed 29.
 - 29 synthetic test cases. Each builds a harmless test file from scratch in memory, with no game data and no system files. Some are valid; most are deliberately malformed or unsupported (truncated, out of range, unterminated, overlapping, wrong format, and so on).
 - Each test file is **written to a new temporary folder on disk**, and the inspector is run against it in a separate process. The test checks the exit code and key output lines.
 - They cover every finding from both of ChatGPT Work's reviews (the mapping is in the script's header comment), plus image mode across several sectors, with marker bytes so that a misplaced read would fail the fingerprint check.
 - The temporary folder is deleted afterwards.
 
-**Expected result:** 29 `PASS` lines, then `RESULT: all 29 tests passed`, exit code `0`.
+**Expected result:** 29 `PASS` lines, then `RESULT: all 29 tests passed`, exit code `0` (reviewed version at `c389278`). For the draft, the expectation is 59 `PASS` lines and `RESULT: all 59 tests passed`. This is untested until a run is authorized.
 
 **Line endings:** Git's `core.autocrlf=true` setting can write CRLF line endings into checked-out copies of files committed with LF, so the SHA-256 of a checked-out copy can differ from the reviewed value.
 - **Committed content:** to compare it, use the Git blob ID (`git hash-object`, which applies Git's normalization).
