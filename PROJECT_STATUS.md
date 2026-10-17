@@ -126,7 +126,15 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 #### Launch-readiness handoff (Claude, 2026-10-16; updated after Work's source acceptance)
 
-**Status: AWAITING THE USER'S SINGLE APPROVAL.** Nothing has been staged, mounted, extracted or executed. No game bytes were accessed for this handoff.
+**Update 2026-10-16 — approved and attempt 1 run.** The user approved the launch package ("I approve the launch package", Claude session).
+- **Claude's steps:** Claude copied the helper (fingerprint verified), staged the files once (exit code 0, `RESULT: OK`, no marker, image unchanged), and ran the WAIL32 preflight (matches R2.3).
+- **Attempt 1** (`ASSETS\PITFALL.EXE`) did not reach gameplay. See [docs/testing/launch-attempt-1.md](docs/testing/launch-attempt-1.md):
+  - startup checks for a CD-ROM (reported) and a 256-colour display (verified);
+  - with user-applied Windows 95 compatibility mode, a missing `dispdib.dll` error, four access-violation crashes and one freeze.
+- **Deviation:** compatibility settings and repeated launches were outside the package. They are recorded in that file, and the layers remain set.
+- **Attempts 2–3 are paused** pending Work's review and the user's decision.
+
+*Original status at preparation time:* awaiting the user's single approval. Nothing had been staged, mounted, extracted or executed, and no game bytes were accessed for this handoff.
 
 **Work's review (2026-10-16):**
 - **What Work checked:** the actual snapshot helper (revision 2) and the setup package. Both script fingerprints matched Claude's report, and GitHub `main` was confirmed at `3b0d55d`.
@@ -361,7 +369,7 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 
 **Current (2026-10-16):** follow *Next milestone: first controlled Windows 11 launch evidence* above.
 1. Done: the preparation handoff (*Launch-readiness handoff* above). Work accepted the scripts for bounded use, and the user has set up the test account, the test folder and recovery.
-2. Obtain the user's environment, extraction and first-execution approval as one bounded package. Work selects technical follow-ups; the user retains reserved decisions.
+2. Done (2026-10-16): the user approved the package, and attempt 1 was run (see [docs/testing/launch-attempt-1.md](docs/testing/launch-attempt-1.md)). Next: Work reviews the attempt-1 evidence; the user decides on the compatibility layers before any further attempt. Work selects technical follow-ups; the user retains reserved decisions.
 3. Gather launch evidence, then let Work prioritize the smallest evidence-backed compatibility fix. Do not choose an engine or add tooling before a concrete need is established.
 4. Historical research leads remain deferred; no external contact is authorized.
 
