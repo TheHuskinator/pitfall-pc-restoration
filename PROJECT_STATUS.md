@@ -1,6 +1,6 @@
 # PROJECT STATUS — Pitfall: The Mayan Adventure (PC Restoration)
 
-**Status:** Planning and research  
+**Status:** First controlled Windows 11 launch-test preparation  
 **Last updated:** 2026-10-16  
 **Project target:** Faithful restoration of the Kinesoft Windows 95 PC edition for Windows 10/11, with an eventual browser port considered after the desktop restoration is stable.
 
@@ -12,17 +12,12 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 ### Working approach
 
-- The user directs priorities and performs testing.
-- Claude Code is the primary implementation and reverse-engineering agent.
-- **Two-agent workflow (from 2026-10-16; see `CLAUDE.md` → Roles):**
-  - The user is the sole decision-maker.
-  - Claude Code is the local developer and reverse-engineering agent, working within authorized scope.
-  - ChatGPT Work ("Work") reviews research, sources, technical claims, code and QA, and helps prepare proposals and handoffs.
-  - Handoff: Claude proposes → the user authorizes → Claude completes and reports → the user passes it to Work → Work reports to the user → the user decides.
-  - **Delegated approval (from 2026-10-16):**
-    - Actions Work explicitly recommends, in a review the user passes on, count as the user's approval within Work's stated boundaries. That includes edits, test runs, commits, pushes and merges into `main`.
-    - Still reserved for the user's direct approval: running game software or mounting/extracting disc images; installing tools; contacting anyone outside the project; and anything Work leaves as the user's decision.
-    - The user's word overrides Work's. See `CLAUDE.md` → Roles.
+- The user owns project direction, major risks, strategy and releases, and performs interactive playtesting.
+- Claude Code is the primary local implementation and reverse-engineering agent.
+- **Expanded delegated authority (user-approved 2026-10-16; see `CLAUDE.md` → Roles):** Work is the delegated technical project manager and independent reviewer. Work selects bounded milestones and may approve routine changes, synthetic tests, non-destructive validation, read-only static examination with reviewed local tools, commits, pushes, merges and related technical follow-ups.
+- **Milestone handoff:** Work scopes and authorizes → Claude implements and reports → Work audits significant changes/results and authorizes the next in-scope step. Batch routine wording fixes; no separate user decision for each minor change.
+- **Reserved for the user:** first game execution and runtime environment/boundaries; initial mounting/extraction; software/dependency downloads or installations; spending; releases or proprietary-content publication/upload; destructive actions, account/permission changes, materially elevated security risk, major strategy changes and external contact. Later non-destructive runtime tests may be approved by Work only inside the user's explicit runtime boundaries.
+- The user's word overrides Work's. Approval does not establish independent verification or redistribution rights. Preserve original material and all evidence limitations.
 - **Transition note:** before 2026-10-16, records used the roles "ChatGPT Chat 1–4" and "Codex / ChatGPT Work". There are no active Chat 1–4 roles. Older records below keep their original labels. Reviews recorded as "Chat 2" and as "Work" should not be counted as separate independent verifications; multiple reviews in the same Work conversation are not independent reviewers.
 - These roles operate under the user's direction and the approval rules in `CLAUDE.md`.
 - Preserve the original game's gameplay, presentation, audio, controls, timing, and content as closely as practical.
@@ -38,7 +33,7 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 > **This section is the authoritative current state (updated 2026-10-16).** Review labels such as "Chat 2" are kept as originally recorded; see the transition note under *Working approach*. The dated sections further down are historical snapshots. Where they conflict with this section, this section wins.
 
-**Phase:** planning/research. No technical direction, toolchain or engine has been chosen.
+**Phase:** first controlled Windows 11 launch-test preparation. Native compatibility testing is the selected next milestone; no restoration engine or implementation architecture has been chosen.
 
 **Reference media — MEDIA-001**, at `private/original-media/Pitfall_The_Mayan_Adventure_ISO/` (git-ignored):
 
@@ -58,7 +53,7 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - Independent reproduction of the EDC and listing results. These are now reproducible with `tools/verify-media001.ps1`. Claude's second run passed every check on 2026-10-15, but that is not an independent run.
 
 **Not yet done:**
-- executable analysis beyond static PE headers and imports of `PITFALL.EXE`, `PITSTART.EXE` and `KILLPIT.EXE`, and static headers, imports and exports of `WAIL32.DLL` (R2.3 draft): no disassembly, strings, resource contents or target bytes;
+- executable analysis beyond static PE headers and imports of `PITFALL.EXE`, `PITSTART.EXE` and `KILLPIT.EXE`, and static headers, imports and exports of `WAIL32.DLL` (R2.3 accepted): no disassembly, general string scanning, resource contents or export-target decoding;
 - game execution and compatibility testing;
 - a working build environment or restoration code.
 
@@ -109,14 +104,31 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - 3,072 bytes follow the last section, and a Debug directory is declared; neither was examined.
   - Discrepancy D-EXE-3: the timestamp field 1995-07-10 03:26:55 UTC is 44 days before the disc's directory date. Not interpreted.
 
-**Next tasks:**
-1. **Selection of the next investigation: pending** (user decision). Candidates include the R2.3 questions Q14–Q16, below.
-2. *(Awaiting user decision)* Resource-type enumeration for `PITFALL.EXE` and `PITSTART.EXE` (no extraction).
-3. *(Awaiting user decision)* Run-time dependencies: static string leads, or execution under its own approved test plan.
-4. *(Awaiting user decision)* R2.3 follow-ups:
-   - Q14: does the game load `WAIL32.DLL` at run time?
-   - Q15: does WINMM wave and MIDI output work on Windows 10/11?
-   - Q16: what do the bytes after the last section and the Debug directory contain?
+### Next milestone: first controlled Windows 11 launch evidence
+
+**Decision (Work, under the user's expanded delegation, 2026-10-16):** prioritize a bounded native launch test over further speculative reverse engineering. R2.1–R2.3 establish static structure and reported dependencies, not Windows 11 compatibility. No original game execution has been reported.
+
+**Preparation evidence from the current handoff:**
+- **Claude-reported, not independently reproduced:** Windows 11 Home x64; the named 32-bit Windows components are present; no CD drive or existing Pitfall installation was found by the described checks. Presence does not prove runtime compatibility.
+- **Source-reviewed by Work, not executed:** scratch staging script revision 2, SHA-256 `2D1AFE08F9F7EDD2D7A673DDC36760EA43FC123B0309CC557C5DBA2C5935AF09`. Accepted for the narrowly scoped current repository-private destination, subject to the user's extraction approval. This is not proof of successful staging.
+- The script uses inventory pinned at `5cc516c228a0719d20842b78b18d62c80ec56775`, validates the unique 40-file set and hashes before writing, uses create-new-only writes and checks the image afterward. Launch requires exit 0, RESULT: OK and no incomplete marker; marker absence alone is insufficient.
+- A separate standard local test account is Work's recommended environment, not yet selected or created by this authorization. That option needs a bounded destination adaptation and source check; the current script writes inside the repository. A shared private test location outside the repository requires the user's explicit exception to the default private-folder policy, with access controls and no Git/cloud upload. No such exception is granted here.
+- The account choice, backups/recovery arrangement, initial extraction and first execution still await the user's explicit approval. This delegation update is not that approval.
+
+**Claude assignment — preparation only, explicitly authorized by Work:**
+1. Synchronize the local checkout with the documentation update using a clean fast-forward only. First inspect local changes and ahead/behind state; preserve unrelated or unpushed work. Stop and report if the update would require resolving divergence, overwriting work or bypassing repository protections.
+2. Consolidate the existing preparation into one concise launch-readiness handoff. Do not repeat completed static investigations or add tooling. Finalize the proposed account/destination arrangement; source-only adaptation of the scratch stager and narrowly scoped before/after observation helpers is allowed. Do not create accounts, change permissions or access game bytes.
+3. Define observation of game-related settings, relevant file changes and application-error logs; keep raw snapshots private and share sanitized findings only. Do not grant blanket permission for arbitrary HKCU changes. State snapshot limitations and label the launcher test as sequential.
+4. Prepare the single user-approval package: environment/account and recovery choice; one verified staging operation; one reviewed WAIL32 preflight on the staged copy with retained local metadata output; up to three launch attempts, at most ten minutes each (direct game, launcher if appropriate, and one useful unchanged confirmation).
+5. Batch any necessary readiness documentation into `PROJECT_STATUS.md`; Work authorizes one documentation-only commit and push to `main` if needed after a clean synchronization and exact diff review. No proprietary content, credentials, raw registry dumps or absolute personal paths. Do not create a new review cycle for wording-only corrections.
+
+**Preparation stop conditions:** unexpected local/remote divergence or conflicting work; any need for original-file access, staging, mounting, execution, installation, account/permission changes, destructive operations or a broader investigation. Report to Work; reserved decisions go to the user. Grammar-only source checks are allowed; do not execute the staging or observation scripts in this preparation assignment.
+
+**Planned execution, not authorized by this entry:** after direct user approval, keep originals read-only; run only from the verified working copy, unelevated, without wrappers, compatibility settings or manual registry fixes. Stop on validation/preflight disagreement, an installation/elevation prompt, security alert, instability, observed unrelated changes or two minutes of unresponsiveness. No automatic fixes or repeated failed launches. Work may approve subsequent tests only inside the actual user-approved environment and limits, not simply because the first run occurred.
+
+**Measurable result:** separately record launch, usable graphics, keyboard input, five minutes of responsive gameplay, sound effects and exact failure details/crash-log metadata. Without a CD device, CD music is **not exercised**, not a demonstrated compatibility failure. The next substantive Work review is launch evidence or a material safety/code change.
+
+**Deferred unless a concrete launch failure makes them necessary:** resource enumeration, debug/trailing-byte analysis (Q16), deeper WAIL32 usage investigation (Q14), CD-audio setup, new reverse-engineering tools and engine reconstruction. Q15's audio behavior is tested through the approved runtime milestone, not inferred from imports.
 
 **2026-10-14 — repository setup:** Added `CLAUDE.md` (permanent agent rules), `.gitignore` (blocks original game files, disc images, media, credentials, and build output), a git-ignored `private/` folder for original material, and a `docs/` structure (research, inventory, legal, decisions, technical, testing). Remote confirmed as `TheHuskinator/pitfall-pc-restoration` (private). The setup files were committed to GitHub; this earlier pending-push note was superseded on 2026-10-15.
 
@@ -237,11 +249,11 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 
 ## Immediate next actions
 
-**Current (2026-10-16)** — the authoritative technical list is *Next proposed tasks* in *Current project status* above:
-1. Choose the next investigation: pending a user decision (see *Next tasks* above). R2.3 is complete: accepted by Work and merged at `aae2681`.
-2. Verify the Andy Glaister lead and draft—not send—an outreach note unless the user explicitly authorizes contact.
-3. Follow the two-agent handoff: Claude proposes → the user authorizes → Claude reports → the user passes it to Work → Work reports to the user → the user decides. Obtain the applicable user approval before mounting, extraction, installation, game execution, tool installation, implementation, commits or pushes.
-4. Do not commit to C++/SDL3 until the technical-discovery milestone produces a short recommendation.
+**Current (2026-10-16):** follow *Next milestone: first controlled Windows 11 launch evidence* above.
+1. Claude completes the authorized preparation handoff; routine details and wording fixes stay within the milestone.
+2. Obtain the user's environment, extraction and first-execution approval as one bounded package. Work selects technical follow-ups; the user retains reserved decisions.
+3. Gather launch evidence, then let Work prioritize the smallest evidence-backed compatibility fix. Do not choose an engine or add tooling before a concrete need is established.
+4. Historical research leads remain deferred; no external contact is authorized.
 
 **Completed (historical):**
 - 2026-10-15: first read-only media examination (`docs/technical/original-media-examination.md`), audited by Chat 2 and ChatGPT Work.
@@ -278,7 +290,7 @@ Each work session should leave the project easier to resume:
 1. Update this file with the milestone state, decisions, open questions, and the next smallest testable task.
 2. Record evidence separately from assumptions. Include source, date, version, and confidence level for significant findings.
 3. Keep original/reference files read-only; work on copies and retain hashes or checksums where useful.
-4. For every code change, record how to build, run, and test it, plus the user-observed result.
+4. For each meaningful code milestone, record how to build, run and test it, plus actual results and who observed them. Batch minor corrections.
 5. Do not send external messages, publish materials, or redistribute original content without explicit user authorization and appropriate rights confirmation.
 6. When a decision is proposed, document alternatives, evidence, tradeoffs, owner, and the date of approval.
 
@@ -298,3 +310,5 @@ Each work session should leave the project easier to resume:
 | 2026-10-16 | Delegated approval: actions ChatGPT Work explicitly recommends (in reviews the user passes on) count as the user's approval, including edits, test runs, commits, pushes and merges into `main`. | User decision | Amends the workflow entry above. Still reserved for the user directly: game execution, mounting or extracting disc images; installing tools; external contact; anything Work leaves to the user. The user's word overrides Work's. |
 | 2026-10-16 | Merge the reviewed export enhancement (`draft/inspect-pe-exports` at `7dbe873`) into `main` with a normal merge commit (`4a7ab30`), keeping both reviewed draft commits. | Work recommendation (delegated approval) | Work: Accept for testing; Claude-reported 73/73 PASS. Not re-run on game files; no independent reproduction. |
 | 2026-10-16 | Merge the reviewed PE parser milestone (`draft/inspect-pe`) into `main` by fast-forward, keeping every reviewed commit ID in `main`'s history. | User-approved | ChatGPT Work ACCEPT of `4ec4321`. Tool results remain Claude-reported; independent byte verification is still open. |
+| 2026-10-16 | Expand Work's role to delegated technical project manager: choose milestones and approve routine technical work, commits, pushes and merges; audit at milestone boundaries. | User-approved | Supersedes earlier per-task approval wording. Reserved decisions remain with the user; later non-destructive runtime tests require a user-approved environment and boundaries. Approval is not independent verification. |
+| 2026-10-16 | Select first controlled Windows 11 launch evidence as the next milestone; authorize bounded preparation only. | Work decision under expanded delegation | See the current milestone assignment. No extraction, game execution, account changes or installations authorized. Defer nonessential reverse engineering. |
