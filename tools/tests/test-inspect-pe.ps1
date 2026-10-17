@@ -3,7 +3,7 @@
     Synthetic tests for tools/inspect-pe.ps1.
 
 .DESCRIPTION
-    DRAFT FOR SOURCE-ONLY REVIEW. This script has not yet been executed.
+    Review and run history: see tools/README.md.
 
     Builds small, harmless PE32 byte arrays from scratch in memory. They contain
     no game data, no copies of system files, and no code that is ever run.
@@ -35,6 +35,39 @@
       R2-3 SizeOfHeaders must cover the section table -> T28
       R2-4 multi-sector image mode, partial last sector -> T29 (and T18)
     Also: header-based RVA (T17), original order kept (T01, T17), image mode (T18, T19)
+
+    Export fixture (New-ExportPe, 0x800 bytes): the base fixture, plus
+      COFF NumberOfSections 4, Characteristics 0x2102 (DLL); SizeOfImage 0x5000
+      export directory: data directory 0 = RVA 0x3000, size 0x160
+      .edata   VA 0x3000, raw 0x600-0x7FF          .bss  VA 0x4000, VSize 0x100, no raw data
+               0x600 export directory table: name 0x3100, OrdinalBase 1, 5 functions, 4 names,
+                     AddressOfFunctions 0x3028, AddressOfNames 0x303C, AddressOfNameOrdinals 0x304C
+               0x628 address table: 0x1000 (.text), 0x1010 (.text), 0 (unused),
+                     0x3110 (forwarder "OTHER.Func"), 0x4000 (.bss data, no stored bytes)
+               0x63C name pointers -> "Alpha", "AlphaAlias", "DataItem", "Fwd"
+               0x64C ordinal indexes 0, 0, 4, 3   (Alpha and AlphaAlias are aliases)
+               0x700 "TESTEXP.DLL"  0x710 "OTHER.Func"  0x720.. names
+
+    Coverage of the export enhancement (Work's corrections to the proposal, 2026-10-16):
+      no export directory still reported; header/import output unchanged -> T30
+      aliases, including more names than functions                    -> T31, T32
+      export address need not have stored bytes (exported data)       -> T31
+      forwarders DLL.Name and DLL.#ordinal; syntax; ordinal range     -> T31, T35, T38, T39, T40
+      forwarder terminator as the last byte inside the directory (pass) and
+        as the first byte outside (fail)                              -> T36, T37
+      non-default ordinal base; ordinal above 65535                   -> T33, T34
+      zero (unused) address-table entries                             -> T31, T59
+      metadata bounds: name index, names, DLL name, tables, directory -> T41-T50
+      counts and arithmetic near the 32-bit limit                     -> T51-T54
+      target classification: beyond SizeOfImage (fail), unmapped,
+        header area                                                   -> T55, T56, T57
+      duplicate names (note)                                          -> T58
+    Coverage of Work's source review of the export draft (commit 4c1d42c):
+      export directory entry: absent (no entry / both zero) vs exactly one zero -> T60-T63
+      zero RVA for a mandatory reference is MALFORMED, not header text:
+        DLL name, address table, name pointer table, ordinal table, a name entry -> T64-T68
+      zero-count tables with zero RVAs remain valid                   -> T69, T70
+      unterminated DLL name; truncated name pointer and ordinal tables -> T71-T73
 
     Synthetic disc images are pre-filled with 0xEE marker bytes. A read from the
     wrong sector position would therefore pull in marker bytes and fail the SHA-256 check.
@@ -81,6 +114,29 @@ function New-ValidPe {
     , $b
 }
 
+# A small DLL-shaped fixture with an export table (layout in the header comment).
+function New-ExportPe {
+    $base = New-ValidPe
+    $b = New-Object byte[] 0x800
+    [Array]::Copy($base, $b, $base.Length)
+    W16 $b 0x46 4                                 # NumberOfSections
+    W16 $b 0x56 0x2102                            # Characteristics: executable image, 32-bit, DLL
+    W32 $b (0x58 + 56) 0x5000                     # SizeOfImage
+    W32 $b 0xB8 0x3000; W32 $b 0xBC 0x160         # export directory (data directory 0)
+    $s = 0x188
+    WStr $b $s '.edata'; W32 $b ($s + 8) 0x200; W32 $b ($s + 12) 0x3000; W32 $b ($s + 16) 0x200; W32 $b ($s + 20) 0x600; W32 $b ($s + 36) 0x40000040
+    $s = 0x1B0
+    WStr $b $s '.bss';   W32 $b ($s + 8) 0x100; W32 $b ($s + 12) 0x4000; W32 $b ($s + 16) 0;     W32 $b ($s + 20) 0;     W32 $b ($s + 36) 0xC0000080
+    W32 $b 0x604 0x12345678; W16 $b 0x608 1; W32 $b 0x60C 0x3100; W32 $b 0x610 1        # timestamp, version 1.0, name, OrdinalBase
+    W32 $b 0x614 5; W32 $b 0x618 4; W32 $b 0x61C 0x3028; W32 $b 0x620 0x303C; W32 $b 0x624 0x304C
+    W32 $b 0x628 0x1000; W32 $b 0x62C 0x1010; W32 $b 0x630 0; W32 $b 0x634 0x3110; W32 $b 0x638 0x4000
+    W32 $b 0x63C 0x3120; W32 $b 0x640 0x3130; W32 $b 0x644 0x3140; W32 $b 0x648 0x3150
+    W16 $b 0x64C 0; W16 $b 0x64E 0; W16 $b 0x650 4; W16 $b 0x652 3
+    WStr $b 0x700 'TESTEXP.DLL'; WStr $b 0x710 'OTHER.Func'
+    WStr $b 0x720 'Alpha'; WStr $b 0x730 'AlphaAlias'; WStr $b 0x740 'DataItem'; WStr $b 0x750 'Fwd'
+    , $b
+}
+
 # Wrap bytes in synthetic raw 2,352-byte sectors (user data at +16) after $Lead filler sectors.
 function New-RawImage([byte[]]$Data, [int]$Lead) {
     $blocks = [int][math]::Ceiling($Data.Length / 2048)
@@ -100,6 +156,8 @@ function Get-Sha256Hex([byte[]]$Data) {
 
 # ---------------------------------------------------------------- test cases
 $defaultArgs = { param($File, $Sha, $Bytes) @('-Path', $File, '-ExpectedSha256', $Sha) }
+$exp = { New-ExportPe }
+$text1 = 'ordinal 1: RVA 0x00001000 -> section .text [CODE X R] (stored bytes)'
 
 $tests = @(
     @{ Id = 'T01'; Desc = 'valid PE32: imports in original and sorted order'; Exit = 0
@@ -191,6 +249,123 @@ $tests = @(
                 @('-Image', $img, '-Extent', '3', '-Size', [string]$Bytes.Length, '-ExpectedSha256', $Sha) }
        Expect = @('sectors 3-5', 'SHA-256 check: matches expected value', 'bytes after the last section: 3464',
                   'Total imported functions: 3 from 1 DLL(s)', 'RESULT: OK') }
+
+    # ---- Exports (T30-T59) ----
+    @{ Id = 'T30'; Desc = 'no export directory: reported after unchanged import output'; Exit = 0
+       Expect = @('original order: Zeta, #7, Alpha', 'Total imported functions: 3 from 1 DLL(s)', '=== EXPORTS', '(no export directory)', 'RESULT: OK') }
+    @{ Id = 'T31'; Desc = 'valid exports: alias, ordinal-only, unused, forwarder by name, exported data'; Exit = 0; Build = $exp
+       Expect = @('flags: EXECUTABLE_IMAGE, 32BIT_MACHINE, DLL', 'Total imported functions: 3 from 1 DLL(s)',
+                  'Export directory: RVA 0x3000, size 0x160, in section .edata', 'DLL name     : TESTEXP.DLL', 'Version=1.0 OrdinalBase=1',
+                  'NumberOfFunctions=5 NumberOfNames=4', ($text1 + '; names: Alpha, AlphaAlias'),
+                  'ordinal 2: RVA 0x00001010 -> section .text [CODE X R] (stored bytes); names: (none)',
+                  'ordinal 3: unused (address 0); names: (none)', 'ordinal 4: forwarder -> OTHER.Func; names: Fwd',
+                  'ordinal 5: RVA 0x00004000 -> section .bss [UDATA R W] (no stored bytes); names: DataItem',
+                  'Total exports: 5 address-table entries (targets 3, forwarders 1, unused 1); names 4', 'RESULT: OK')
+       Reject = @('NOTE:') }
+    @{ Id = 'T32'; Desc = 'more names than functions via aliases is valid'; Exit = 0; Build = $exp
+       Mutate = { param($b) W32 $b 0x614 1; W16 $b 0x650 0; W16 $b 0x652 0 }
+       Expect = @(($text1 + '; names: Alpha, AlphaAlias, DataItem, Fwd'),
+                  'Total exports: 1 address-table entries (targets 1, forwarders 0, unused 0); names 4', 'RESULT: OK') }
+    @{ Id = 'T33'; Desc = 'non-default ordinal base'; Exit = 0; Build = $exp; Mutate = { param($b) W32 $b 0x610 100 }
+       Expect = @('OrdinalBase=100', 'ordinal 100: RVA 0x00001000', 'ordinal 102: unused', 'ordinal 103: forwarder -> OTHER.Func', 'ordinal 104: RVA 0x00004000', 'RESULT: OK')
+       Reject = @('NOTE:') }
+    @{ Id = 'T34'; Desc = 'highest ordinal above 65535 is noted, not rejected'; Exit = 0; Build = $exp; Mutate = { param($b) W32 $b 0x610 65535 }
+       Expect = @('NOTE: the highest ordinal, 65539, exceeds 65535', 'ordinal 65539: RVA 0x00004000', 'RESULT: OK') }
+    @{ Id = 'T35'; Desc = 'forwarder by ordinal (DLL.#27)'; Exit = 0; Build = $exp
+       Mutate = { param($b) WStr $b 0x710 'OTHER.#27'; $b[0x719] = 0 }
+       Expect = @('ordinal 4: forwarder -> OTHER.#27; names: Fwd', 'RESULT: OK') }
+    @{ Id = 'T36'; Desc = 'forwarder terminator is the last byte inside the export directory (pass)'; Exit = 0; Build = $exp
+       Mutate = { param($b) W32 $b 0xBC 0x11B }   # directory [0x3000, 0x311B); "OTHER.Func" 0x3110-0x3119, zero at 0x311A
+       Expect = @('Export directory: RVA 0x3000, size 0x11B', 'ordinal 4: forwarder -> OTHER.Func; names: Fwd', 'RESULT: OK') }
+    @{ Id = 'T37'; Desc = 'forwarder terminator is the first byte outside the export directory (fail)'; Exit = 3; Build = $exp
+       Mutate = { param($b) W32 $b 0xBC 0x11A }   # directory [0x3000, 0x311A); the zero at 0x311A is outside
+       Expect = @('RESULT: MALFORMED', 'export ordinal 4 forwarder', 'no terminating zero byte'); Reject = @('Total exports') }
+    @{ Id = 'T38'; Desc = 'forwarder without DLL.Name form'; Exit = 3; Build = $exp
+       Mutate = { param($b) WStr $b 0x710 'NoDotHere'; $b[0x719] = 0 }
+       Expect = @('RESULT: MALFORMED', 'is not of the form DLL.Name or DLL.#ordinal') }
+    @{ Id = 'T39'; Desc = 'forwarder with a non-decimal ordinal form'; Exit = 3; Build = $exp
+       Mutate = { param($b) WStr $b 0x710 'OTHER.#9x'; $b[0x719] = 0 }
+       Expect = @('RESULT: MALFORMED', 'invalid ordinal form') }
+    @{ Id = 'T40'; Desc = 'forwarder ordinal above 65535'; Exit = 3; Build = $exp
+       Mutate = { param($b) WStr $b 0x710 'OTHER.#70000' }   # zero already at 0x71C
+       Expect = @('RESULT: MALFORMED', 'invalid ordinal form') }
+    @{ Id = 'T41'; Desc = 'name ordinal index not below NumberOfFunctions'; Exit = 3; Build = $exp; Mutate = { param($b) W16 $b 0x64C 7 }
+       Expect = @('RESULT: MALFORMED', 'export name 1: ordinal-table index 7 is not below NumberOfFunctions 5') }
+    @{ Id = 'T42'; Desc = 'names but no functions'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x614 0 }
+       Expect = @('RESULT: MALFORMED', 'is not below NumberOfFunctions 0') }
+    @{ Id = 'T43'; Desc = 'unmappable export name RVA'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x63C 0x9000 }
+       Expect = @('RESULT: MALFORMED', 'export name 1: RVA 0x9000'); Reject = @('Total exports') }
+    @{ Id = 'T44'; Desc = 'export name with no terminating zero before the section end'; Exit = 3; Build = $exp
+       Mutate = { param($b) for ($k = 0x750; $k -lt 0x800; $k++) { $b[$k] = 0x58 } }
+       Expect = @('RESULT: MALFORMED', 'export name 4', 'no terminating zero byte') }
+    @{ Id = 'T45'; Desc = 'unmappable export DLL-name RVA'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x60C 0x9000 }
+       Expect = @('RESULT: MALFORMED', 'export DLL name: RVA 0x9000'); Reject = @('DLL name     :') }
+    @{ Id = 'T46'; Desc = 'export address table runs past stored data'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x614 200 }
+       Expect = @('RESULT: MALFORMED', 'Export address table (200 entries') }
+    @{ Id = 'T47'; Desc = 'export directory smaller than 40 bytes'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0xBC 0x20 }
+       Expect = @('RESULT: MALFORMED', 'smaller than the 40-byte export directory table') }
+    @{ Id = 'T48'; Desc = 'export directory outside every section (inside SizeOfImage)'; Exit = 3; Build = $exp
+       Mutate = { param($b) W32 $b 0xB8 0x4800; W32 $b 0xBC 0x40 }
+       Expect = @('RESULT: MALFORMED', 'export directory: RVA 0x4800 is not inside the headers or any section') }
+    @{ Id = 'T49'; Desc = 'export directory in a section with no stored bytes'; Exit = 3; Build = $exp
+       Mutate = { param($b) W32 $b 0xB8 0x4000; W32 $b 0xBC 0x40 }
+       Expect = @('RESULT: MALFORMED', 'beyond its stored file data') }
+    @{ Id = 'T50'; Desc = 'export directory runs past its section''s stored data'; Exit = 3; Build = $exp
+       Mutate = { param($b) W32 $b 0xB8 0x3100; W32 $b 0xBC 0x140 }
+       Expect = @('RESULT: MALFORMED', 'Export directory [RVA 0x3100, size 0x140) extends beyond the stored data') }
+    @{ Id = 'T51'; Desc = 'huge NumberOfFunctions rejected by the limit'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x614 0x7FFFFFFF }
+       Expect = @('RESULT: MALFORMED', 'NumberOfFunctions 2147483647 exceeds this tool''s limit') }
+    @{ Id = 'T52'; Desc = 'huge NumberOfNames rejected by the limit'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x618 0xFFFFFFFF }
+       Expect = @('RESULT: MALFORMED', 'NumberOfNames 4294967295 exceeds this tool''s limit') }
+    @{ Id = 'T53'; Desc = 'table RVA near the 32-bit limit'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x61C 0xFFFFFFF0 }
+       Expect = @('RESULT: MALFORMED', 'export address table: RVA 0xFFFFFFF0') }
+    @{ Id = 'T54'; Desc = 'export directory RVA near the 32-bit limit (no wrap-around)'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0xB8 0xFFFFFFF0 }
+       Expect = @('RESULT: MALFORMED', 'extends beyond SizeOfImage 0x5000') }
+    @{ Id = 'T55'; Desc = 'export target at or beyond SizeOfImage'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x62C 0x6000 }
+       Expect = @('RESULT: MALFORMED', 'Export ordinal 2: target RVA 0x6000 is at or beyond SizeOfImage') }
+    @{ Id = 'T56'; Desc = 'export target inside SizeOfImage but outside every section'; Exit = 0; Build = $exp; Mutate = { param($b) W32 $b 0x62C 0x4800 }
+       Expect = @('ordinal 2: RVA 0x00004800 -> unmapped/unclassified; loader validity not established; names: (none)', 'RESULT: OK') }
+    @{ Id = 'T57'; Desc = 'export target in the header area'; Exit = 0; Build = $exp; Mutate = { param($b) W32 $b 0x62C 0x100 }
+       Expect = @('ordinal 2: RVA 0x00000100 -> header area; names: (none)', 'RESULT: OK') }
+    @{ Id = 'T58'; Desc = 'duplicate export names are noted'; Exit = 0; Build = $exp; Mutate = { param($b) W32 $b 0x640 0x3120 }
+       Expect = @('NOTE: duplicate export name Alpha (name entries 1 and 2)', ($text1 + '; names: Alpha, Alpha'), 'RESULT: OK') }
+    @{ Id = 'T59'; Desc = 'a name that refers to an unused address-table entry is noted'; Exit = 0; Build = $exp; Mutate = { param($b) W16 $b 0x650 2 }
+       Expect = @('ordinal 3: unused (address 0); names: DataItem', 'NOTE: export name(s) DataItem refer to the unused address-table entry for ordinal 3',
+                  'ordinal 5: RVA 0x00004000 -> section .bss [UDATA R W] (no stored bytes); names: (none)', 'RESULT: OK') }
+
+    # ---- Export corrections from Work's review of 4c1d42c (T60-T73) ----
+    @{ Id = 'T60'; Desc = 'export directory RVA 0 with non-zero size is inconsistent'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0xB8 0 }
+       Expect = @('RESULT: MALFORMED', 'Export directory entry is inconsistent: RVA 0x0, size 0x160'); Reject = @('(no export directory)') }
+    @{ Id = 'T61'; Desc = 'export directory non-zero RVA with size 0 is inconsistent'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0xBC 0 }
+       Expect = @('RESULT: MALFORMED', 'Export directory entry is inconsistent: RVA 0x3000, size 0x0') }
+    @{ Id = 'T62'; Desc = 'export directory RVA and size both 0 is absent'; Exit = 0; Build = $exp; Mutate = { param($b) W32 $b 0xB8 0; W32 $b 0xBC 0 }
+       Expect = @('(no export directory)', 'RESULT: OK'); Reject = @('Export directory:') }
+    @{ Id = 'T63'; Desc = 'no data-directory entries at all: imports and exports absent'; Exit = 0; Build = $exp; Mutate = { param($b) W32 $b (0x58 + 92) 0 }
+       Expect = @('NumberOfRvaAndSizes=0', '(no import directory)', '(no export directory)', 'RESULT: OK') }
+    @{ Id = 'T64'; Desc = 'export DLL-name RVA 0 is missing, not header text'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x60C 0 }
+       Expect = @('RESULT: MALFORMED', 'export DLL name: RVA is 0 (missing mandatory reference)'); Reject = @('DLL name     : MZ') }
+    @{ Id = 'T65'; Desc = 'export name-pointer entry 0 is missing, not header text'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x63C 0 }
+       Expect = @('RESULT: MALFORMED', 'export name 1: name RVA is 0 (missing mandatory reference)'); Reject = @('names: MZ') }
+    @{ Id = 'T66'; Desc = 'address table RVA 0 with NumberOfFunctions > 0'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x61C 0 }
+       Expect = @('RESULT: MALFORMED', 'export address table: RVA is 0 (missing mandatory reference) but NumberOfFunctions is 5') }
+    @{ Id = 'T67'; Desc = 'name pointer table RVA 0 with NumberOfNames > 0'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x620 0 }
+       Expect = @('RESULT: MALFORMED', 'export name pointer table: RVA is 0 (missing mandatory reference) but NumberOfNames is 4') }
+    @{ Id = 'T68'; Desc = 'ordinal table RVA 0 with NumberOfNames > 0'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x624 0 }
+       Expect = @('RESULT: MALFORMED', 'export ordinal table: RVA is 0 (missing mandatory reference) but NumberOfNames is 4') }
+    @{ Id = 'T69'; Desc = 'no names: zero name-table RVAs are valid'; Exit = 0; Build = $exp
+       Mutate = { param($b) W32 $b 0x618 0; W32 $b 0x620 0; W32 $b 0x624 0 }
+       Expect = @('NumberOfFunctions=5 NumberOfNames=0 AddressOfFunctions=0x3028 AddressOfNames=0x0 AddressOfNameOrdinals=0x0',
+                  ($text1 + '; names: (none)'), 'Total exports: 5 address-table entries (targets 3, forwarders 1, unused 1); names 0', 'RESULT: OK') }
+    @{ Id = 'T70'; Desc = 'empty export table: zero counts and zero table RVAs are valid'; Exit = 0; Build = $exp
+       Mutate = { param($b) W32 $b 0x614 0; W32 $b 0x618 0; W32 $b 0x61C 0; W32 $b 0x620 0; W32 $b 0x624 0 }
+       Expect = @('DLL name     : TESTEXP.DLL', 'Total exports: 0 address-table entries (targets 0, forwarders 0, unused 0); names 0', 'RESULT: OK') }
+    @{ Id = 'T71'; Desc = 'export DLL name with no terminating zero before the section end'; Exit = 3; Build = $exp
+       Mutate = { param($b) W32 $b 0x60C 0x31F8; for ($k = 0x7F8; $k -lt 0x800; $k++) { $b[$k] = 0x58 } }
+       Expect = @('RESULT: MALFORMED', 'export DLL name: no terminating zero byte') }
+    @{ Id = 'T72'; Desc = 'name pointer table truncated by the section end'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x620 0x31F8 }
+       Expect = @('RESULT: MALFORMED', 'Export name pointer table (4 entries at RVA 0x31F8) runs past the stored data') }
+    @{ Id = 'T73'; Desc = 'ordinal table truncated by the section end'; Exit = 3; Build = $exp; Mutate = { param($b) W32 $b 0x624 0x31FC }
+       Expect = @('RESULT: MALFORMED', 'Export ordinal table (4 entries at RVA 0x31FC) runs past the stored data') }
 )
 
 # ---------------------------------------------------------------- runner

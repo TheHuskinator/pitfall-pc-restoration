@@ -1,14 +1,17 @@
 <#
 .SYNOPSIS
-    Read-only inspector for 32-bit PE (PE32) headers, sections and static imports.
+    Read-only inspector for 32-bit PE (PE32) headers, sections, static imports and exports.
 
 .DESCRIPTION
-    DRAFT FOR SOURCE-ONLY REVIEW. This script has not yet been executed.
+    Review and test history: see tools/README.md.
 
     Reads one file into memory and optionally verifies its SHA-256. It then reports:
     the DOS/PE signatures, the COFF header, the PE32 optional header, the data
-    directories, the section table, the entry-point location and the static import
-    table (DLL names and function names or ordinals, in original and in sorted order).
+    directories, the section table, the entry-point location, the static import
+    table (DLL names and function names or ordinals, in original and in sorted
+    order) and, in a separate section after the imports, the export table (the
+    library name, and every address-table entry with its ordinal, its names and
+    aliases, and its target or forwarder).
 
     It never writes, executes, disassembles or extracts anything. All file access
     uses FileAccess.Read / FileShare.Read.
@@ -26,9 +29,41 @@
       - End of the section table <= SizeOfHeaders <= file size.
       - No two sections overlap in their virtual address ranges.
       - Each section's stored raw data lies inside the file.
-      - The import directory [RVA, RVA + Size) lies inside one section's stored
+      - The import directory [RVA, RVA + Size) lies within one supported stored
+        region: the header area (see Address handling) or one section's stored
         data. Its descriptor table, including the all-zero terminator, lies within
         the declared directory Size.
+      - Export metadata must be readable from stored data. That covers the export
+        directory [RVA, RVA + Size), which must be at least 40 bytes and lie in one
+        stored region and within SizeOfImage; the library name; the export
+        address table; the name pointer table; the ordinal table; and every
+        export name. All are bounds-checked, with counts capped at 65,536 and all
+        arithmetic done in 64 bits. Every name's ordinal-table index must be below
+        NumberOfFunctions. Several names may share one index (aliases), so having
+        more names than functions is valid.
+      - The export data-directory entry is absent when it does not exist or when
+        its RVA and size are both zero. Exactly one zero is MALFORMED.
+      - Missing mandatory references are MALFORMED rather than mapped. That means
+        a zero RVA for: the library name; the address table when NumberOfFunctions
+        > 0; the name pointer or ordinal table when NumberOfNames > 0; or any entry
+        of the name pointer table. Zero-count tables may have zero RVAs, and an
+        address-table entry of 0 is a valid "unused" entry. This is this
+        inspector's strict validation policy, not a claim about which files
+        Windows itself accepts or rejects.
+      - Forwarders (an address-table RVA inside the export directory's own range)
+        must be printable strings of the form DLL.Name or DLL.#ordinal, split at
+        the last '.'. Both parts must be non-empty, and the ordinal must be decimal
+        0..65535. The terminating zero must lie inside [RVA, RVA + Size) of the
+        export directory.
+
+    Export target classification (this tool's policy)
+      A non-forwarder export address is *classified*, not read. The parser reports
+      whether it falls in the header area, or in a section (with that section's
+      flags and whether the address has stored bytes in the file), or is
+      "unmapped/unclassified; loader validity not established". Only an address at
+      or beyond SizeOfImage is MALFORMED. Section flags are reported as
+      observations only, not as proof that an export is code rather than data.
+      An address-table entry of 0 is reported as unused.
 
     Address handling (this tool's supported policy)
       An RVA below both SizeOfHeaders and the lowest section VirtualAddress is
@@ -71,9 +106,11 @@ $RawSector = 2352
 $UserDataOffset = 16
 $BlockSize = 2048
 $mode = $PSCmdlet.ParameterSetName
+$MaxExportEntries = 65536
 $script:buf = $null
 $script:sections = @()
 $script:sizeOfHeaders = 0L
+$script:sizeOfImage = 0L
 
 # ---------------------------------------------------------------- helpers
 
@@ -148,6 +185,22 @@ function Resolve-Rva([long]$Rva, [string]$What) {
         Fail 3 ('{0}: RVA 0x{1:X} is in section {2} but beyond its stored file data' -f $What, $Rva, $s.Name)
     }
     return @{ Offset = $s.RawPtr + $delta; Limit = $s.RawPtr + $mapped; Region = "section $($s.Name)" }
+}
+
+# Classify an export target RVA without reading it (see "Export target classification").
+# The caller has already rejected RVAs at or beyond SizeOfImage.
+function Get-TargetClass([long]$Rva) {
+    $firstVa = [long]::MaxValue
+    foreach ($s in $script:sections) { if ($s.VA -lt $firstVa) { $firstVa = $s.VA } }
+    $hdrEnd = [math]::Min($script:sizeOfHeaders, $firstVa)
+    if ($Rva -ge 0 -and $Rva -lt $hdrEnd) { return 'header area' }
+    $hits = @($script:sections | Where-Object { $Rva -ge $_.VA -and $Rva -lt ($_.VA + $_.Span) })
+    if ($hits.Count -eq 1) {
+        $s = $hits[0]
+        $stored = if (($Rva - $s.VA) -lt [math]::Min($s.Span, $s.RawSize)) { 'stored bytes' } else { 'no stored bytes' }
+        return ('section {0} [{1}] ({2})' -f $s.Name, $s.Flags, $stored)
+    }
+    'unmapped/unclassified; loader validity not established'
 }
 
 # ---------------------------------------------------------------- main
@@ -255,8 +308,9 @@ try {
     $subNames = @{ 1 = 'NATIVE'; 2 = 'WINDOWS_GUI'; 3 = 'WINDOWS_CUI'; 5 = 'OS2_CUI'; 7 = 'POSIX_CUI' }
     $subName = if ($subNames.ContainsKey([int]$subsys)) { $subNames[[int]$subsys] } else { 'unknown' }
     $script:sizeOfHeaders = U32 ($o + 60)
+    $script:sizeOfImage = U32 ($o + 56)
     'SizeOfImage=0x{0:X} SizeOfHeaders=0x{1:X} CheckSum=0x{2:X8} Subsystem={3} ({4}) DllCharacteristics=0x{5:X4}' -f `
-        (U32 ($o + 56)), $script:sizeOfHeaders, (U32 ($o + 64)), $subsys, $subName, (U16 ($o + 70))
+        $script:sizeOfImage, $script:sizeOfHeaders, (U32 ($o + 64)), $subsys, $subName, (U16 ($o + 70))
     'StackReserve=0x{0:X} StackCommit=0x{1:X} HeapReserve=0x{2:X} HeapCommit=0x{3:X} LoaderFlags=0x{4:X}' -f `
         (U32 ($o + 72)), (U32 ($o + 76)), (U32 ($o + 80)), (U32 ($o + 84)), (U32 ($o + 88))
     if ($script:sizeOfHeaders -gt $script:buf.LongLength) {
@@ -293,7 +347,7 @@ try {
         $name = Printable (([Text.Encoding]::ASCII.GetString($script:buf, [int]$b, 8)).TrimEnd([char]0))
         $s = [pscustomobject]@{
             Name = $name; VSize = (U32 ($b + 8)); VA = (U32 ($b + 12))
-            RawSize = (U32 ($b + 16)); RawPtr = (U32 ($b + 20)); Chars = (U32 ($b + 36)); Span = 0L
+            RawSize = (U32 ($b + 16)); RawPtr = (U32 ($b + 20)); Chars = (U32 ($b + 36)); Span = 0L; Flags = ''
         }
         $s.Span = if ($s.VSize -gt 0) { $s.VSize } else { $s.RawSize }   # virtual extent used for address mapping
         $f = @()
@@ -305,6 +359,7 @@ try {
         if ($s.Chars -band 0x20000000L) { $f += 'X' }
         if ($s.Chars -band 0x40000000L) { $f += 'R' }
         if ($s.Chars -band 0x80000000L) { $f += 'W' }
+        $s.Flags = ($f -join ' ')   # kept for export target classification
         '  {0,-8} VA=0x{1:X8} VSize=0x{2:X8} RawPtr=0x{3:X8} RawSize=0x{4:X8} Chars=0x{5:X8} [{6}]' -f `
             $s.Name, $s.VA, $s.VSize, $s.RawPtr, $s.RawSize, $s.Chars, ($f -join ' ')
         if ($s.RawSize -gt 0) { Need $s.RawPtr $s.RawSize ('section {0} raw data' -f $name) }
@@ -407,6 +462,123 @@ try {
             $d += 20
         }
         'Total imported functions: {0} from {1} DLL(s)' -f $total, $nDesc
+    }
+
+    # ---- Exports (a separate, added section; all output above is unchanged) ----
+    '=== EXPORTS'
+    # Absent = no data-directory entry 0, or RVA and size both zero. Exactly one zero is inconsistent.
+    if (-not $dirs.ContainsKey(0) -or ($dirs[0][0] -eq 0 -and $dirs[0][1] -eq 0)) { '(no export directory)' }
+    elseif ($dirs[0][0] -eq 0 -or $dirs[0][1] -eq 0) {
+        Fail 3 ('Export directory entry is inconsistent: RVA 0x{0:X}, size 0x{1:X} (exactly one of them is zero)' -f $dirs[0][0], $dirs[0][1])
+    }
+    else {
+        $expRva = $dirs[0][0]; $expSize = $dirs[0][1]
+        $expEnd = $expRva + $expSize                     # 64-bit arithmetic: cannot wrap around
+        if ($expSize -lt 40) { Fail 3 ('Export directory size {0} is smaller than the 40-byte export directory table' -f $expSize) }
+        if ($expEnd -gt $script:sizeOfImage) {
+            Fail 3 ('Export directory [RVA 0x{0:X}, 0x{1:X}) extends beyond SizeOfImage 0x{2:X}' -f $expRva, $expEnd, $script:sizeOfImage)
+        }
+        $el = Resolve-Rva $expRva 'export directory'
+        if ($el.Offset + $expSize -gt $el.Limit) {
+            Fail 3 ('Export directory [RVA 0x{0:X}, size 0x{1:X}) extends beyond the stored data of {2} (ends at file offset 0x{3:X})' -f $expRva, $expSize, $el.Region, $el.Limit)
+        }
+        $x = $el.Offset
+        $eFlags = U32 $x; $eTds = U32 ($x + 4); $eMaj = U16 ($x + 8); $eMin = U16 ($x + 10); $eNameRva = U32 ($x + 12)
+        $eBase = U32 ($x + 16); $nFunc = U32 ($x + 20); $nNames = U32 ($x + 24)
+        $eatRva = U32 ($x + 28); $nptRva = U32 ($x + 32); $otRva = U32 ($x + 36)
+        'Export directory: RVA 0x{0:X}, size 0x{1:X}, in {2}' -f $expRva, $expSize, $el.Region
+        # Strict-validation policy: a zero RVA for a mandatory export reference is missing, not "the header".
+        if ($eNameRva -eq 0) { Fail 3 'export DLL name: RVA is 0 (missing mandatory reference)' }
+        $nl = Resolve-Rva $eNameRva 'export DLL name'
+        'DLL name     : ' + (Read-CString $nl.Offset $nl.Limit 'export DLL name')
+        'Characteristics=0x{0:X} TimeDateStamp=0x{1:X8} (field decodes to {2:yyyy-MM-dd HH:mm:ss} UTC) Version={3}.{4} OrdinalBase={5}' -f `
+            $eFlags, $eTds, ([DateTimeOffset]::FromUnixTimeSeconds($eTds).UtcDateTime), $eMaj, $eMin, $eBase
+        'NumberOfFunctions={0} NumberOfNames={1} AddressOfFunctions=0x{2:X} AddressOfNames=0x{3:X} AddressOfNameOrdinals=0x{4:X}' -f `
+            $nFunc, $nNames, $eatRva, $nptRva, $otRva
+        if ($eFlags -ne 0) { 'NOTE: export Characteristics is 0x{0:X}; the field is reserved and normally 0' -f $eFlags }
+        if ($nFunc -gt $MaxExportEntries) { Fail 3 ('NumberOfFunctions {0} exceeds this tool''s limit of {1}' -f $nFunc, $MaxExportEntries) }
+        if ($nNames -gt $MaxExportEntries) { Fail 3 ('NumberOfNames {0} exceeds this tool''s limit of {1}' -f $nNames, $MaxExportEntries) }
+        if ($nFunc -gt 0 -and ($eBase + $nFunc - 1) -gt 0xFFFF) {
+            'NOTE: the highest ordinal, {0}, exceeds 65535 and could not be imported by ordinal' -f ($eBase + $nFunc - 1)
+        }
+
+        # Metadata tables: each must be readable from one stored region.
+        $eat = 0L; $npt = 0L; $ot = 0L
+        if ($nFunc -gt 0) {
+            if ($eatRva -eq 0) { Fail 3 ('export address table: RVA is 0 (missing mandatory reference) but NumberOfFunctions is {0}' -f $nFunc) }
+            $tl = Resolve-Rva $eatRva 'export address table'
+            if ($tl.Offset + 4 * $nFunc -gt $tl.Limit) {
+                Fail 3 ('Export address table ({0} entries at RVA 0x{1:X}) runs past the stored data of {2}' -f $nFunc, $eatRva, $tl.Region)
+            }
+            $eat = $tl.Offset
+        }
+        if ($nNames -gt 0) {
+            if ($nptRva -eq 0) { Fail 3 ('export name pointer table: RVA is 0 (missing mandatory reference) but NumberOfNames is {0}' -f $nNames) }
+            if ($otRva -eq 0) { Fail 3 ('export ordinal table: RVA is 0 (missing mandatory reference) but NumberOfNames is {0}' -f $nNames) }
+            $tl = Resolve-Rva $nptRva 'export name pointer table'
+            if ($tl.Offset + 4 * $nNames -gt $tl.Limit) {
+                Fail 3 ('Export name pointer table ({0} entries at RVA 0x{1:X}) runs past the stored data of {2}' -f $nNames, $nptRva, $tl.Region)
+            }
+            $npt = $tl.Offset
+            $tl = Resolve-Rva $otRva 'export ordinal table'
+            if ($tl.Offset + 2 * $nNames -gt $tl.Limit) {
+                Fail 3 ('Export ordinal table ({0} entries at RVA 0x{1:X}) runs past the stored data of {2}' -f $nNames, $otRva, $tl.Region)
+            }
+            $ot = $tl.Offset
+        }
+
+        # Names. Several names may share one address-table index (aliases); that is valid.
+        $aliases = @{}   # [long] index -> list of names, in name-table order
+        $seen = New-Object 'System.Collections.Generic.Dictionary[string,long]' ([StringComparer]::Ordinal)
+        for ($i = 0L; $i -lt $nNames; $i++) {
+            $what = 'export name {0}' -f ($i + 1)
+            $idx = U16 ($ot + 2 * $i)
+            if ($idx -ge $nFunc) { Fail 3 ('{0}: ordinal-table index {1} is not below NumberOfFunctions {2}' -f $what, $idx, $nFunc) }
+            $nameRvaI = U32 ($npt + 4 * $i)
+            if ($nameRvaI -eq 0) { Fail 3 ('{0}: name RVA is 0 (missing mandatory reference)' -f $what) }
+            $nr = Resolve-Rva $nameRvaI $what
+            $nm = Read-CString $nr.Offset $nr.Limit $what
+            if ($seen.ContainsKey($nm)) { 'NOTE: duplicate export name {0} (name entries {1} and {2})' -f $nm, $seen[$nm], ($i + 1) }
+            else { $seen[$nm] = $i + 1 }
+            if (-not $aliases.ContainsKey($idx)) { $aliases[$idx] = New-Object System.Collections.Generic.List[string] }
+            $aliases[$idx].Add($nm)
+        }
+
+        # Address table, in original (index) order. Targets are classified, not read.
+        $nT = 0; $nF = 0; $nU = 0
+        for ($i = 0L; $i -lt $nFunc; $i++) {
+            $ord = $eBase + $i
+            $names = if ($aliases.ContainsKey($i)) { $aliases[$i] -join ', ' } else { '(none)' }
+            $v = U32 ($eat + 4 * $i)
+            if ($v -eq 0) {
+                $nU++
+                '  ordinal {0}: unused (address 0); names: {1}' -f $ord, $names
+                if ($aliases.ContainsKey($i)) { 'NOTE: export name(s) {0} refer to the unused address-table entry for ordinal {1}' -f $names, $ord }
+                continue
+            }
+            if ($v -ge $expRva -and $v -lt $expEnd) {
+                # Forwarder: the string, including its terminating zero, must lie inside the export directory range.
+                $what = 'export ordinal {0} forwarder' -f $ord
+                $text = Read-CString ($el.Offset + ($v - $expRva)) ($el.Offset + $expSize) $what
+                $dot = $text.LastIndexOf('.')
+                if ($dot -le 0 -or $dot -ge $text.Length - 1) {
+                    Fail 3 ('{0}: "{1}" is not of the form DLL.Name or DLL.#ordinal' -f $what, $text)
+                }
+                $target = $text.Substring($dot + 1)
+                if ($target.StartsWith('#') -and ($target -notmatch '^#\d{1,5}$' -or [long]$target.Substring(1) -gt 65535)) {
+                    Fail 3 ('{0}: "{1}" has an invalid ordinal form; expected # followed by a decimal number 0..65535' -f $what, $text)
+                }
+                $nF++
+                '  ordinal {0}: forwarder -> {1}; names: {2}' -f $ord, $text, $names
+                continue
+            }
+            if ($v -ge $script:sizeOfImage) {
+                Fail 3 ('Export ordinal {0}: target RVA 0x{1:X} is at or beyond SizeOfImage 0x{2:X}' -f $ord, $v, $script:sizeOfImage)
+            }
+            $nT++
+            '  ordinal {0}: RVA 0x{1:X8} -> {2}; names: {3}' -f $ord, $v, (Get-TargetClass $v), $names
+        }
+        'Total exports: {0} address-table entries (targets {1}, forwarders {2}, unused {3}); names {4}' -f $nFunc, $nT, $nF, $nU, $nNames
     }
 }
 catch {
