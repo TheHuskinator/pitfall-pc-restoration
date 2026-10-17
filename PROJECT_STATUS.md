@@ -330,6 +330,30 @@ The mocks model real getter failures through getter methods. That this matches l
 - **No static-analysis project:** the reviewed PE inspector cannot establish the CD-check control flow.
 - The result is to be delivered as a sanitized report in a new dated `private/work-review/` batch.
 
+#### Confirmation run result and Work review (2026-10-17)
+
+- **Run:** one unchanged confirmation launch (run `baseline-20261017-154823`, kept local). Report: [existing-account-confirmation-1.md](docs/testing/existing-account-confirmation-1.md).
+- **Dialogs**, exact text copied from each message box, in this order:
+  1. `Pitfall`: "Pitfall must be played in 256 color mode for optimum performance." [OK]
+  2. `Pitfall`: "Pitfall must be played using the CD-ROM." [OK]
+- **Ending:** after OK on the second dialog, the game closed by itself (reported), with exit code 0 and no game crash events found (verified). No difference was found in any captured observation. This reproduces baseline 1.
+- **Work verdict: ACCEPT.** Work checked the report against its full SHA-256 and reviewed the sanitized report only. The exact media requirement remains unknown.
+
+### Next milestone: data-only disc image and mounted-disc test (preparation only)
+
+**Work recommendation (2026-10-17):** prepare a **data-only ISO** of the existing image's data track and **one mounted-disc launch**, rather than another unchanged launch or broader reverse engineering. Windows' built-in disc-image mounting means no virtual-drive software is needed.
+
+- **Claude is authorized to prepare, not execute:**
+  - a proposal and conversion-script source, based on the committed media documentation;
+  - the conversion keeps the data track's filesystem and volume label;
+  - source-integrity checks, a new private output file, no overwrites, and verification against the 40-file inventory;
+  - one planned launch of the **same working-copy executable and working directory**, changing only the presence of the mounted disc.
+- **Excluded from the plan:** AutoPlay, `PITSTART.EXE`, any installer and anything run from the mounted image.
+- **Limitation:** this test **does not reproduce the audio tracks or test CD music**.
+- **No original-media access** is authorized by this preparation assignment. The preparation goes to a new `private/work-review/` batch.
+- **Reserved for the user:** creating the ISO, mounting it and testing in that changed environment each require the user's explicit approval.
+- **Reading the outcome:** a pass would show that the mounted data disc satisfies the immediate requirement. A failure gives a specific reason to investigate the CD check. Neither outcome justifies downloading DLLs or rebuilding the engine.
+
 #### Next run — proposed, pending explicit user approval
 
 - **Subject:** exactly one `ASSETS\PITFALL.EXE` launch from the already staged copy, under the existing account, unelevated, with `ASSETS` explicitly set as the working directory. No Windows 95 mode, reduced-colour setting, wrapper, replacement DLL, launcher or installer in this baseline.
@@ -474,7 +498,7 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 **Current (2026-10-16):** follow *Next milestone: one attributable baseline in the existing Windows account* above.
 1. Preserve the completed separate-account exploratory session. Work reviewed it with evidence-limit corrections; no need to redo staging or WAIL32 analysis.
 2. ~~Claude completes the narrowly scoped account/privacy helper adaptation and read-only preflight, without requiring a separate Windows account.~~ Done: helper revision 2 accepted by Work and installed with a verified fingerprint (2026-10-17).
-3. ~~Obtain explicit approval for the single existing-account baseline, then record that run before selecting any compatibility change.~~ Done 2026-10-17: baseline 1 run and accepted by Work. **Current:** one unchanged confirmation launch to capture the exact dialog text (see *Baseline 1 result and Work review*).
+3. ~~Obtain explicit approval for the single existing-account baseline, then record that run before selecting any compatibility change.~~ Done 2026-10-17: baseline 1 and the confirmation run, both accepted by Work. **Current:** prepare the data-only disc image and mounted-disc test proposal (see *Next milestone: data-only disc image and mounted-disc test*); execution needs the user's explicit approval.
 4. Keep Defender enabled, originals read-only and personal data out of reports. Defer tooling, mounting/conversion and deeper reverse engineering until evidence justifies them.
 
 **Completed (historical):**
@@ -540,3 +564,4 @@ Each work session should leave the project easier to resume:
 | 2026-10-17 | Accept `baseline-run.ps1` revision 2 (`B9B56E5E…DEE2`) for one supervised existing-account baseline; install it to `C:\PitfallTest\tools`. | Work review (delegated) | Source acceptance only. The 10-minute limit is a reminder, not an automatic stop; exit code 0 does not mean gameplay worked. The launch itself still needs the user's explicit approval. |
 | 2026-10-17 | Deliver files for Work's review through the git-ignored `private/work-review/` folder. | User request | Claude-written files only; dated batches, fingerprints listed in its README, never edited after listing. |
 | 2026-10-17 | Accept existing-account baseline 1; next, one unchanged confirmation launch to capture the exact dialog text. | Work review (delegated) after the user-approved run | CD-ROM check is the leading suspected blocker, not a proven cause. No static-analysis project. The confirmation run is launched and observed by the user. |
+| 2026-10-17 | Accept the confirmation run; next, prepare a data-only ISO and one mounted-disc launch. | Work review and preparation assignment (delegated) | Preparation only, with no original-media access. Creating the ISO, mounting it and the launch each need the user's explicit approval. Does not test CD audio. |
