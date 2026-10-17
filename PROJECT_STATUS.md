@@ -378,6 +378,28 @@ The mocks model real getter failures through getter methods. That this matches l
   - **C:** every folder in every phase is checked for links, outputs are confined, and the report is written only into a verified real logs folder. Testing showed revision 2's first draft wrote its report through a linked logs folder; this is fixed.
   - **Wording corrected:** Git ignores `private/`; staging checks must still exclude proprietary content.
 - **Still reserved for the user:** creating the ISO, the AutoPlay switch, mounting and the launch.
+- **Revision 2 review (Work):** A and B fixed. One path-safety correction was required: after rejecting a path, the error handler could still hash the source through it, and the disc check still read the ISO and its record.
+- **Revision 3** (batch `2026-10-17-mounted-disc-prep-r3`):
+  - Folder validation is a prerequisite to every read and write, and stops at the first rejected folder.
+  - Tests 83/83 (Claude-reported, synthetic) assert zero source, ISO and record accesses and no report through rejected paths, with positive controls. Run against revision 2, the new tests fail 8 cases.
+  - **Work verdict: ACCEPT for the proposed mounted-disc test, subject to the user's explicit approval.** Work reviewed the source and tests without running them or accessing original media.
+
+| Accepted file (mounted-disc revision 3) | SHA-256 |
+|---|---|
+| `make-data-iso.ps1` | `1F8BD327D422770C0CA22E615C1CF811E01512569522D22D2AC68167DBBB3B61` |
+| `test-make-data-iso.ps1` | `30C89F7CF93A4CB2E354A2871B74AE79C3AC8FADA5CBC1402A37A6EB73700A2D` |
+| `mounted-disc-proposal.md` | `34F59F9FA9C504C0D08FDBC9A579C067442CAF0D8B9B2BA70B00A496128C9156` |
+
+- **Helper revision 3 installed** *(verified by Claude, 2026-10-17)*: `C:\PitfallTest\tools\baseline-run-r3.ps1`, copied only because no file of that name existed. SHA-256 `315248685186A97ABED61573C3158233A0F3F41EBA1195D87EDB214A0B8FDD90` matches the accepted file. `baseline-run.ps1` (revision 2, `B9B56E5E…`) is untouched. All three phases of the next test use `baseline-run-r3.ps1`; its printed "Next:" hints still name revision 2 and are to be ignored.
+- **`make-data-iso.ps1`** is run directly from its review batch folder, after its fingerprint is checked; it is not copied elsewhere.
+- **Awaiting the user's one combined approval** for the five actions below. Work's acceptance does not itself authorize them.
+  1. One data-only ISO creation.
+  2. Switching AutoPlay off temporarily (the user does this).
+  3. Mounting, only after the pre-mount check passes.
+  4. One supervised launch, after the mounted-disc check and the before snapshot pass.
+  5. Ejecting the ISO, then restoring the recorded previous AutoPlay setting.
+
+  Conditions: network may stay connected, Defender stays on, everything runs unelevated, and any failed check, unexpected prompt or stop condition means stop, with no automatic retry. CD music remains outside this data-only test.
 
 #### Next run — proposed, pending explicit user approval
 
@@ -523,7 +545,7 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 **Current (2026-10-16):** follow *Next milestone: one attributable baseline in the existing Windows account* above.
 1. Preserve the completed separate-account exploratory session. Work reviewed it with evidence-limit corrections; no need to redo staging or WAIL32 analysis.
 2. ~~Claude completes the narrowly scoped account/privacy helper adaptation and read-only preflight, without requiring a separate Windows account.~~ Done: helper revision 2 accepted by Work and installed with a verified fingerprint (2026-10-17).
-3. ~~Obtain explicit approval for the single existing-account baseline, then record that run before selecting any compatibility change.~~ Done 2026-10-17: baseline 1 and the confirmation run, both accepted by Work. **Current:** the mounted-disc proposal, revision 2, awaits Work's review (see *Mounted-disc preparation: review and correction*). Creating the ISO, the AutoPlay switch, mounting and the launch each need the user's explicit approval.
+3. ~~Obtain explicit approval for the single existing-account baseline, then record that run before selecting any compatibility change.~~ Done 2026-10-17: baseline 1 and the confirmation run, both accepted by Work. **Current:** the mounted-disc proposal, revision 3, is accepted by Work and helper revision 3 is installed. The test awaits the user's one combined approval for ISO creation, the temporary AutoPlay switch-off, mounting, one launch, then eject and restore (see *Mounted-disc preparation: review and correction*).
 4. Keep Defender enabled, originals read-only and personal data out of reports. Defer tooling, mounting/conversion and deeper reverse engineering until evidence justifies them.
 
 **Completed (historical):**
@@ -592,3 +614,4 @@ Each work session should leave the project easier to resume:
 | 2026-10-17 | Accept the confirmation run; next, prepare a data-only ISO and one mounted-disc launch. | Work review and preparation assignment (delegated) | Preparation only, with no original-media access. Creating the ISO, mounting it and the launch each need the user's explicit approval. Does not test CD audio. |
 | 2026-10-17 | Run future tests with the network connected; remove the helper's network gate (revision 3). | User decision; Work ACCEPT of revision 3 | Network recorded as context; network or firewall prompts are a stop condition. Earlier runs stay documented as offline. |
 | 2026-10-17 | Mounted-disc preparation revision 1: corrections required (AutoPlay before mounting, finalisation, link checks); revision 2 submitted. | Work review (delegated) | Revision 2 proposes a user-approved temporary AutoPlay switch-off. Nothing created, mounted or launched. |
+| 2026-10-17 | Accept mounted-disc revision 3 (`make-data-iso.ps1` `1F8BD327…`); install helper revision 3 as `baseline-run-r3.ps1`. | Work review (delegated) | Subject to the user's explicit combined approval of ISO creation, the AutoPlay switch-off, mounting, one launch, eject and restore. |
