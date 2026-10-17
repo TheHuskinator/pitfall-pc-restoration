@@ -19,7 +19,10 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - Claude Code is the local developer and reverse-engineering agent, working within authorized scope.
   - ChatGPT Work ("Work") reviews research, sources, technical claims, code and QA, and helps prepare proposals and handoffs.
   - Handoff: Claude proposes → the user authorizes → Claude completes and reports → the user passes it to Work → Work reports to the user → the user decides.
-  - A Work verdict is not permission to act.
+  - **Delegated approval (from 2026-10-16):**
+    - Actions Work explicitly recommends, in a review the user passes on, count as the user's approval within Work's stated boundaries. That includes edits, test runs, commits, pushes and merges into `main`.
+    - Still reserved for the user's direct approval: running game software or mounting/extracting disc images; installing tools; contacting anyone outside the project; and anything Work leaves as the user's decision.
+    - The user's word overrides Work's. See `CLAUDE.md` → Roles.
 - **Transition note:** before 2026-10-16, records used the roles "ChatGPT Chat 1–4" and "Codex / ChatGPT Work". There are no active Chat 1–4 roles. Older records below keep their original labels. Reviews recorded as "Chat 2" and as "Work" should not be counted as separate independent verifications; multiple reviews in the same Work conversation are not independent reviewers.
 - These roles operate under the user's direction and the approval rules in `CLAUDE.md`.
 - Preserve the original game's gameplay, presentation, audio, controls, timing, and content as closely as practical.
@@ -273,4 +276,5 @@ Each work session should leave the project easier to resume:
 | 2026-10-15 | Claude Code primary; Chat 1 coordination, Chat 2 research review, Chat 3 development handoffs, Chat 4 QA; Codex / ChatGPT Work independent audit/backup. | User-approved | Responsibilities do not expand action permissions. |
 | 2026-10-15 | First examine `private/original-media/Pitfall.{img,sub,ccd,cue}` read-only and stop after a metadata/structure report. | User-approved task scope | Presence, provenance, permission for use, completeness, and release identity remain to be verified; no mounting, extraction, installation, or game execution. |
 | 2026-10-16 | Replace the numbered-chat roles with a two-agent workflow: the user (sole decision-maker), Claude Code (developer and reverse-engineering agent) and ChatGPT Work (independent reviewer, proposal and handoff help). | User decision | Supersedes the 2026-10-15 role entry above, which is kept as history. Historical review labels are unchanged. Reviews in one Work conversation are not separate independent reviewers. A Work verdict is not permission to act. |
+| 2026-10-16 | Delegated approval: actions ChatGPT Work explicitly recommends (in reviews the user passes on) count as the user's approval, including edits, test runs, commits, pushes and merges into `main`. | User decision | Amends the workflow entry above. Still reserved for the user directly: game execution, mounting or extracting disc images; installing tools; external contact; anything Work leaves to the user. The user's word overrides Work's. |
 | 2026-10-16 | Merge the reviewed PE parser milestone (`draft/inspect-pe`) into `main` by fast-forward, keeping every reviewed commit ID in `main`'s history. | User-approved | ChatGPT Work ACCEPT of `4ec4321`. Tool results remain Claude-reported; independent byte verification is still open. |

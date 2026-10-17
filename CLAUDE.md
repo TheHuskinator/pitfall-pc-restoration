@@ -22,10 +22,23 @@ Two-agent workflow (adopted by the user on 2026-10-16):
 4. The user passes the material to Work for review.
 5. Work reports its findings to the user, and the user decides what happens next.
 
+**Delegated approval (adopted by the user on 2026-10-16):** when the user passes a Work review to Claude, the actions Work **explicitly recommends** count as the user's approval, within the boundaries Work states.
+- **This covers** edits, test runs, commits, pushes and **merges into `main`** that Work explicitly recommends.
+- **It does not cover**, so Claude still asks the user:
+  - anything Work leaves as "the user's decision";
+  - options Work lists without recommending;
+  - anything outside Work's stated boundaries.
+- **Always reserved for the user's direct approval**, even if Work recommends them:
+  1. running original game software, or mounting or extracting disc images;
+  2. installing tools or dependencies;
+  3. contacting anyone outside the project.
+- **The user's own word overrides Work's** whenever they differ. The user can withdraw this delegation at any time.
+- **Reporting:** when Claude acts on delegated approval, its report says so, citing the Work recommendation it relied on.
+
 **Authority limits:**
-- A Work verdict (including ACCEPT) is a review result, **not** permission to edit, execute, commit, push or expand scope.
-- The user's approval covers only the action and boundaries stated.
-- Neither role grants permission to contact people, install tools, execute game software or push changes. The user approves those as required below.
+- A Work verdict on its own (e.g. ACCEPT with no recommended action) is a review result, **not** permission to act.
+- Any approval, the user's or delegated, covers only the action and boundaries stated.
+- Neither role grants permission to contact people, install tools or execute game software. Those always need the user's direct approval (see above and rules 7 and 9).
 
 **Counting reviews:** several reviews in the same Work conversation are **not** separate independent reviewers. Do not describe them as additional independent verification.
 
@@ -37,7 +50,7 @@ Two-agent workflow (adopted by the user on 2026-10-16):
 2. **Do not assume original source code exists or is available.** Plan as if only the shipped game files are available until proven otherwise.
 3. **Never download copyrighted game files** (disc images, installers, executables, assets, music, video, manuals) from the internet. Only work with material the user supplies.
 4. **Never commit original game material.** Original/proprietary files live only in `private/` (git-ignored). Check `git status` before every commit to confirm nothing proprietary is staged.
-5. **Never push to GitHub without the user's explicit approval** for that specific push. Local commits are fine when the user has asked for them.
+5. **Never push to GitHub without the user's explicit approval** for that specific push. Local commits are fine when the user has asked for them. A commit, push or merge that Work explicitly recommends, in a review the user passes on, counts as that approval (see Roles → *Delegated approval*).
 6. **Ask before major architectural decisions** — choice of language, framework, engine approach (compatibility layer vs. reimplementation), build system, asset pipeline, or any new third-party dependency. Record approved decisions in `docs/decisions/`.
 7. **Do not send external communications** (emails, issues, forum posts, outreach) without explicit user authorization.
 8. **Explain everything in plain English.** Avoid unexplained jargon. When a technical term is necessary, define it briefly.
