@@ -1,7 +1,7 @@
 # MEDIA-001 audit tracker
 
 **Created:** 2026-10-15
-**Covers:** the audits of Claude Code's MEDIA-001 examinations (commits `d0cd045` and `d906553`), of reports R2.1 and R2.2, and of the PE parser and its documentation (branch `draft/inspect-pe`).
+**Covers:** the audits of Claude Code's MEDIA-001 examinations (commits `d0cd045` and `d906553`), of reports R2.1 and R2.2, of the PE parser and its documentation (branch `draft/inspect-pe`), and of its export-reading enhancement (branch `draft/inspect-pe-exports`).
 
 **Reviewer labels and workflow (note added 2026-10-16):**
 - On 2026-10-16 the user replaced the numbered-chat roles ("ChatGPT Chat 1–4", "Codex / ChatGPT Work") with a two-agent workflow: the user (sole decision-maker), Claude Code, and ChatGPT Work ("Work", the reviewer). See `CLAUDE.md` → Roles.
@@ -119,6 +119,19 @@ Neither auditor had access to the disc image. Hashes, raw-sector observations, Q
 | R2.2-R | Report `docs/technical/startup-executables.md` | Committed on `main` as `323a03c`, with a status-line fix in `e08d2dc`. |
 | R2.2-A | Chat 2 audit of `e08d2dc` (2026-10-16) | **Accept with corrections.**<br>• Confirmed: identity, both files' headers and consistency arithmetic, import counts and thunk ranges, the R2.1 comparison sets, and the D-EXE-2 durations.<br>• Required, documentation only: the abbreviated KILLPIT hash in §1 (`…ADE3A` → `…B4AF6`); "not used by PITFALL" → absent from its recorded static imports; "nothing was run" → no original game code was executed; resource wording limited to the declared directory and section; process-control absence narrowed to `OpenProcess`/`TerminateProcess` (noting `ExitProcess` and `CreateProcessA`); J6 likelihood claim removed; J7 limited to differing fields; §6 sources separated; matching fixes in `PROJECT_STATUS.md` and this tracker.<br>• Optional, also applied: conditional Q9–Q12; J1 wording; J4 raw vs directory size; separate citation of API semantics; §7 additions.<br>• Corrections committed on `main` in `6629328` (tagged *[R2.2-C1]*–*[R2.2-C8]*). No parser change or game-file read was needed. |
 | R2.2-F | Work's follow-up review of `6629328`, on GitHub at `06ee277` (2026-10-16) | **ACCEPT**, no further technical corrections.<br>• Confirmed: all eight report corrections and the matching status/tracker fixes; numerical tables and import lists unchanged; parser and test blob IDs unchanged; `6629328` changes only four documentation files and `06ee277` only `CLAUDE.md`.<br>• Evidence limit: executable observations remain Claude-reported, not independently reproduced.<br>• Same reviewer role as R2.2-A (see the note at the top); not an additional independent verification. |
+
+## Export-reading enhancement to `tools/inspect-pe.ps1` (2026-10-16)
+
+| Step | What happened | Outcome |
+| --- | --- | --- |
+| X1 | Claude proposed the export enhancement; Work recommended corrections to the proposal (aliases, metadata vs targets, forwarder boundaries, branching from the updated `main`) | The user authorized the corrected plan: a draft only, with no tests, no game files and no merge. |
+| X2 | Draft `4c1d42c` on `draft/inspect-pe-exports` (cut from `4942b62`), including the deferred header-comment fixes | Work source review: **Accept with corrections**. Two validation gaps: an export directory entry with only one zero field; zero RVAs for mandatory references being read as header text. |
+| X3 | Revision `7dbe873`: both gaps fixed (export-only; shared mapper and import code unchanged); tests T60–T73 added | Done on Work's explicit recommendation (delegated approval). Work source review: **Accept for testing**; T30 strengthening not recommended. |
+| X4 | Single synthetic run at `7dbe873` (Work's explicit recommendation) | **73/73 PASS, exit 0**; temporary folder removed; pre-checks passed. Claude-reported. |
+| X5 | Work's review of X4 | **ACCEPT**: closes the synthetic-testing step. Recommended a merge commit, one documentation commit and one push. |
+| X6 | Merge into `main` (merge commit `4a7ab30`; parents `afec385` and `7dbe873`); script blobs `3c334673…` and `f69db216…` unchanged | Done on Work's explicit recommendation (delegated approval). This tracker entry, `tools/README.md` and `PROJECT_STATUS.md` were updated in the following documentation commit. |
+
+**Evidence limits:** the test run is Claude-reported and has not been independently reproduced. The export-enabled version has not been run on any game file. `WAIL32.DLL` has not been examined. Reviews X2–X5 come from the same Work reviewer role and are not separate independent verifications.
 
 ## Repository hygiene: tracker character-encoding repair (2026-10-15)
 

@@ -92,14 +92,17 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 - **R2.2 final ACCEPT recorded (2026-10-16):** the R2.2 report, technical index, audit tracker (row R2.2-F) and this file now record Work's follow-up ACCEPT, with historical labels preserved.
 
+- **Export-reading enhancement: completed and merged (2026-10-16).**
+  - `tools/inspect-pe.ps1` now also reports export tables. The deferred header-comment fixes are completed in the same change.
+  - **History:** draft `4c1d42c` (Work: Accept with corrections), then `7dbe873` (Work: Accept for testing).
+  - **Testing:** Claude's single synthetic run at `7dbe873` gave **73/73 PASS, exit 0** (Claude-reported). Work accepted this as closing the testing step.
+  - **Merge:** merged into `main` by merge commit `4a7ab30` on Work's explicit recommendation, under delegated approval.
+  - **Not done:** independent reproduction of the run; any re-run of the export-enabled version on game files; any `WAIL32.DLL` examination.
+
 **Next tasks:**
-1. **Export-reading enhancement for `tools/inspect-pe.ps1`.** Authorized 2026-10-16 as a draft only:
-   - code, synthetic tests and the deferred header-comment fixes, written on branch `draft/inspect-pe-exports`, committed and published for Work's source review;
-   - **no tests run, no game files read, no merge**.
-   - Running the tests, merging and any later push each need separate authorization.
-2. *(Awaiting user decision)* Static exports/imports check of `WAIL32.DLL` (R2.3), after the export enhancement is reviewed, tested and merged.
-3. *(Awaiting user decision)* Resource-type enumeration for `PITFALL.EXE` and `PITSTART.EXE` (no extraction).
-4. *(Awaiting user decision)* Run-time dependencies: static string leads, or execution under its own approved test plan.
+1. *(Awaiting user decision)* R2.3: a separately scoped `WAIL32.DLL` header/import/export review. Claude will propose its scope first.
+2. *(Awaiting user decision)* Resource-type enumeration for `PITFALL.EXE` and `PITSTART.EXE` (no extraction).
+3. *(Awaiting user decision)* Run-time dependencies: static string leads, or execution under its own approved test plan.
 
 **2026-10-14 — repository setup:** Added `CLAUDE.md` (permanent agent rules), `.gitignore` (blocks original game files, disc images, media, credentials, and build output), a git-ignored `private/` folder for original material, and a `docs/` structure (research, inventory, legal, decisions, technical, testing). Remote confirmed as `TheHuskinator/pitfall-pc-restoration` (private). The setup files were committed to GitHub; this earlier pending-push note was superseded on 2026-10-15.
 
@@ -221,7 +224,7 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 ## Immediate next actions
 
 **Current (2026-10-16)** — the authoritative technical list is *Next proposed tasks* in *Current project status* above:
-1. Export-reading enhancement draft (authorized 2026-10-16; draft only, see *Next tasks* above), then Work's source review. The user decides whether the tests may run.
+1. Propose a separately scoped R2.3 (`WAIL32.DLL` header/import/export review). Its scope needs approval from the user, or by an explicit Work recommendation under delegated approval.
 2. Verify the Andy Glaister lead and draft—not send—an outreach note unless the user explicitly authorizes contact.
 3. Follow the two-agent handoff: Claude proposes → the user authorizes → Claude reports → the user passes it to Work → Work reports to the user → the user decides. Obtain the applicable user approval before mounting, extraction, installation, game execution, tool installation, implementation, commits or pushes.
 4. Do not commit to C++/SDL3 until the technical-discovery milestone produces a short recommendation.
@@ -231,6 +234,7 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 - 2026-10-15: provenance reported by the user; real subfolder path adopted; read-only ISO 9660 directory inventory completed.
 - 2026-10-15: `PITFALL.EXE` header/import summary (R2.1), accepted by Chat 2. Reproduced with the reviewed replacement parser (§10 of `docs/technical/executable.md`).
 - 2026-10-16: PE parser milestone (`tools/inspect-pe.ps1`, its tests and documentation) accepted by ChatGPT Work. `draft/inspect-pe` was fast-forward merged into `main` (`50cf7d0` → `4ec4321`).
+- 2026-10-16: export-reading enhancement to `tools/inspect-pe.ps1` reviewed by Work, synthetic-tested (73/73 PASS, Claude-reported) and merged into `main` (`4a7ab30`).
 - 2026-10-16: R2.2 (`PITSTART.EXE`, `KILLPIT.EXE`) completed. Its first audit is recorded as "Chat 2"; final result: Work's follow-up ACCEPT of the corrections in `6629328`, reviewed at `06ee277`.
 - 2026-10-15: six original-port-analysis articles and the author's roadmap indexed with citations; reported findings extracted. Still open: validating them against local game files, and following up on private tools/permissions.
 
@@ -277,4 +281,5 @@ Each work session should leave the project easier to resume:
 | 2026-10-15 | First examine `private/original-media/Pitfall.{img,sub,ccd,cue}` read-only and stop after a metadata/structure report. | User-approved task scope | Presence, provenance, permission for use, completeness, and release identity remain to be verified; no mounting, extraction, installation, or game execution. |
 | 2026-10-16 | Replace the numbered-chat roles with a two-agent workflow: the user (sole decision-maker), Claude Code (developer and reverse-engineering agent) and ChatGPT Work (independent reviewer, proposal and handoff help). | User decision | Supersedes the 2026-10-15 role entry above, which is kept as history. Historical review labels are unchanged. Reviews in one Work conversation are not separate independent reviewers. A Work verdict is not permission to act. |
 | 2026-10-16 | Delegated approval: actions ChatGPT Work explicitly recommends (in reviews the user passes on) count as the user's approval, including edits, test runs, commits, pushes and merges into `main`. | User decision | Amends the workflow entry above. Still reserved for the user directly: game execution, mounting or extracting disc images; installing tools; external contact; anything Work leaves to the user. The user's word overrides Work's. |
+| 2026-10-16 | Merge the reviewed export enhancement (`draft/inspect-pe-exports` at `7dbe873`) into `main` with a normal merge commit (`4a7ab30`), keeping both reviewed draft commits. | Work recommendation (delegated approval) | Work: Accept for testing; Claude-reported 73/73 PASS. Not re-run on game files; no independent reproduction. |
 | 2026-10-16 | Merge the reviewed PE parser milestone (`draft/inspect-pe`) into `main` by fast-forward, keeping every reviewed commit ID in `main`'s history. | User-approved | ChatGPT Work ACCEPT of `4ec4321`. Tool results remain Claude-reported; independent byte verification is still open. |

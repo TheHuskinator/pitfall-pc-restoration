@@ -58,9 +58,13 @@ A run by the same examiner is a reproducibility check, not an independent confir
 
 ## `inspect-pe.ps1` — read-only PE32 header/import/export inspector
 
-> **Draft status (branch `draft/inspect-pe-exports`, 2026-10-16):** the export-table support and the export tests described below are a **never-run draft**. Work's source review of `4c1d42c` gave "Accept with corrections"; this revision applies those corrections and awaits Work's review. Running the tests needs approval (from the user, or by a Work recommendation under delegated approval). Everything else in this section describes the reviewed and tested version at `c389278`.
+> **Status (2026-10-16):** export-table support is **merged into `main`** (merge commit `4a7ab30`).
+> - **Reviews:** Work's source reviews gave `4c1d42c` "Accept with corrections" and `7dbe873` "Accept for testing".
+> - **Tests:** Claude's single synthetic run at `7dbe873`: **73/73 PASS, exit 0** (Claude-reported). Work accepted that as closing the testing step.
+> - **History:** until that run, the export support was a never-run draft on branch `draft/inspect-pe-exports` (`4c1d42c`, then `7dbe873`).
+> - **Not yet done with this version:** a re-run on the game files, independent reproduction of any run, and any examination of `WAIL32.DLL`.
 
-**Purpose:** report a 32-bit Windows program's (PE32) headers, sections, entry point and static imports, in original and sorted order, and (draft) its export table. It is the reviewed and synthetic-tested replacement for the session-local parser behind report R2.1 ([docs/technical/executable.md](../docs/technical/executable.md)). Review history: [audit tracker](../docs/reviews/media-001-audit-tracker.md).
+**Purpose:** report a 32-bit Windows program's (PE32) headers, sections, entry point and static imports, in original and sorted order, and its export table. It is the reviewed and synthetic-tested replacement for the session-local parser behind report R2.1 ([docs/technical/executable.md](../docs/technical/executable.md)). Review history: [audit tracker](../docs/reviews/media-001-audit-tracker.md).
 
 **Safety:**
 - Opens its input read-only.
@@ -94,7 +98,7 @@ A run by the same examiner is a reproducibility check, not an independent confir
 
 **Address-mapping policy:** this tool bounds section mapping by `VirtualSize`. That is the tool's deliberate, stricter policy, not a claim that it reproduces the Windows loader exactly.
 
-### Exports (draft)
+### Exports
 
 **Output:**
 - A separate `=== EXPORTS` section comes **after** the static-import section. Every existing header and import line, and every exit-code meaning, is unchanged; the export section is purely added.
@@ -145,19 +149,21 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\tests\test-inspect-pe.
 ```
 
 **What they do:**
-- **Draft:** the script now defines 73 cases: the 29 reviewed cases T01–T29, unchanged, plus 44 export cases, which have not been run. They are T30–T59 from the first draft (`4c1d42c`, source-reviewed by Work) and T60–T73, added for Work's corrections. The description below covers the reviewed 29.
-- 29 synthetic test cases. Each builds a harmless test file from scratch in memory, with no game data and no system files. Some are valid; most are deliberately malformed or unsupported (truncated, out of range, unterminated, overlapping, wrong format, and so on).
+- 73 synthetic test cases:
+  - T01–T29: the original import-parser cases, unchanged since `c389278`;
+  - T30–T73: 44 export cases. T30–T59 came from the first export draft (`4c1d42c`); T60–T73 were added for Work's corrections (`7dbe873`).
+- Each case builds a harmless test file from scratch in memory, with no game data and no system files. Some are valid; most are deliberately malformed or unsupported (truncated, out of range, unterminated, overlapping, inconsistent, wrong format, and so on).
 - Each test file is **written to a new temporary folder on disk**, and the inspector is run against it in a separate process. The test checks the exit code and key output lines.
-- They cover every finding from both of ChatGPT Work's reviews (the mapping is in the script's header comment), plus image mode across several sectors, with marker bytes so that a misplaced read would fail the fingerprint check.
+- They cover every finding from Work's reviews of the import parser and of the export draft (the mapping is in the script's header comment), plus image mode across several sectors, with marker bytes so that a misplaced read would fail the fingerprint check.
 - The temporary folder is deleted afterwards.
 
-**Expected result:** 29 `PASS` lines, then `RESULT: all 29 tests passed`, exit code `0` (reviewed version at `c389278`). For the draft, the expectation is 73 `PASS` lines and `RESULT: all 73 tests passed`. This is untested until a run is authorized.
+**Expected result:** 73 `PASS` lines, then `RESULT: all 73 tests passed`, exit code `0` (version at `7dbe873`, merged in `4a7ab30`). The earlier import-only version at `c389278` had 29 tests.
 
 **Line endings:** Git's `core.autocrlf=true` setting can write CRLF line endings into checked-out copies of files committed with LF, so the SHA-256 of a checked-out copy can differ from the reviewed value.
 - **Committed content:** to compare it, use the Git blob ID (`git hash-object`, which applies Git's normalization).
 - **A physical working file:** to show it differs only in line endings, hash it after converting CRLF to LF and compare with the reviewed value.
 
-On 2026-10-15, Claude reported doing both checks for these two scripts; see *Runs so far*.
+On 2026-10-15, Claude reported doing both checks for the `c389278` versions of these two scripts. On 2026-10-16, before the 73-test run, Claude reported checking that the working files' Git blob IDs matched the reviewed `7dbe873` IDs. See *Runs so far*.
 
 ### Runs so far
 
@@ -165,8 +171,18 @@ On 2026-10-15, Claude reported doing both checks for these two scripts; see *Run
 | --- | --- | --- | --- |
 | 2026-10-15 | Claude Code (user-approved) | Synthetic tests at `c389278` | 29/29 PASS, exit 0; temporary folder removed |
 | 2026-10-15 | Claude Code (user-approved) | `PITFALL.EXE` re-read at `c389278` | Fingerprint matched before parsing; `RESULT: OK`, exit 0. All R2.1 values reproduced; only display order differs ([executable.md §10](../docs/technical/executable.md)) |
+| 2026-10-16 | Claude Code (on Work's explicit recommendation, delegated approval) | Synthetic tests at `7dbe873` (a single invocation) | **73/73 PASS, exit 0**; temporary folder removed. Pre-checks: clean checkout, `HEAD` = `7dbe873`, blob IDs matched. No game files read. |
 
-**Reviewed code identity for both runs** (commit `c389278`):
+The 2026-10-15 `PITFALL.EXE` re-read and the R2.2 examination used the import-only version. **The export-enabled version has not been run on any game file.**
+
+**Reviewed code identity for the 2026-10-16 run** (commit `7dbe873`, merged unchanged in `4a7ab30`):
+
+| File | Git blob ID |
+| --- | --- |
+| `tools/inspect-pe.ps1` | `3c334673f4dc6f32261cd0d745ca39af9825d6c4` |
+| `tools/tests/test-inspect-pe.ps1` | `f69db216a30402c6c156f67c20c05d4b15ca3e2f` |
+
+**Reviewed code identity for the 2026-10-15 runs** (commit `c389278`):
 
 | File | Git blob ID | Reviewed SHA-256 (LF line endings) |
 | --- | --- | --- |
@@ -175,4 +191,7 @@ On 2026-10-15, Claude reported doing both checks for these two scripts; see *Run
 
 Claude's reported checks: both working files matched these blob IDs and, after CRLF→LF conversion, these SHA-256 values.
 
-**Evidence limit:** both runs were performed and reported by Claude, who also wrote the tool, so this is not an independent confirmation. ChatGPT Work reviewed the source (twice) and the reported results, but did not run the tool.
+**Evidence limit:**
+- Every run above was performed and reported by Claude, who also wrote the tool, so none is an independent confirmation.
+- ChatGPT Work reviewed the source (the import parser twice and the export draft twice) and the reported results, but did not run the tool.
+- No independent party has reproduced any run.
