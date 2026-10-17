@@ -13,7 +13,7 @@ Findings about how the original Kinesoft Windows 95 build works.
 
 - [startup-executables.md](startup-executables.md) — **R2.2 (final: Work's follow-up ACCEPT of the corrections in `6629328`, reviewed at `06ee277`; the first audit is recorded as "Chat 2"):** static headers and imports of `PITSTART.EXE` and `ASSETS/KILLPIT.EXE`. Both are 32-bit x86 Windows GUI programs. `PITSTART.EXE` imports 92 functions from 6 DLLs, including Video for Windows (`MSVFW32.dll`); `KILLPIT.EXE` imports 24 functions from KERNEL32 and USER32. Roles are hypotheses only.
 
-- [wail32.md](wail32.md) — **R2.3 (Claude-reported examination complete; pending Work review; lists manually transcribed):** static headers, imports and exports of `ASSETS/WAIL32.DLL`. It is a PE32 x86 DLL with 104 named export entries (`AIL_…`, `FILE_…`, `MEM_…`; no forwarders) and 65 imports from KERNEL32, USER32 and WINMM. Not statically imported by any of the three executables; use by the game is not tested. This was the export-enabled parser's first game-file run.
+- [wail32.md](wail32.md) — **R2.3 (accepted by Work, `aae2681`; Claude-reported; lists manually transcribed):** static headers, imports and exports of `ASSETS/WAIL32.DLL`. It is a PE32 x86 DLL with 104 named export entries (`AIL_…`, `FILE_…`, `MEM_…`; no forwarders) and 65 imports from KERNEL32, USER32 and WINMM. Not statically imported by any of the three executables; use by the game is not tested. This was the export-enabled parser's first game-file run.
 
 ## Planned technical investigations (create pages when evidence arrives)
 

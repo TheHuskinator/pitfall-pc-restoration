@@ -1,7 +1,9 @@
 # R2.3 — `ASSETS/WAIL32.DLL` static analysis: PE headers, imports and exports
 
 **Report ID:** R2.3
-**Status:** **Claude-reported examination complete; pending Work review.** On review branch `draft/r2.3-wail32`, not merged into `main`.
+**Status:** **Accepted by Work** (final ACCEPT of `aae2681`, 2026-10-16) after one "Accept with corrections" round on `5866633`. Fast-forward merged into `main` (`aae2681`). Examination baseline: `main` at `af720d7`, parser blob `3c334673…`.
+- **What the acceptance covers:** the documentation and its internal consistency.
+- **What remains true:** the examination is **Claude-reported**, the lists were manually transcribed with no retained run transcript, and it does not establish that the game uses `WAIL32.DLL` or that it works on Windows 10/11.
 **Transcription:** the import and export lists in §6–§7 were transcribed manually from the parser's on-screen output. No separate run transcript was retained, and the authorized single run was not repeated. Internal consistency checks (§5, and the counts) do **not** establish that the transcription is accurate; see §10.
 **Examination date:** 2026-10-16
 **Examiner:** Claude Code. Claude is the only examiner, and all results are Claude-reported.

@@ -98,7 +98,10 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - **Testing:** Claude's single synthetic run at `7dbe873` gave **73/73 PASS, exit 0** (Claude-reported). Work accepted this as closing the testing step.
   - **Merge:** merged into `main` by merge commit `4a7ab30` on Work's explicit recommendation, under delegated approval.
   - **Not done (at merge time):** independent reproduction of the run; any re-run of the export-enabled version on game files; any `WAIL32.DLL` examination. *(`WAIL32.DLL` was examined afterwards; see R2.3.)*
-- **R2.3: Claude-reported examination complete; pending Work review** (2026-10-16). Report `docs/technical/wail32.md` is on review branch `draft/r2.3-wail32`, not merged into `main`. Its lists were transcribed manually from on-screen output and no run transcript was retained, so transcription accuracy is not established. This was the export-enabled parser's first game-file run: one invocation on Work's explicit recommendation (delegated approval), fingerprint verified before parsing, `RESULT: OK`. All results are Claude-reported.
+- **R2.3: accepted by Work and merged** (2026-10-16).
+  - Report `docs/technical/wail32.md`: final ACCEPT of `aae2681` after one round of documentation corrections; fast-forward merged into `main` (`af720d7` → `aae2681`) on Work's explicit recommendation.
+  - Examination baseline: `main` at `af720d7`, parser blob `3c334673…`.
+  - The acceptance covers the documentation and its internal consistency. Its lists were transcribed manually from on-screen output and no run transcript was retained, so transcription accuracy is not established. This was the export-enabled parser's first game-file run: one invocation on Work's explicit recommendation (delegated approval), fingerprint verified before parsing, `RESULT: OK`. All results are Claude-reported.
   - `WAIL32.DLL` is a PE32 x86 **DLL** (ImageBase `0x20000000`, linker field 2.55, subsystem 4.0).
   - **104 export entries**, each with exactly one name (98 `AIL_…`, 4 `FILE_…`, 2 `MEM_…`); no aliases, forwarders or unused entries; all targets classified in `.text`.
   - **65 static imports** from KERNEL32, USER32 and WINMM, including `waveOut*` and `midiOut*`. No `LoadLibraryA`; `GetProcAddress` is imported.
@@ -107,9 +110,13 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - Discrepancy D-EXE-3: the timestamp field 1995-07-10 03:26:55 UTC is 44 days before the disc's directory date. Not interpreted.
 
 **Next tasks:**
-1. Work's review of R2.3 on branch `draft/r2.3-wail32`. Merging into `main` is a separate decision.
+1. **Selection of the next investigation: pending** (user decision). Candidates include the R2.3 questions Q14–Q16, below.
 2. *(Awaiting user decision)* Resource-type enumeration for `PITFALL.EXE` and `PITSTART.EXE` (no extraction).
 3. *(Awaiting user decision)* Run-time dependencies: static string leads, or execution under its own approved test plan.
+4. *(Awaiting user decision)* R2.3 follow-ups:
+   - Q14: does the game load `WAIL32.DLL` at run time?
+   - Q15: does WINMM wave and MIDI output work on Windows 10/11?
+   - Q16: what do the bytes after the last section and the Debug directory contain?
 
 **2026-10-14 — repository setup:** Added `CLAUDE.md` (permanent agent rules), `.gitignore` (blocks original game files, disc images, media, credentials, and build output), a git-ignored `private/` folder for original material, and a `docs/` structure (research, inventory, legal, decisions, technical, testing). Remote confirmed as `TheHuskinator/pitfall-pc-restoration` (private). The setup files were committed to GitHub; this earlier pending-push note was superseded on 2026-10-15.
 
@@ -231,7 +238,7 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 ## Immediate next actions
 
 **Current (2026-10-16)** — the authoritative technical list is *Next proposed tasks* in *Current project status* above:
-1. Work reviews R2.3 (`docs/technical/wail32.md` on branch `draft/r2.3-wail32`): Claude-reported examination complete, done on 2026-10-16 within Work's recommended scope.
+1. Choose the next investigation: pending a user decision (see *Next tasks* above). R2.3 is complete: accepted by Work and merged at `aae2681`.
 2. Verify the Andy Glaister lead and draft—not send—an outreach note unless the user explicitly authorizes contact.
 3. Follow the two-agent handoff: Claude proposes → the user authorizes → Claude reports → the user passes it to Work → Work reports to the user → the user decides. Obtain the applicable user approval before mounting, extraction, installation, game execution, tool installation, implementation, commits or pushes.
 4. Do not commit to C++/SDL3 until the technical-discovery milestone produces a short recommendation.
@@ -241,6 +248,7 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 - 2026-10-15: provenance reported by the user; real subfolder path adopted; read-only ISO 9660 directory inventory completed.
 - 2026-10-15: `PITFALL.EXE` header/import summary (R2.1), accepted by Chat 2. Reproduced with the reviewed replacement parser (§10 of `docs/technical/executable.md`).
 - 2026-10-16: PE parser milestone (`tools/inspect-pe.ps1`, its tests and documentation) accepted by ChatGPT Work. `draft/inspect-pe` was fast-forward merged into `main` (`50cf7d0` → `4ec4321`).
+- 2026-10-16: R2.3 (`WAIL32.DLL` headers, imports and exports) examined by Claude (Claude-reported), accepted by Work (`aae2681`) and fast-forward merged into `main`.
 - 2026-10-16: export-reading enhancement to `tools/inspect-pe.ps1` reviewed by Work, synthetic-tested (73/73 PASS, Claude-reported) and merged into `main` (`4a7ab30`).
 - 2026-10-16: R2.2 (`PITSTART.EXE`, `KILLPIT.EXE`) completed. Its first audit is recorded as "Chat 2"; final result: Work's follow-up ACCEPT of the corrections in `6629328`, reviewed at `06ee277`.
 - 2026-10-15: six original-port-analysis articles and the author's roadmap indexed with citations; reported findings extracted. Still open: validating them against local game files, and following up on private tools/permissions.
