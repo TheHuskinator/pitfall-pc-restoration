@@ -78,10 +78,10 @@ private/                (git-ignored) original game files, disc images, extracte
 ## Environment notes (this machine)
 
 - OS: Windows 11, shell is Windows PowerShell 5.1.
-- `git` is **not on PATH**. Use GitHub Desktop's bundled copy:
-  `& "$env:LOCALAPPDATA\GitHubDesktop\app-3.6.7\resources\app\git\cmd\git.exe" <args>`
-  (the version folder `app-3.6.7` changes when GitHub Desktop updates — search `%LOCALAPPDATA%\GitHubDesktop` if it moves).
-- Command-line git cannot authenticate to GitHub (the repo is private). Pushing/fetching is done by the user through GitHub Desktop, or after the user sets up credentials.
+- **Git for Windows** is installed (2026-10-16): `C:\Program Files\Git\cmd\git.exe` (2.55.0). New terminals have `git` on PATH. An agent session started before the install may not, so use the full path: `& "$env:ProgramFiles\Git\cmd\git.exe" <args>`. GitHub Desktop's bundled copy (`%LOCALAPPDATA%\GitHubDesktop\app-*\resources\app\git\cmd\git.exe`) still works as a fallback.
+- **GitHub CLI** is installed (`C:\Program Files\GitHub CLI\gh.exe`) and signed in as `TheHuskinator`. Command-line Git can authenticate to the private repository; on 2026-10-16 it did so through Git for Windows' credential manager.
+- Pushing from the command line therefore works, but **rule 5 still applies: push only with the user's explicit approval for that specific push.** The user can also push from GitHub Desktop.
+- `core.autocrlf=true`: checked-out files use CRLF line endings, so compare committed content by Git blob ID (see `tools/README.md`).
 - Remote: `https://github.com/TheHuskinator/pitfall-pc-restoration.git`, default branch `main`.
 
 ## Documentation conventions
