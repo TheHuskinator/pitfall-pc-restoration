@@ -14,7 +14,13 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 - The user directs priorities and performs testing.
 - Claude Code is the primary implementation and reverse-engineering agent.
-- ChatGPT Chat 1 coordinates; Chat 2 reviews research; Chat 3 prepares development handoffs; Chat 4 handles QA planning and review. Codex / ChatGPT Work provides independent audit and backup support.
+- **Two-agent workflow (from 2026-10-16; see `CLAUDE.md` → Roles):**
+  - The user is the sole decision-maker.
+  - Claude Code is the local developer and reverse-engineering agent, working within authorized scope.
+  - ChatGPT Work ("Work") reviews research, sources, technical claims, code and QA, and helps prepare proposals and handoffs.
+  - Handoff: Claude proposes → the user authorizes → Claude completes and reports → the user passes it to Work → Work reports to the user → the user decides.
+  - A Work verdict is not permission to act.
+- **Transition note:** before 2026-10-16, records used the roles "ChatGPT Chat 1–4" and "Codex / ChatGPT Work". There are no active Chat 1–4 roles. Older records below keep their original labels. Reviews recorded as "Chat 2" and as "Work" should not be counted as separate independent verifications; multiple reviews in the same Work conversation are not independent reviewers.
 - These roles operate under the user's direction and the approval rules in `CLAUDE.md`.
 - Preserve the original game's gameplay, presentation, audio, controls, timing, and content as closely as practical.
 - Treat a browser version as a later phase; it must not compromise the Windows restoration.
@@ -27,14 +33,14 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 ## Current project status
 
-> **This section is the authoritative current state (updated 2026-10-15, after the Chat 2 and ChatGPT Work audits).** The dated sections further down are historical snapshots. Where they conflict with this section, this section wins.
+> **This section is the authoritative current state (updated 2026-10-16).** Review labels such as "Chat 2" are kept as originally recorded; see the transition note under *Working approach*. The dated sections further down are historical snapshots. Where they conflict with this section, this section wins.
 
 **Phase:** planning/research. No technical direction, toolchain or engine has been chosen.
 
 **Reference media — MEDIA-001**, at `private/original-media/Pitfall_The_Mayan_Adventure_ISO/` (git-ignored):
 
 - **Provenance — Reported (user):** made from a legitimate physical copy the user owned. The user also reports a scratched physical disc, currently unreadable.
-- **Verified (Claude, 2026-10-15; arithmetic independently confirmed by Chat 2 and ChatGPT Work):** a CloneCD-style raw image of 272,313 sectors. It is a single session: 1 Mode 1 data track plus 23 tracks declared as audio. CCD and CUE agree.
+- **Verified (Claude, 2026-10-15; arithmetic confirmed in reviews recorded as "Chat 2" and "ChatGPT Work", which are not counted as separate independent verifications):** a CloneCD-style raw image of 272,313 sectors. It is a single session: 1 Mode 1 data track plus 23 tracks declared as audio. CCD and CUE agree.
 - **Examiner-reported, not independently reproduced:**
   - All 8,880 Mode 1 sectors pass header and EDC checks.
   - The ISO 9660 volume `PITFALL` lists 40 files (38 in `ASSETS`, 2 at the root), including `PITFALL.EXE`, `WAIL32.DLL`, `INIT.PH` and `LEVEL00`–`LEVEL23.PH`.
@@ -70,7 +76,11 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - ChatGPT Work reviewed `21fa6a2`: **Accept with corrections**, documentation only, with no parser changes. The corrections are in `4ec4321`, which Work then reviewed: **ACCEPT**, no further corrections (2026-10-16).
   - Known, documented, non-blocking: two script header comments are out of date (see `tools/README.md`). They are deferred to a separately reviewed comment-only update.
 
-- **R2.2 done 2026-10-16** (user-approved scope; report `docs/technical/startup-executables.md`, committed on `main` as `323a03c` and `e08d2dc`). Chat 2 audit: **Accept with corrections**, documentation only. The corrections are committed on `main` in the commit that follows `e08d2dc`, pending review:
+- **R2.2 done 2026-10-16** (user-approved scope; report `docs/technical/startup-executables.md`, committed on `main` as `323a03c` and `e08d2dc`).
+  - **Review:** the first audit, recorded at the time as "Chat 2", gave **Accept with corrections** (documentation only). The corrections are in `6629328`.
+  - **Latest result:** **Work's follow-up ACCEPT** of the R2.2 corrections in `6629328`, reviewed on GitHub at `06ee277`, with no further technical corrections.
+  - Under the two-agent workflow, these are reviews from the same reviewer role, not separate independent verifications.
+  - Findings:
   - Both `PITSTART.EXE` and `ASSETS/KILLPIT.EXE` are PE32 x86 Windows GUI programs (subsystem 4.0, linker field 2.55). Fingerprints were verified before parsing; `RESULT: OK` for both.
   - `PITSTART.EXE`: 92 static imports from 6 DLLs, including `MSVFW32.dll!MCIWndCreateA` (Video for Windows). That DLL is absent from `PITFALL.EXE`'s recorded static imports. Its `.rsrc` section is 96% of the file (contents not examined).
   - `KILLPIT.EXE`: 24 static imports, from KERNEL32 (23) and USER32 (`MessageBoxA`). It declares no PE Resource directory and has no `.rsrc` section. It has no static imports of `OpenProcess` or `TerminateProcess`; its `ExitProcess` ends only its own process. Its static imports therefore do not support the filename guess that it "kills" the game process. Actual behavior is not tested.
@@ -78,7 +88,7 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - All results are Claude-reported; roles are hypotheses only.
 
 **Next proposed tasks (each awaiting user decision):**
-1. Review the R2.2 documentation corrections (Chat 2: Accept with corrections). R2.2 itself is already committed; committing and pushing the corrections are the user's decisions.
+1. Record Work's follow-up ACCEPT in the R2.2 report, technical index and audit tracker, which still say the corrections are "pending review". This is a documentation-only update awaiting authorization.
 2. Static exports/imports check of `WAIL32.DLL`. This needs export-table support in a reviewed tool change.
 3. Resource-type enumeration for `PITFALL.EXE` and `PITSTART.EXE` (no extraction).
 4. Run-time dependencies: static string leads, or execution under its own approved test plan.
@@ -204,9 +214,9 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 ## Immediate next actions
 
 **Current (2026-10-16)** — the authoritative technical list is *Next proposed tasks* in *Current project status* above:
-1. Review the documentation corrections from Chat 2's R2.2 audit (Accept with corrections). The examination was done and committed on 2026-10-16 within the approved scope.
+1. R2.2 is complete: the examination was committed on 2026-10-16, and Work's follow-up ACCEPT of the corrections in `6629328` was reviewed on GitHub at `06ee277`. Next, recording that ACCEPT in the remaining documents, and the proposed export-parser enhancement, each await the user's authorization.
 2. Verify the Andy Glaister lead and draft—not send—an outreach note unless the user explicitly authorizes contact.
-3. Route reports through Chat 2 (research), Chat 3 (development handoff), Chat 4 (QA) and ChatGPT Work (audit) as appropriate, with Chat 1 coordinating. Obtain the applicable user approval before mounting, extraction, installation, game execution, tool installation or implementation.
+3. Follow the two-agent handoff: Claude proposes → the user authorizes → Claude reports → the user passes it to Work → Work reports to the user → the user decides. Obtain the applicable user approval before mounting, extraction, installation, game execution, tool installation, implementation, commits or pushes.
 4. Do not commit to C++/SDL3 until the technical-discovery milestone produces a short recommendation.
 
 **Completed (historical):**
@@ -257,4 +267,5 @@ Each work session should leave the project easier to resume:
 | 2026-10-15 | Evaluate Claude Code + Ghidra + REA for investigative work. | Proposed tooling | Windows 32-bit x86 interoperability requires validation; nothing confirmed installed. |
 | 2026-10-15 | Claude Code primary; Chat 1 coordination, Chat 2 research review, Chat 3 development handoffs, Chat 4 QA; Codex / ChatGPT Work independent audit/backup. | User-approved | Responsibilities do not expand action permissions. |
 | 2026-10-15 | First examine `private/original-media/Pitfall.{img,sub,ccd,cue}` read-only and stop after a metadata/structure report. | User-approved task scope | Presence, provenance, permission for use, completeness, and release identity remain to be verified; no mounting, extraction, installation, or game execution. |
+| 2026-10-16 | Replace the numbered-chat roles with a two-agent workflow: the user (sole decision-maker), Claude Code (developer and reverse-engineering agent) and ChatGPT Work (independent reviewer, proposal and handoff help). | User decision | Supersedes the 2026-10-15 role entry above, which is kept as history. Historical review labels are unchanged. Reviews in one Work conversation are not separate independent reviewers. A Work verdict is not permission to act. |
 | 2026-10-16 | Merge the reviewed PE parser milestone (`draft/inspect-pe`) into `main` by fast-forward, keeping every reviewed commit ID in `main`'s history. | User-approved | ChatGPT Work ACCEPT of `4ec4321`. Tool results remain Claude-reported; independent byte verification is still open. |

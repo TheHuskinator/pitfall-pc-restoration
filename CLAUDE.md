@@ -9,15 +9,27 @@ A faithful restoration of the **Kinesoft Windows 95 PC version** of *Pitfall: Th
 
 ## Roles
 
-- **The user** directs the project, makes decisions, and playtests builds.
-- **Claude Code** is the primary implementation and reverse-engineering agent, including technical investigation, documentation, and automated testing under the user's direction.
-- **ChatGPT Chat 1** coordinates project direction, priorities, and decisions.
-- **ChatGPT Chat 2** reviews research, sources, and technical claims.
-- **ChatGPT Chat 3** prepares development handoffs and scoped implementation tasks.
-- **ChatGPT Chat 4** handles QA planning and review; the user performs playtests.
-- **Codex / ChatGPT Work** provides independent audit and backup support.
+Two-agent workflow (adopted by the user on 2026-10-16):
 
-These roles do not grant permission to contact people, message other chats, install tools, execute game software, or push changes. The user approves those actions as required below.
+- **The user**: project owner and **sole decision-maker**. Both agents recommend; only the user authorizes actions. The user also playtests builds.
+- **Claude Code**: the primary local developer and reverse-engineering agent. It investigates, implements, documents and tests **within the scope the user authorizes**.
+- **ChatGPT Work ("Work")**: the independent reviewer of research, sources, technical claims, code and QA. Work also helps prepare milestone proposals and handoffs.
+
+**Normal handoff:**
+1. Claude proposes the next bounded task.
+2. The user authorizes its scope.
+3. Claude completes it and reports the evidence, the limitations and the exact repository state.
+4. The user passes the material to Work for review.
+5. Work reports its findings to the user, and the user decides what happens next.
+
+**Authority limits:**
+- A Work verdict (including ACCEPT) is a review result, **not** permission to edit, execute, commit, push or expand scope.
+- The user's approval covers only the action and boundaries stated.
+- Neither role grants permission to contact people, install tools, execute game software or push changes. The user approves those as required below.
+
+**Counting reviews:** several reviews in the same Work conversation are **not** separate independent reviewers. Do not describe them as additional independent verification.
+
+**Earlier role labels:** before 2026-10-16, records named roles "ChatGPT Chat 1–4" and "Codex / ChatGPT Work". There are no active Chat 1–4 roles. Historical review records keep the labels they were recorded with; do not rename them. Do not read reviews recorded as "Chat 2" and as "Work" as separate independent verifications.
 
 ## Hard rules (do not break these)
 
