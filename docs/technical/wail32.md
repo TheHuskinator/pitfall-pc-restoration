@@ -180,9 +180,12 @@ Original lookup-table order, manually transcribed from the parser's on-screen ou
 - 104 address-table entries: 104 targets, 0 forwarders, 0 unused.
 - 104 names, exactly one per entry: no aliases and no duplicates.
 - No `NOTE:` lines were printed.
-- Every target classifies as `section .text [CODE X R] (stored bytes)`. That is section-flag classification only; it is not proof that an entry is code rather than data. No target bytes were read, and nothing was followed.
+- Every target classifies as `section .text [CODE X R] (stored bytes)`. That is section-flag classification only; it is not proof that an entry is code rather than data. Export-target contents were not examined or decoded, and nothing was followed. (The parser does read the whole file into memory, to verify its fingerprint.)
 
-**Address-table order**, manually transcribed from the parser's on-screen output (see the transcription note at the top). Each line gives the ordinal, the export RVA, its classification and its name; the name order is the recorded name-table order, and no entry has an alias.
+**Address-table order**, manually transcribed from the parser's on-screen output (see the transcription note at the top). Each line gives the ordinal, the export RVA, its classification and its name; no entry has an alias.
+- The parser lists entries in **address-table order**, and keeps name-table order only **within** each entry's alias list.
+- It does not print each name's overall position in the name pointer table.
+- With one name per entry, this listing therefore does **not** establish the original overall name-table order.
 
 ```text
 ordinal 1: RVA 0x000069A9 -> section .text [CODE X R] (stored bytes); names: AIL_XMIDI_master_volume
@@ -313,9 +316,9 @@ ordinal 104: RVA 0x0000895B -> section .text [CODE X R] (stored bytes); names: M
 | --- | --- | --- |
 | K1 | A 32-bit x86 DLL with the same linker version field (2.55) and subsystem version (4.0) as the three executables. Unlike them, it has a non-zero CheckSum, a different ImageBase, and the local-symbols-stripped flag clear. | Fields: **Verified**. Shared toolchain: **Assumption** |
 | K2 | WINMM's `waveOut*` (wave audio output) and `midiOut*` (MIDI output) imports, together with multimedia timers, are consistent with a sound library that drives wave and MIDI output itself. | Imports: **Verified**. Role: **Assumption** |
-| K3 | The `AIL_` export prefix and names such as `AIL_start_sample`, `AIL_start_sequence` and `AIL_set_XMIDI_master_volume` are consistent with an audio API (samples, MIDI-style "sequences", timers). This is the naming used by the Miles Sound System ("Audio Interface Library"). | Names: **Verified**. API semantics and product identity: **Assumption** (names do not establish behavior or product; the Miles naming is from general knowledge, not a cited source) |
+| K3 | The `AIL_` export prefix and names such as `AIL_start_sample`, `AIL_start_sequence` and `AIL_set_XMIDI_master_volume` are consistent with an audio API (samples, MIDI-style "sequences", timers). Whether this is the Miles Sound System, as the file name suggests, remains a hypothesis. *[corrected after Work's review of `5866633`: an uncited naming claim was removed]* | Names: **Verified**. API semantics and product identity: **Assumption** (names do not establish behavior or product) |
 | K4 | The `FILE_` and `MEM_` exports look like helper routines (file I/O and locked memory). | **Assumption** |
-| K5 | The shared `.data` and `.bss` sections mean these sections would be shared between processes that load the DLL. | Flags: **Verified**. Meaning and run-time effect: **Assumption** / **Not tested** |
+| K5 | `.data` and `.bss` carry `IMAGE_SCN_MEM_SHARED`, indicating that these sections can be shared in memory. Actual run-time behavior was not tested. | Flags: **Verified**. Run-time behavior: **Not tested** |
 | K6 | The library imports `GetProcAddress` but not `LoadLibraryA`. | **Verified** (static imports only); what it looks up is **Not tested** |
 | K7 | 3,072 bytes follow the last section, and a Debug directory is declared. Their contents and any relationship between them are unknown. | Sizes: **Verified**. Contents: **Not tested** |
 
@@ -351,8 +354,8 @@ The reasons, and whether any of these dates are accurate, are **Not tested**.
 ## 11. Not tested / out of scope
 
 - Disassembly or decompilation, including the entry point and any export target.
-- Any byte at an export target; forwarder resolution (there are no forwarders).
-- Strings; the contents of the Debug directory or of the 3,072 bytes after the last section; resources (none declared).
+- Examination or decoding of export-target contents; forwarder resolution (there are no forwarders).
+- General string scanning (only import and export names were parsed); the contents of the Debug directory or of the 3,072 bytes after the last section; resources (none declared).
 - Loading, executing or debugging the DLL; whether any game program loads it; which exports are actually called.
 - Behavior on Windows 10/11 of the imported WINMM functions.
 - Product or version identification; comparison with other copies of `WAIL32.DLL` (no reference hashes are available).
@@ -364,7 +367,7 @@ The reasons, and whether any of these dates are accurate, are **Not tested**.
 With the MEDIA-001 image, from the repository root at `af720d7` (parser blob `3c334673…`):
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools\inspect-pe.ps1 -Image private\original-media\Pitfall_The_Mayan_Adventure_ISO\Pitfall.img -Extent 6784 -Size 116736 -ExpectedSha256 432D51744010E25EC82E550B4BC6422134625451F6A33FE72228528AA28C241A
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\inspect-pe.ps1 -Image "<MEDIA-001 image>" -Extent 6784 -Size 116736 -ExpectedSha256 432D51744010E25EC82E550B4BC6422134625451F6A33FE72228528AA28C241A
 ```
 
 **Expected result:**
