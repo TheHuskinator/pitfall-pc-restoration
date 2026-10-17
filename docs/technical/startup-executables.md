@@ -1,7 +1,10 @@
 # R2.2 — `PITSTART.EXE` and `KILLPIT.EXE` static analysis: PE headers and static imports
 
 **Report ID:** R2.2
-**Status:** committed on `main` (`323a03c`, `e08d2dc`). Audited by ChatGPT Chat 2 (2026-10-16): **Accept with corrections**. The documentation corrections are applied, marked *[R2.2-Cn]*, and pending review.
+**Status:** committed on `main` (`323a03c`, `e08d2dc`).
+- **First audit** (2026-10-16, recorded at the time as "ChatGPT Chat 2"): **Accept with corrections**. The documentation corrections, marked *[R2.2-Cn]*, are in `6629328`.
+- **Final result:** **Work's follow-up ACCEPT** of the R2.2 corrections in `6629328`, reviewed on GitHub at `06ee277`. No further technical corrections.
+- **Workflow note:** on 2026-10-16 the user replaced the numbered-chat roles with a two-agent workflow (see `CLAUDE.md` → Roles). The reviewer recorded in this report as "Chat 2" is the Work reviewer role. Both reviews are from the same reviewer, so they are **not** separate independent verifications. Older mentions of "Chat 2" below are kept as originally recorded.
 **Examination date:** 2026-10-16
 **Examiner:** Claude Code (the only examiner; all results are Claude-reported)
 **Approval:** user-approved R2.2 scope (2026-10-16). It covers only these two files; the reviewed parser; fingerprints verified before parsing; signatures, headers, sections, entry points and static imports only; stop on a mismatch, unsupported format, malformed result or error.
