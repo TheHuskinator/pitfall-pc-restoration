@@ -354,6 +354,31 @@ The mocks model real getter failures through getter methods. That this matches l
 - **Reserved for the user:** creating the ISO, mounting it and testing in that changed environment each require the user's explicit approval.
 - **Reading the outcome:** a pass would show that the mounted data disc satisfies the immediate requirement. A failure gives a specific reason to investigate the CD check. Neither outcome justifies downloading DLLs or rebuilding the engine.
 
+#### Network-connected testing and helper revision 3 (2026-10-17)
+
+- **User decision:** future tests run with the network connected. The helper's network-disconnection launch gate is removed, and network state is recorded as context.
+  - Defender, unelevated execution, working-copy checks, narrow logging and all other stop conditions stay.
+  - No firewall rules, exclusions or system changes.
+  - If the game asks for network or firewall permission, or opens an online service, stop and report; do not approve it.
+  - Baseline 1 and the confirmation run remain documented as **offline**. Future runs record **network connected**, so comparisons acknowledge the changed condition.
+- **`baseline-run.ps1` revision 3** (`31524868…FDD90`; tests 107/107, Claude-reported).
+  - **Work verdict: ACCEPT.** The diff is bounded: the gate is removed, connectivity is recorded and the prompt stop instruction is added. Other protections are unchanged.
+  - Network status describes physical adapters, not proven internet access.
+  - Not yet installed; how it is installed beside revision 2 is an open point in the mounted-disc proposal.
+
+#### Mounted-disc preparation: review and correction (2026-10-17)
+
+- **Revision 1** (local review batch `2026-10-17-mounted-disc-prep`). **Work verdict: corrections required before use.** The conversion approach was found reasonable; three findings:
+  - **A. AutoPlay:** the check only rejected handler names containing "AutoRun" and treated absent values as safe. The post-mount process check is too late to prevent an automatic launch. AutoPlay safety must be established before mounting; any setting change needs the user's approval.
+  - **B. Finalisation:** the ISO and its hash record were published before the final source-image check, so a failed conversion could leave an apparently usable ISO.
+  - **C. Folders:** link and parent-folder protections were incomplete in the disc check (`private\derived`, `C:\PitfallTest`).
+- **Revision 2** (batch `2026-10-17-mounted-disc-prep-r2`; tests 79/79, Claude-reported, synthetic only). Submitted for Work's review.
+  - **A:** a new read-only `pre-mount` check accepts AutoPlay only if it is verifiably off: `DisableAutoplay = 1`, or a software-disc action of exactly "Take no action". Every other state is a STOP. The proposal asks the user to turn AutoPlay off in Settings for the test and back on afterwards.
+  - **B:** the source is re-checked before publishing, and a completed-conversion record is written last. Any failure leaves an INCOMPLETE marker, and nothing is deleted. Both checks refuse an ISO without a valid record.
+  - **C:** every folder in every phase is checked for links, outputs are confined, and the report is written only into a verified real logs folder. Testing showed revision 2's first draft wrote its report through a linked logs folder; this is fixed.
+  - **Wording corrected:** Git ignores `private/`; staging checks must still exclude proprietary content.
+- **Still reserved for the user:** creating the ISO, the AutoPlay switch, mounting and the launch.
+
 #### Next run — proposed, pending explicit user approval
 
 - **Subject:** exactly one `ASSETS\PITFALL.EXE` launch from the already staged copy, under the existing account, unelevated, with `ASSETS` explicitly set as the working directory. No Windows 95 mode, reduced-colour setting, wrapper, replacement DLL, launcher or installer in this baseline.
@@ -498,7 +523,7 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 **Current (2026-10-16):** follow *Next milestone: one attributable baseline in the existing Windows account* above.
 1. Preserve the completed separate-account exploratory session. Work reviewed it with evidence-limit corrections; no need to redo staging or WAIL32 analysis.
 2. ~~Claude completes the narrowly scoped account/privacy helper adaptation and read-only preflight, without requiring a separate Windows account.~~ Done: helper revision 2 accepted by Work and installed with a verified fingerprint (2026-10-17).
-3. ~~Obtain explicit approval for the single existing-account baseline, then record that run before selecting any compatibility change.~~ Done 2026-10-17: baseline 1 and the confirmation run, both accepted by Work. **Current:** prepare the data-only disc image and mounted-disc test proposal (see *Next milestone: data-only disc image and mounted-disc test*); execution needs the user's explicit approval.
+3. ~~Obtain explicit approval for the single existing-account baseline, then record that run before selecting any compatibility change.~~ Done 2026-10-17: baseline 1 and the confirmation run, both accepted by Work. **Current:** the mounted-disc proposal, revision 2, awaits Work's review (see *Mounted-disc preparation: review and correction*). Creating the ISO, the AutoPlay switch, mounting and the launch each need the user's explicit approval.
 4. Keep Defender enabled, originals read-only and personal data out of reports. Defer tooling, mounting/conversion and deeper reverse engineering until evidence justifies them.
 
 **Completed (historical):**
@@ -565,3 +590,5 @@ Each work session should leave the project easier to resume:
 | 2026-10-17 | Deliver files for Work's review through the git-ignored `private/work-review/` folder. | User request | Claude-written files only; dated batches, fingerprints listed in its README, never edited after listing. |
 | 2026-10-17 | Accept existing-account baseline 1; next, one unchanged confirmation launch to capture the exact dialog text. | Work review (delegated) after the user-approved run | CD-ROM check is the leading suspected blocker, not a proven cause. No static-analysis project. The confirmation run is launched and observed by the user. |
 | 2026-10-17 | Accept the confirmation run; next, prepare a data-only ISO and one mounted-disc launch. | Work review and preparation assignment (delegated) | Preparation only, with no original-media access. Creating the ISO, mounting it and the launch each need the user's explicit approval. Does not test CD audio. |
+| 2026-10-17 | Run future tests with the network connected; remove the helper's network gate (revision 3). | User decision; Work ACCEPT of revision 3 | Network recorded as context; network or firewall prompts are a stop condition. Earlier runs stay documented as offline. |
+| 2026-10-17 | Mounted-disc preparation revision 1: corrections required (AutoPlay before mounting, finalisation, link checks); revision 2 submitted. | Work review (delegated) | Revision 2 proposes a user-approved temporary AutoPlay switch-off. Nothing created, mounted or launched. |
