@@ -1,6 +1,6 @@
 # PROJECT STATUS — Pitfall: The Mayan Adventure (PC Restoration)
 
-**Status:** First controlled Windows 11 launch-test preparation  
+**Status:** First launch evidence reviewed; preparing an existing-account baseline  
 **Last updated:** 2026-10-16  
 **Project target:** Faithful restoration of the Kinesoft Windows 95 PC edition for Windows 10/11, with an eventual browser port considered after the desktop restoration is stable.
 
@@ -33,7 +33,7 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 > **This section is the authoritative current state (updated 2026-10-16).** Review labels such as "Chat 2" are kept as originally recorded; see the transition note under *Working approach*. The dated sections further down are historical snapshots. Where they conflict with this section, this section wins.
 
-**Phase:** first controlled Windows 11 launch-test preparation. Native compatibility testing is the selected next milestone; no restoration engine or implementation architecture has been chosen.
+**Phase:** native Windows 11 compatibility diagnosis. An exploratory separate-account session opened the game window but did not reach gameplay. The user has selected their existing account for the next bounded baseline; no restoration engine or implementation architecture has been chosen.
 
 **Reference media — MEDIA-001**, at `private/original-media/Pitfall_The_Mayan_Adventure_ISO/` (git-ignored):
 
@@ -54,7 +54,7 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 **Not yet done:**
 - executable analysis beyond static PE headers and imports of `PITFALL.EXE`, `PITSTART.EXE` and `KILLPIT.EXE`, and static headers, imports and exports of `WAIL32.DLL` (R2.3 accepted): no disassembly, general string scanning, resource contents or export-target decoding;
-- game execution and compatibility testing;
+- a controlled, reproducible launch-to-gameplay success (the first exploratory execution is recorded below);
 - a working build environment or restoration code.
 
 **Done 2026-10-15:**
@@ -104,149 +104,61 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - 3,072 bytes follow the last section, and a Debug directory is declared; neither was examined.
   - Discrepancy D-EXE-3: the timestamp field 1995-07-10 03:26:55 UTC is 44 days before the disc's directory date. Not interpreted.
 
-### Next milestone: first controlled Windows 11 launch evidence
+### Next milestone: one attributable baseline in the existing Windows account
 
-**Decision (Work, under the user's expanded delegation, 2026-10-16):** prioritize a bounded native launch test over further speculative reverse engineering. R2.1–R2.3 establish static structure and reported dependencies, not Windows 11 compatibility. No original game execution has been reported.
+**User decision (2026-10-16):** use the existing Windows account rather than a separate testing account. Preserve the completed separate-account session as evidence; do not restart media preparation. The account choice is accepted. **No new game launch is authorized by this plan update:** the first run in the changed environment requires the user's explicit approval of the bounded run below.
 
-**Preparation evidence from the current handoff:**
-- **Claude-reported, not independently reproduced:** Windows 11 Home x64; the named 32-bit Windows components are present; no CD drive or existing Pitfall installation was found by the described checks. Presence does not prove runtime compatibility.
-- **Source-reviewed by Work, not executed:** scratch staging script revision 2, SHA-256 `2D1AFE08F9F7EDD2D7A673DDC36760EA43FC123B0309CC557C5DBA2C5935AF09`. Accepted for the narrowly scoped current repository-private destination, subject to the user's extraction approval. This is not proof of successful staging.
-- The script uses inventory pinned at `5cc516c228a0719d20842b78b18d62c80ec56775`, validates the unique 40-file set and hashes before writing, uses create-new-only writes and checks the image afterward. Launch requires exit 0, RESULT: OK and no incomplete marker; marker absence alone is insufficient.
-- A separate standard local test account is Work's recommended environment, not yet selected or created by this authorization. That option needs a bounded destination adaptation and source check; the current script writes inside the repository. A shared private test location outside the repository requires the user's explicit exception to the default private-folder policy, with access controls and no Git/cloud upload. No such exception is granted here.
-- The account choice, backups/recovery arrangement, initial extraction and first execution still await the user's explicit approval. This delegation update is not that approval.
+#### Evidence and review
 
-**Claude assignment — preparation only, explicitly authorized by Work:**
-1. Synchronize the local checkout with the documentation update using a clean fast-forward only. First inspect local changes and ahead/behind state; preserve unrelated or unpushed work. Stop and report if the update would require resolving divergence, overwriting work or bypassing repository protections.
-2. Consolidate the existing preparation into one concise launch-readiness handoff. Do not repeat completed static investigations or add tooling. Finalize the proposed account/destination arrangement; source-only adaptation of the scratch stager and narrowly scoped before/after observation helpers is allowed. Do not create accounts, change permissions or access game bytes.
-3. Define observation of game-related settings, relevant file changes and application-error logs; keep raw snapshots private and share sanitized findings only. Do not grant blanket permission for arbitrary HKCU changes. State snapshot limitations and label the launcher test as sequential.
-4. Prepare the single user-approval package: environment/account and recovery choice; one verified staging operation; one reviewed WAIL32 preflight on the staged copy with retained local metadata output; up to three launch attempts, at most ten minutes each (direct game, launcher if appropriate, and one useful unchanged confirmation).
-5. Batch any necessary readiness documentation into `PROJECT_STATUS.md`; Work authorizes one documentation-only commit and push to `main` if needed after a clean synchronization and exact diff review. No proprietary content, credentials, raw registry dumps or absolute personal paths. Do not create a new review cycle for wording-only corrections.
+- [Launch session 1](docs/testing/launch-attempt-1.md), originally published at `1322174`: the user ran `PITFALL.EXE` several times, initially without settings and then with Windows 95 / reduced-colour settings. `PITSTART.EXE` was not run.
+- **Claude-reported:** staging succeeded and all 40 working-copy files matched the inventory; the original image remained unchanged; the single WAIL32 preflight matched R2.3. No re-extraction or repeated WAIL32 parsing is needed for this environment change.
+- **Claude-observed / user-reported, not independently reproduced by Work:** the window and 256-colour dialog appeared; the user reported a CD-ROM message; a `dispdib.dll` dialog, four access-violation events (two each naming `AcGenral.DLL` and `winmmbase.dll`) and a freeze followed in the multi-launch session. No gameplay was reached. Per-launch settings and event correlation are unavailable.
+- **Work verdict: ACCEPT WITH CORRECTIONS, applied to the report.** This is useful exploratory evidence, not one controlled attempt. A faulting module does not identify the root cause; named-key filtering cannot prove no game registry writes; unchanged captured areas cannot prove no harm elsewhere. COMPLETE snapshots are successful observations, not a safety certificate.
+- **Open hypotheses:** whether the CD warning is the blocking check; whether reduced colour alone helps; whether Windows 95 mode changes the path leading to the DLL error; the cause of each crash. Do not present these as diagnoses or install a DLL on the strength of its name.
+- Raw logs and screenshots stay local. Work's review covers the sanitized report and Claude handoff, not original files, screenshots or raw registry exports.
 
-**Preparation stop conditions:** unexpected local/remote divergence or conflicting work; any need for original-file access, staging, mounting, execution, installation, account/permission changes, destructive operations or a broader investigation. Report to Work; reserved decisions go to the user. Grammar-only source checks are allowed; do not execute the staging or observation scripts in this preparation assignment.
+#### Existing-account environment and precautions
 
-#### Launch-readiness handoff (Claude, 2026-10-16; updated after Work's source acceptance)
+- Use the user's existing local account in a **normal, unelevated session**. Administrator-group membership alone is not elevation; the helper must reject an elevated process, not reject this account merely because it belongs to Administrators.
+- Keep the working copy at `C:\PitfallTest\pitfall-cd`, tools under `C:\PitfallTest\tools`, and logs under `C:\PitfallTest\logs`. The previously user-approved private working-copy exception is retained. Keep them outside Git/cloud uploads; preserve original media read-only.
+- No new account, reinstall, restaging, permission reset or account deletion is required. Leave the old `Pitfall Test` account and its compatibility settings/logs untouched.
+- **Microsoft Defender stays enabled.** Check protection status read-only; do not add exclusions or disable/bypass detections. Stop if protection is disabled, its required status cannot be established, or it raises an alert; report rather than changing security configuration.
+- Recommend confirming a current backup of important personal files. Prior backup/restore-point reports remain user-reported, not independently verified; a restore point is optional and is not a personal-file backup.
+- The everyday account exposes more personal state than the test account. Close unrelated documents/apps as practical. Minimize logging: no full `HKCU\Software` export, personal-folder crawl or account-wide registry-value dump. Record exact game-path compatibility settings, relevant startup-change indicators and identified game-related keys; retain only locally and report sanitized differences. Unknown changes are not automatically attributed to the game.
+- Preserve the offline baseline during the actual attempt: disconnect both Ethernet and Wi-Fi as applicable, then reconnect after the game has stopped. Defender remains enabled. Offline use does not isolate the filesystem; no firewall or permanent network configuration changes are requested.
 
-**Update 2026-10-16 — approved and attempt 1 run.** The user approved the launch package ("I approve the launch package", Claude session).
-- **Claude's steps:** Claude copied the helper (fingerprint verified), staged the files once (exit code 0, `RESULT: OK`, no marker, image unchanged), and ran the WAIL32 preflight (matches R2.3).
-- **Attempt 1** (`ASSETS\PITFALL.EXE`) did not reach gameplay. See [docs/testing/launch-attempt-1.md](docs/testing/launch-attempt-1.md):
-  - startup checks for a CD-ROM (reported) and a 256-colour display (verified);
-  - with user-applied Windows 95 compatibility mode, a missing `dispdib.dll` error, four access-violation crashes and one freeze.
-- **Deviation:** compatibility settings and repeated launches were outside the package. They are recorded in that file, and the layers remain set.
-- **Attempts 2–3 are paused** pending Work's review and the user's decision.
+#### Claude assignment — preparation authorized by Work
 
-*Original status at preparation time:* awaiting the user's single approval. Nothing had been staged, mounted, extracted or executed, and no game bytes were accessed for this handoff.
+1. Safely synchronize with this documentation commit: inspect dirty/unpushed work and remote state, then fast-forward only if clean. Stop on divergence or conflicting work; do not discard anything.
+2. Adapt the observation helper in scratch for the existing account: retain exact-account, unelevated-process, folder/link, no-overwrite and explicit failure checks; remove the standard-account membership requirement; replace the full personal-registry export with the narrow observations above. Scope crash events to the run's recorded start/end times, application path and PID/start time where available. Keep the output local.
+3. Use source/grammar checks and harmless synthetic validation with mocked account/registry inputs as needed, without game execution or collection of broad personal data. Record the new helper fingerprint and a compact source-change summary. This is one safety-focused adaptation, not a new tooling project; Work checks the changed guards/privacy behavior before use.
+4. Perform only essential read-only preflight using existing tools: correct account and non-elevation, Defender status, working-folder metadata/access, SHA-256 of the 40 existing working-copy files against the pinned inventory, and compatibility settings for the exact game/launcher paths in the current user's and machine-wide applicable locations plus `__COMPAT_LAYER`. Claude may hash the working copy locally; Work does not access game bytes.
+5. Do not assume the old account's `WIN95/256COLOR` settings apply to the existing account. Record the effective explicit settings. Do not change either profile or machine-wide settings automatically. If any explicit layer affects the proposed baseline, stop and propose a precise, reversible per-application adjustment; no global reset or administrator workaround.
+6. Report readiness for **one** existing-account direct launch, with no new installation or research prerequisite. Batch documentation corrections into `PROJECT_STATUS.md` and, if needed, the existing test report. Work authorizes one documentation-only commit/push after diff and state checks; preserve raw evidence and history.
 
-**Work's review (2026-10-16):**
-- **What Work checked:** the actual snapshot helper (revision 2) and the setup package. Both script fingerprints matched Claude's report, and GitHub `main` was confirmed at `3b0d55d`.
-- **Verdict:** both scripts are accepted for the proposed bounded use, subject to the user's setup and execution approval. Work ran neither, and source acceptance does not guarantee they work.
-- **Authorized under delegation:** this status update, consolidating the approval into one package, and one documentation-only commit and push.
+**Preparation stop conditions:** unexpected repository divergence; modified/missing working-copy files; wrong/elevated account; link/path mismatch; ambiguous compatibility state; security alert/disabled protection; need for new software, extraction/mounting, permission/account changes or broader personal-data collection. No live game run, new image conversion, full registry export, automatic cleanup, compatibility toggle or system change is included in this preparation authorization.
 
-**Environment set up by the user (account and permission changes made by the user, not Claude):**
-- **Recovery** *(reported by the user, 2026-10-16)*: a restore point was created, and important files are backed up.
-- **Test account `Pitfall Test`** *(verified by Claude, read-only)*. Its name contains a space; it replaces the earlier working name `pitfalltest`.
-  - It is a local, enabled account.
-  - It is not a member of the Administrators group.
-- **Folder `C:\PitfallTest`** *(verified by Claude, read-only)*:
-  - it is a real, empty directory, not a link;
-  - it is owned by the user's own account;
-  - it has exactly four permission entries, all applied to subfolders and files: SYSTEM (Full control), Administrators (Full control), the user's own account (Modify) and `Pitfall Test` (Modify);
-  - it has no inherited entries, and no Everyone, Users or Authenticated Users entries.
+#### Next run — proposed, pending explicit user approval
 
-**Scripts** (held in Claude's session scratch folder, outside the repository; **neither executed**):
-- **Staging script, revision 3**, SHA-256 `7C3BDA91659076C68A9D66C68A907BE17E6054F248BBC12729FCF9C081FAA7DD`. Work accepted its source.
-  - The destination is fixed at `C:\PitfallTest\pitfall-cd`. The script must create it, and refuses to run if it already exists.
-  - It refuses links (including junctions) and destinations under the user-profiles folder.
-  - The inventory it checks against is pinned at `5cc516c`. It validates all 40 files and their fingerprints before writing anything, and only ever creates new files.
-  - The disc image is checked before and after.
-  - **Launch gate:** exit code 0, the line `RESULT: OK`, and no `STAGING-INCOMPLETE.txt` marker. All three are required.
-- **Observation helper `snapshot-test.ps1`, revision 3**, SHA-256 `DE761EE73890426C70133576C4300F1122F0F4DD745D78E265CA569D748DFEEC`.
-  - Revision 2 (`E67005F05DAE138F747BC615440B7A058497EF2730BD3264E225D0A8A182463C`) is the one Work accepted.
-  - **Revision 3 changes only the account check:** the expected account is `Pitfall Test`, and the name may contain spaces, but not at the start or end. The user authorized this correction on 2026-10-16. It passes PowerShell's grammar check with 0 errors and has not been re-reviewed by Work.
-  - **Who runs it and what it writes:** the user runs it inside the test account, unelevated, before and after each attempt. It reads only, and writes a new folder `C:\PitfallTest\logs\<label>-<time>\`.
-  - **It refuses to run (exit code 2) when:**
-    - it is the wrong account, or elevated, or the account is in the Administrators group;
-    - a folder involved is a link or junction;
-    - a snapshot folder with that name already exists.
-  - **What it records:**
-    - the account and its elevation status;
-    - game-folder files with their SHA-256;
-    - an export of `HKCU\Software`;
-    - startup (`Run`/`RunOnce`) entries;
-    - per-user VirtualStore files and `%TEMP%`;
-    - Application-log errors from the last three hours.
-  - **How results are reported:**
-    - each observation is reported as OK, EMPTY, UNAVAILABLE or FAILED;
-    - "No matching events" is kept distinct from "could not read the log";
-    - the final line is `SNAPSHOT RESULT: COMPLETE` (exit code 0) or `INCOMPLETE` (exit code 1).
-  - **Limits:** these are point-in-time snapshots, not continuous monitoring. Areas outside the captured locations are not observed.
+- **Subject:** exactly one `ASSETS\PITFALL.EXE` launch from the already staged copy, under the existing account, unelevated, with `ASSETS` explicitly set as the working directory. No Windows 95 mode, reduced-colour setting, wrapper, replacement DLL, launcher or installer in this baseline.
+- **Duration:** at most 10 minutes; stop sooner on a blocking dialog, crash, security alert, instability, unexpected administrator/install/system-change request or two minutes without response. Cancel elevation/install prompts. End only the identified test process if needed; never use `KILLPIT.EXE`.
+- Record the exact settings, account context, executable hash, working directory, display/audio/input baseline, start/end times and process identifier before associating events with the run. Capture exact dialog wording and order. For a nonblocking warning, record it; do not change settings mid-run or silently count another launch as the same attempt.
+- Capture narrow before/after observations and application-error events. Failed essential observations or unexpected unrelated changes stop further testing. A quiet event log is not proof of success.
+- Score launch, graphics/palette/fullscreen behavior, keyboard/controller input, minutes of responsive gameplay, sound effects, music and crashes separately. Aim for five minutes of gameplay if it gets that far. CD music remains **not exercised** while no CD device is available.
+- Stop after the one result and let Work select the smallest next test. Do not consume the old attempt-2/3 slots or stack several compatibility changes.
 
-**Private working-copy exception** (pending the user's approval):
-- **What it covers:** the default policy keeps original material only in `private/`. The exception allows one staged copy at `C:\PitfallTest\pitfall-cd`, plus raw logs in `C:\PitfallTest\logs`.
-- **Where it may live:** outside the repository, outside every user profile, and not in OneDrive or any cloud-synced folder. Access is limited to the four permission entries above.
-- **Sharing:** the copy and the logs, including the full registry exports, are never committed, uploaded, shared or pasted into a chat. Only sanitized findings are shared.
-- **Lifetime:** kept until this milestone ends. Deleting it later is a destructive operation, so it needs the user's direct approval at that time.
+#### Follow-up authority and priorities
 
-**Operating instructions** (Work's adjustments included):
-1. **Folder:** setup is done and verified. Any later error or unexpected permission entry means stop.
-2. **Before every use of the helper:** confirm its SHA-256 matches revision 3.
-3. **Network:** the package does not technically block connections, so the user disconnects networking (for example, Airplane mode) for each game attempt. The user reconnects afterwards to pass on sanitized findings.
-4. **Per attempt, inside the `Pitfall Test` account:**
-   1. Disconnect networking.
-   2. Take the "before" snapshot:
-      ```powershell
-      powershell -NoProfile -ExecutionPolicy Bypass -File C:\PitfallTest\tools\snapshot-test.ps1 -Label before-N
-      ```
-      Continue only on `SNAPSHOT RESULT: COMPLETE`.
-   3. Launch with an explicit working folder (not by double-clicking):
-      - **Attempt 1 (direct):**
-        ```powershell
-        Start-Process -FilePath 'C:\PitfallTest\pitfall-cd\ASSETS\PITFALL.EXE' -WorkingDirectory 'C:\PitfallTest\pitfall-cd\ASSETS'
-        ```
-      - **Attempt 2 (launcher, sequential**, because it inherits attempt 1's settings):
-        ```powershell
-        Start-Process -FilePath 'C:\PitfallTest\pitfall-cd\PITSTART.EXE' -WorkingDirectory 'C:\PitfallTest\pitfall-cd'
-        ```
-      - **Attempt 3:** one useful, unchanged confirmation of whichever attempt got further.
-   4. Observe for at most 10 minutes, then close the game.
-   5. Take the "after" snapshot with `-Label after-N`.
-   6. Reconnect networking.
-   7. Claude compares the before and after evidence **before the next launch**.
-5. **Stop the attempt if any of these happens:**
-   - a security alert;
-   - instability;
-   - an unexpected installation or elevation prompt (answer **No**);
-   - any download or online request;
-   - two minutes of unresponsiveness. End the program in Task Manager, not with `KILLPIT.EXE`.
-6. **Stop further attempts if:**
-   - a snapshot is not `COMPLETE`;
-   - concerning changes appear, such as a new startup entry or changes to an unrelated program's settings or files.
+Once the user approves the changed environment and a safe, repeatable procedure is established, Work may approve bounded non-destructive follow-up tests within those exact limits. Record the variable, expected evidence and stop condition for each batch; do not ask the user about routine wording or in-scope technical details. Crashes and mixed settings in session 1 do not yet establish that procedure.
 
-   Changes that are allowed: the game folder, `%TEMP%`, the per-user VirtualStore, and game-related settings under the test account's `HKCU\Software`.
-7. **Record:**
-   - whether it launched;
-   - whether graphics are usable;
-   - keyboard and controller input;
-   - minutes of responsive gameplay;
-   - sound effects;
-   - exact error text. Screenshots stay local.
+Prioritize the earliest reproducible blocker. Reduced colour **without** Windows 95 mode is a possible later one-variable experiment, not an approved action here. Converting a data track to ISO or mounting media still requires direct user approval and would not recreate the mixed-mode disc's CD-audio tracks. Do not install wrappers, download DLLs, modify system files or choose engine reconstruction based on this session.
 
-   CD music is **not exercised**.
+#### Preserved preparation history
 
-**The user's single approval** covers the items below. The user may approve only part of it.
-1. Using the account and folder above as the test environment.
-2. The private working-copy exception.
-3. Claude's local steps:
-   - copying the helper (revision 3) into `C:\PitfallTest\tools` and verifying its fingerprint;
-   - one staging run, as the user's own account, unelevated;
-   - one WAIL32 preflight on the staged copy with the reviewed parser (blob `3c334673…`). Its output stays in `private/test-logs`, and it is compared with R2.3: x86 DLL, 65 imports, 104 exports.
-4. Up to three launch attempts by the user under the instructions above.
-5. Claude examining the logs locally and reporting sanitized findings.
-
-**Planned execution, not authorized by this entry:** after direct user approval, keep originals read-only; run only from the verified working copy, unelevated, without wrappers, compatibility settings or manual registry fixes. Stop on validation/preflight disagreement, an installation/elevation prompt, security alert, instability, observed unrelated changes or two minutes of unresponsiveness. No automatic fixes or repeated failed launches. Work may approve subsequent tests only inside the actual user-approved environment and limits, not simply because the first run occurred.
-
-**Measurable result:** separately record launch, usable graphics, keyboard input, five minutes of responsive gameplay, sound effects and exact failure details/crash-log metadata. Without a CD device, CD music is **not exercised**, not a demonstrated compatibility failure. The next substantive Work review is launch evidence or a material safety/code change.
-
-**Deferred unless a concrete launch failure makes them necessary:** resource enumeration, debug/trailing-byte analysis (Q16), deeper WAIL32 usage investigation (Q14), CD-audio setup, new reverse-engineering tools and engine reconstruction. Q15's audio behavior is tested through the approved runtime milestone, not inferred from imports.
+- The old package, its user approval and separate-account setup are preserved at [`1322174`](https://github.com/TheHuskinator/pitfall-pc-restoration/blob/13221746b18a07b4d6416625e573b4881df63aee/PROJECT_STATUS.md) and in session 1.
+- Reviewed staging revision 3: `7C3BDA91659076C68A9D66C68A907BE17E6054F248BBC12729FCF9C081FAA7DD`; inventory pin `5cc516c228a0719d20842b78b18d62c80ec56775`.
+- Separate-account snapshot revision 3: `DE761EE73890426C70133576C4300F1122F0F4DD745D78E265CA569D748DFEEC`, source-accepted by Work before use. It is **not** the helper for the existing-account test.
+- Staging, preflight and snapshot execution results remain Claude-reported. Do not reclassify them as independent reproduction.
 
 **2026-10-14 — repository setup:** Added `CLAUDE.md` (permanent agent rules), `.gitignore` (blocks original game files, disc images, media, credentials, and build output), a git-ignored `private/` folder for original material, and a `docs/` structure (research, inventory, legal, decisions, technical, testing). Remote confirmed as `TheHuskinator/pitfall-pc-restoration` (private). The setup files were committed to GitHub; this earlier pending-push note was superseded on 2026-10-15.
 
@@ -367,11 +279,11 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 
 ## Immediate next actions
 
-**Current (2026-10-16):** follow *Next milestone: first controlled Windows 11 launch evidence* above.
-1. Done: the preparation handoff (*Launch-readiness handoff* above). Work accepted the scripts for bounded use, and the user has set up the test account, the test folder and recovery.
-2. Done (2026-10-16): the user approved the package, and attempt 1 was run (see [docs/testing/launch-attempt-1.md](docs/testing/launch-attempt-1.md)). Next: Work reviews the attempt-1 evidence; the user decides on the compatibility layers before any further attempt. Work selects technical follow-ups; the user retains reserved decisions.
-3. Gather launch evidence, then let Work prioritize the smallest evidence-backed compatibility fix. Do not choose an engine or add tooling before a concrete need is established.
-4. Historical research leads remain deferred; no external contact is authorized.
+**Current (2026-10-16):** follow *Next milestone: one attributable baseline in the existing Windows account* above.
+1. Preserve the completed separate-account exploratory session. Work reviewed it with evidence-limit corrections; no need to redo staging or WAIL32 analysis.
+2. Claude completes the narrowly scoped account/privacy helper adaptation and read-only preflight, without requiring a separate Windows account.
+3. Obtain explicit approval for the single existing-account baseline, then record that run before selecting any compatibility change.
+4. Keep Defender enabled, originals read-only and personal data out of reports. Defer tooling, mounting/conversion and deeper reverse engineering until evidence justifies them.
 
 **Completed (historical):**
 - 2026-10-15: first read-only media examination (`docs/technical/original-media-examination.md`), audited by Chat 2 and ChatGPT Work.
@@ -431,3 +343,5 @@ Each work session should leave the project easier to resume:
 | 2026-10-16 | Expand Work's role to delegated technical project manager: choose milestones and approve routine technical work, commits, pushes and merges; audit at milestone boundaries. | User-approved | Supersedes earlier per-task approval wording. Reserved decisions remain with the user; later non-destructive runtime tests require a user-approved environment and boundaries. Approval is not independent verification. |
 | 2026-10-16 | Select first controlled Windows 11 launch evidence as the next milestone; authorize bounded preparation only. | Work decision under expanded delegation | See the current milestone assignment. No extraction, game execution, account changes or installations authorized. Defer nonessential reverse engineering. |
 | 2026-10-16 | Accept staging revision 3 and snapshot helper revision 2 for the bounded first launch; the user authorizes correcting the helper's expected account to `Pitfall Test` (revision 3). | Work review (delegated) + user authorization | Source acceptance only; nothing run. The test environment, the working-copy exception, staging, the preflight and the launch attempts still await the user's single approval. |
+| 2026-10-16 | Use the existing account, unelevated, for the next planned test; separate account no longer required absent a specific technical need. | User direction | Preserve session 1 and existing working copy. Defender remains enabled; no full personal-registry export. First launch in changed environment still requires explicit approval. |
+| 2026-10-16 | Review exploratory session 1 and select one attributable existing-account baseline. | Work review and delegated preparation assignment | Evidence-limit corrections applied to the report; faults are not causally attributed. Helper adaptation/read-only preflight authorized, no new game launch or media conversion. |

@@ -65,7 +65,15 @@ The user does not need to approve each minor edit. Preserve explicit stop condit
 
 ## Current phase
 
-First controlled Windows 11 compatibility-test preparation (see `PROJECT_STATUS.md`). Prioritize measured native compatibility before additional speculative reverse engineering. **Do not choose full engine reconstruction before native compatibility has been meaningfully tested, or start a reimplementation without the user's strategy approval.** C++ with SDL3 is a candidate only.
+Windows 11 compatibility diagnosis following the first exploratory launch session (see `PROJECT_STATUS.md`). Prioritize measured native compatibility before additional speculative reverse engineering. **Do not choose full engine reconstruction before native compatibility has been meaningfully tested, or start a reimplementation without the user's strategy approval.** C++ with SDL3 is a candidate only.
+
+### Current runtime environment decision (user, 2026-10-16)
+
+Use the user's **existing Windows account, unelevated**, for subsequent planned compatibility tests. Do not require a separate account unless evidence identifies a specific technical need. The separate-account test already performed remains part of the evidence; do not discard its logs or automatically delete the account or change its permissions.
+
+Keep originals read-only and use the existing dedicated working-copy folder. Keep Microsoft Defender and its protections enabled: no exclusions, bypassing detections, or system-wide security changes. Recommend a current backup before testing; a restore point is not a personal-file backup. Existing-account logging must avoid full personal-registry exports and unrelated user data.
+
+The first execution in the changed environment remains subject to explicit user approval of the bounded test. After a safe, repeatable procedure is established, Work may approve routine follow-up tests only within the user-approved boundaries. Environment selection is not authorization to launch automatically. See the current milestone for exact preparation and stop conditions.
 
 ## First original-media examination (historical, completed)
 

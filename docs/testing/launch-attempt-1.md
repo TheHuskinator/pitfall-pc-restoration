@@ -1,8 +1,10 @@
 # Launch attempt 1 — `ASSETS\PITFALL.EXE`, Windows 11 (2026-10-16)
 
-First execution of original game software, under the user's approval of the launch package (Claude session, 2026-10-16). The package and its boundaries are in [PROJECT_STATUS.md](../../PROJECT_STATUS.md) (*Launch-readiness handoff*). The user ran the game; Claude did the preparation and the log review.
+First execution of original game software, under the user's approval of the launch package (Claude session, 2026-10-16). The original package and its boundaries are preserved in [PROJECT_STATUS.md at the examination-report commit](https://github.com/TheHuskinator/pitfall-pc-restoration/blob/13221746b18a07b4d6416625e573b4881df63aee/PROJECT_STATUS.md) (*Launch-readiness handoff*); the current status file contains the superseding plan. The user ran the game; Claude did the preparation and the log review.
 
-**Result in one line:** the game starts and shows its window, but does not reach gameplay. The original configuration stops at startup checks for a CD-ROM and a 256-colour display. With Windows 95 compatibility mode, it then fails on a missing `dispdib.dll` and crashes or freezes.
+**Result in one line:** this mixed-configuration session did not reach gameplay. Claude reports screenshots of the game window, a 256-colour warning and a `Bad or missing dispdib.dll - error 2` dialog; the user reported a CD-ROM message. Four access-violation events and a freeze were reported across several launches. Exact per-launch settings and causal order were not captured.
+
+**Work review (2026-10-16): ACCEPT WITH CORRECTIONS, applied in this update.** Useful exploratory evidence, not a controlled single-launch baseline. Work reviewed the committed report and user-provided Claude handoff, not the raw snapshots, screenshots or game bytes. Below, "verified" means verified by Claude from the cited local evidence, not independently reproduced by Work.
 
 Labels: **verified** (with source), **reported** (by the user, not independently checked), **assumption**.
 
@@ -63,24 +65,24 @@ Which launch produced which event, and which settings were active for each, was 
   - an Explorer `MuiCache` entry for `PITFALL.EXE` (company "Activision");
   - `DirectInput\MostRecentApplication` set to `PITFALL.EXE`;
   - new `Multimedia\Audio` keys.
-- **No game-written settings:** no key containing "Pitfall", "Activision" or "Kinesoft" was created by the game.
+- **No identified game-specific keys by this name filter:** Claude did not identify new keys containing "Pitfall", "Activision" or "Kinesoft" as game-created settings. Key-name filtering does not establish that the game wrote no registry values, modified no existing keys, or used no differently named locations.
 
 **Other changes:**
 - About 2,500 other new keys appeared in the account. They are consistent with Windows finishing setup of a brand-new account (Store-app registrations, content delivery). The only other app-related change is a Snipping Tool entry from the user's screenshots.
 - **Game files:** all 40 are unchanged (same sizes, times and SHA-256).
-- **Unchanged elsewhere:** startup (`Run`/`RunOnce`) entries, the VirtualStore (empty before and after) and the `%TEMP%` file names.
+- **Unchanged in the reported snapshots:** the selected startup (`Run`/`RunOnce`) entries, the VirtualStore listing (empty before and after) and the captured top-level `%TEMP%` names. These observations do not cover all startup mechanisms, temporary-file contents, every subfolder or unrelated filesystem locations.
 
 **Concerning changes:** none found within the captured areas. There are no new startup entries, and nothing indicates changes to unrelated programs.
 
 ## 3. Interpretation (assumptions, to be tested)
 
-- **A1 — the program has explicit startup checks for a CD-ROM drive and a 256-colour display.** These are consistent with the statically imported `GetDeviceCaps` and `GetVersion` (R2.1). Which exact checks the program makes is not established.
-- **A2 — `AcGenral.DLL` is part of Windows' compatibility-fix engine,** which is loaded when compatibility modes are applied. Its crashes are therefore likely tied to the compatibility settings, not to the unmodified program.
-- **A3 — the `winmmbase.dll` crashes are in Windows' multimedia layer.** That layer handles `mciSendCommand`, `aux*`, `joy*` and `waveOut*`; R2.1 lists the game's WINMM imports. Without a CD device, MCI CD-audio or `aux` volume calls are candidates; this is not tested.
-- **A4 — DISPDIB.DLL is a Windows 3.x/9x-era library for full-screen low-resolution display, and it is not part of Windows 11.**
-  - **Compatibility mode effect:** Windows 95 mode probably makes the game take a Windows 95 code path that loads it at run time. `LoadLibraryA` is imported, and DISPDIB is not a static import.
-  - **Error code:** "error 2" is consistent with "file not found".
-  - **Status:** the library's role is general Windows knowledge; its use by this game is not verified.
+- **A1 — startup messages concern CD media and display colour depth.** Exact checks and whether each dialog is a warning or a blocking condition are not established. The R2.1 imports provide possible API leads, not proof of the code path or failure cause.
+- **A2 — the two events naming `AcGenral.DLL` are consistent with compatibility processing being involved.** They do not prove the compatibility setting caused the crash or exonerate the original program. A faulting module identifies where an exception surfaced, not necessarily where the defect originated. See [Microsoft crash-troubleshooting guidance](https://learn.microsoft.com/en-us/troubleshoot/windows-server/performance/troubleshoot-application-service-crashing-behavior).
+- **A3 — two events name `winmmbase.dll`.** R2.1's WINMM imports make multimedia calls relevant leads, but no call stack or matched per-launch trace establishes the failing API. Missing CD media, audio/volume handling, invalid application state and compatibility interactions remain hypotheses; no particular cause is selected.
+- **A4 — the dialog names `dispdib.dll`; the required module/version and loading path are unverified.**
+  - Windows 95 compatibility mode changing a version-dependent path is a hypothesis, not a demonstrated trace. R2.1 records a `GetVersion` import, but an import alone does not establish how the result is used.
+  - Win32 system error 2 means file not found ([Microsoft error codes](https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-)), but the source and interpretation of the game's displayed number have not been verified.
+  - The earlier assertion that this library is absent from Windows 11 was not supported by a host check in this report. A missing/bad-module dialog does not prove that downloading or copying a DLL is a valid or safe fix. No DLL download, replacement or registration is proposed here.
 - **A5 — the CD-ROM message disappearing under Windows 95 mode is not explained.** It may be a different code path rather than a satisfied check.
 
 ## 4. Deviations from the approved boundaries (recorded factually)
@@ -89,15 +91,15 @@ The approved package specified no compatibility settings, and one launch per att
 - applied Windows 95 and Reduced colour compatibility modes to `PITFALL.EXE` and `PITSTART.EXE`;
 - launched `PITFALL.EXE` several times.
 
-These are the user's own actions as project owner, and no unrelated system changes resulted. However, as a consequence:
+These were the user's own actions, not unauthorized execution by Claude. No concerning changes were reported within the captured areas; absence of unrelated changes or harm system-wide is not established. As a consequence:
 - the four crash events cannot be matched to specific settings;
 - planned attempt 2 (`PITSTART.EXE`, "unchanged") would no longer run in the originally approved conditions while the compatibility layers remain.
 
 ## 5. Stop-rule status
 
-- **This attempt:** stopped correctly after crashes and a freeze.
-- **Further attempts:** no stop condition is triggered. Both snapshots are COMPLETE, and no concerning changes were found.
-- Attempts 2 and 3 have **not** been run. They are paused pending Work's review and the user's decision on the compatibility layers.
+- **This session:** the final frozen process was reportedly ended in Task Manager. The record does not establish that each earlier stop condition was followed or the duration of the freeze.
+- **Further attempts:** remain paused. COMPLETE snapshots mean the configured observations succeeded, not that the program is safe or stable. Crashes/freezing and changed test conditions require a revised bounded plan; the unused attempt slots are not automatic permission to continue.
+- `PITSTART.EXE` has not been launched. The existing-account baseline plan in `PROJECT_STATUS.md` supersedes the old attempts 2–3; preserve this session as historical evidence.
 
 ## 6. Measurable result
 
