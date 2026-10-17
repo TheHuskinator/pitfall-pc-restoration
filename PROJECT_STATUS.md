@@ -138,6 +138,80 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 **Preparation stop conditions:** unexpected repository divergence; modified/missing working-copy files; wrong/elevated account; link/path mismatch; ambiguous compatibility state; security alert/disabled protection; need for new software, extraction/mounting, permission/account changes or broader personal-data collection. No live game run, new image conversion, full registry export, automatic cleanup, compatibility toggle or system change is included in this preparation authorization.
 
+#### Preparation result (Claude, 2026-10-16) — ready for Work's check
+
+All items below were checked by Claude on this PC, read-only unless stated. Nothing was launched, and no settings, permissions or files were changed outside Claude's scratch folder. Not independently reproduced by Work.
+
+- **Sync:** fast-forwarded from `1322174` to `94967f8`. No local changes; no divergence.
+- **Account** *(verified)*:
+  - it is the user's existing account, at Medium integrity level, and is not elevated;
+  - its Administrators membership is "deny only" in this session.
+- **Microsoft Defender** *(verified, `Get-MpComputerStatus`)*:
+  - service, antivirus, real-time, behaviour-monitoring and download-scanning protections are all on;
+  - tamper protection is on, and the running mode is Normal;
+  - signatures were updated on 2026-10-16;
+  - no detections are on record, and Windows Security Center lists only Windows Defender.
+
+  Nothing was changed.
+- **Working copy** *(verified)*:
+  - `C:\PitfallTest`, `pitfall-cd`, `ASSETS`, `tools` and `logs` are real folders, not links;
+  - the permissions are unchanged (the same four entries); the user's account has Modify;
+  - exactly 40 files are present, and all match the pinned inventory (`5cc516c`) by path, size and SHA-256, with no extras and no links;
+  - `PITFALL.EXE` is `36047291…1E74BFFA86`;
+  - no game process is running.
+- **Compatibility settings for the user's account** *(verified)*:
+  - no `AppCompatFlags\Layers` value for `ASSETS\PITFALL.EXE` or `PITSTART.EXE`, checked in both the per-user and machine-wide locations and both registry views;
+  - no game-named `AppCompatFlags\Custom` entries;
+  - `__COMPAT_LAYER` is empty in the process, user and machine environments;
+  - no game-named Program Compatibility Assistant records.
+
+  The `WIN95 256COLOR` layers exist only in the separate `Pitfall Test` account, which is untouched and does not affect this account.
+
+  **Limitation:** Windows' built-in compatibility database (fixes Windows applies automatically to known programs) cannot be inspected with the existing tools, so a built-in fix for `PITFALL.EXE` is neither established nor ruled out.
+- **Game-named registry keys:** `Software\Activision` exists in the per-user and machine-wide settings, holding only an unrelated `Call Of Duty` subkey. No Kinesoft keys, and no game-named registry VirtualStore keys.
+- **New helper `baseline-run.ps1`, revision 1** (scratch only; **not executed**; for Work's check before use), SHA-256 `0BAD8EACB210784D4B4BD7A64D46D6283D7B2DCC36237456A35410CC27BA08D5`. Adapted from the separate-account snapshot helper, revision 3.
+  - **Phases:** each runs once per run folder.
+    - `before` creates a new run folder `logs\baseline-<time>`.
+    - `launch` runs only after a COMPLETE `before`, only once per run, and only while no physical network adapter is up. It starts `PITFALL.EXE` once (`Start-Process`, working folder `ASSETS`, no layer), records the process ID and start time, waits for exit with a 10-minute reminder (it never ends the game itself), and records the exit time and code.
+    - `after` runs only once no `PITFALL.EXE` is running. It repeats the observations, collects crash events and compares before with after.
+  - **Kept guards:**
+    - exact account (default: the user's own);
+    - non-elevation (no elevated token and Medium integrity level);
+    - link and folder checks; create-new-only writes;
+    - explicit OK / EMPTY / UNAVAILABLE / FAILED per observation;
+    - exit codes: 0 COMPLETE, 1 STOP, 2 precondition failed.
+  - **Removed:** the standard-account (no Administrators membership) requirement.
+  - **New guards:**
+    - `__COMPAT_LAYER` must be empty in the process, user and machine environments;
+    - no explicit layer may be set for `PITFALL.EXE`;
+    - Defender's protections must be on;
+    - `PITFALL.EXE` must match the pinned SHA-256;
+    - only one launch per run.
+  - **Privacy:** the full `HKCU\Software` export is replaced by narrow observations.
+    - **Registry, stored as value-data SHA-256 hashes rather than values:**
+      - game-path compatibility settings;
+      - Activision and Kinesoft keys, per-user and machine-wide;
+      - the per-user registry VirtualStore;
+      - top-level `HKCU\Software` key **names**;
+      - `Run`/`RunOnce` entries;
+      - game-named `MuiCache`, Program Compatibility Assistant and DirectInput records.
+    - **Files and devices:**
+      - Startup-folder file names;
+      - Windows `*.ini` metadata;
+      - display, audio and input device state.
+    - **Since the launch only:** `%TEMP%` and file-VirtualStore items written since the launch, capped at 100 each.
+  - **Crash events:**
+    - Application Error, Application Hang and Windows Error Reporting events from the launch time onwards;
+    - each is classified as `run` (path, process ID and start time all match) or `name` (mentions `pitfall.exe` only).
+  - **Before/after comparison verdicts:**
+    - STOP: a changed compatibility setting, a changed startup entry, or a new Defender detection;
+    - REVIEW: game files, game keys, Windows records or display/audio/input state changed. These are not attributed to the game automatically.
+  - **Statically listed commands that can write:** creating the run folder, create-new file saves and the single `Start-Process`. There is no `Set-*`, `Remove-*` or `reg.exe`.
+  - **Checks:** PowerShell grammar check, 0 errors. Synthetic tests `test-baseline-run.ps1` (SHA-256 `3E066731D497C8D4F2D07A9513B9C8F9CA32643025804C62C178E022B4135717`): **31/31 PASS**. They load only the helper's pure functions, using made-up inputs (no game run, no personal data). Covered: integrity levels including an unelevated Administrators member, the account and run-name patterns, layer matching, event attribution in both message formats, data hashing, the change verdicts, and refusing to overwrite a file.
+- **Readiness:** no installation, extraction, account, permission or settings change, and no further research, is needed for the one baseline launch.
+  - **Remaining steps before the user's approval request:** Work's check of the helper; then copying it to `C:\PitfallTest\tools` with its fingerprint verified.
+  - **What the user does on the day:** close unrelated documents and apps; confirm a current backup; disconnect Wi-Fi and Ethernet before the `launch` phase; reconnect after the `after` phase.
+
 #### Next run — proposed, pending explicit user approval
 
 - **Subject:** exactly one `ASSETS\PITFALL.EXE` launch from the already staged copy, under the existing account, unelevated, with `ASSETS` explicitly set as the working directory. No Windows 95 mode, reduced-colour setting, wrapper, replacement DLL, launcher or installer in this baseline.
