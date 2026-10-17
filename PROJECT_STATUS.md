@@ -169,7 +169,7 @@ All items below were checked by Claude on this PC, read-only unless stated. Noth
 
   **Limitation:** Windows' built-in compatibility database (fixes Windows applies automatically to known programs) cannot be inspected with the existing tools, so a built-in fix for `PITFALL.EXE` is neither established nor ruled out.
 - **Game-named registry keys:** `Software\Activision` exists in the per-user and machine-wide settings, holding only an unrelated `Call Of Duty` subkey. No Kinesoft keys, and no game-named registry VirtualStore keys.
-- **New helper `baseline-run.ps1`, revision 1** (scratch only; **not executed**; for Work's check before use), SHA-256 `0BAD8EACB210784D4B4BD7A64D46D6283D7B2DCC36237456A35410CC27BA08D5`. Adapted from the separate-account snapshot helper, revision 3.
+- **New helper `baseline-run.ps1`, revision 1**: *superseded by revision 2 (see Helper correction batch below); Work found revision 1 not launch-ready.* (scratch only; **not executed**; for Work's check before use), SHA-256 `0BAD8EACB210784D4B4BD7A64D46D6283D7B2DCC36237456A35410CC27BA08D5`. Adapted from the separate-account snapshot helper, revision 3.
   - **Phases:** each runs once per run folder.
     - `before` creates a new run folder `logs\baseline-<time>`.
     - `launch` runs only after a COMPLETE `before`, only once per run, and only while no physical network adapter is up. It starts `PITFALL.EXE` once (`Start-Process`, working folder `ASSETS`, no layer), records the process ID and start time, waits for exit with a 10-minute reminder (it never ends the game itself), and records the exit time and code.
@@ -211,6 +211,89 @@ All items below were checked by Claude on this PC, read-only unless stated. Noth
 - **Readiness:** no installation, extraction, account, permission or settings change, and no further research, is needed for the one baseline launch.
   - **Remaining steps before the user's approval request:** Work's check of the helper; then copying it to `C:\PitfallTest\tools` with its fingerprint verified.
   - **What the user does on the day:** close unrelated documents and apps; confirm a current backup; disconnect Wi-Fi and Ethernet before the `launch` phase; reconnect after the `after` phase.
+
+#### Helper correction batch (Claude, 2026-10-17) — revision 2 for Work's independent review
+
+Work's review of `1125fe6` found revision 1 **not launch-ready**, with four blockers. Revision 2 addresses them in one bounded batch, in scratch only. No game run, no game-file access, no installation and no settings change; the tests use mocks and synthetic fixtures only.
+
+- **`baseline-run.ps1`, revision 2** (not executed): SHA-256 `B9B56E5E18088DD8EEE7B400E056CB674DB8D04EED25B432A349D7DE5575DEE2`. It supersedes revision 1 (`0BAD8EAC…`).
+- **`test-baseline-run.ps1`**: SHA-256 `6C4953A74A7EB7886D179AFA15438B02209133266E082D8225445887FFB57A8A`. Result: **104/104 PASS**.
+
+**Blocker 1 — narrower evidence:**
+- **Removed:** reading the unrelated Activision subtree; the whole-subtree registry VirtualStore listing; the list of top-level `HKCU\Software` names; the recursive `%TEMP%` and file-VirtualStore scans; the clear-text `MostRecentApplication` value.
+- **Registry kept, game-specific only:** only *game-named* subkeys are read. Game-named means matching pitfall, pitstart, killpit, mayan or kinesoft. They are looked for under `HKCU\Software`, `HKLM\SOFTWARE` (both views), the Activision vendor keys and the registry VirtualStore. Values are stored as SHA-256 hashes, and other subkey names are not recorded.
+- **Startup checks kept:** `Run`/`RunOnce` and Startup-folder entries, stored as hashes of names and data. Game-named entries are also recorded by name.
+- **Other observations kept:**
+  - game-named Windows records (`MuiCache`, Program Compatibility Assistant and DirectInput entries);
+  - `WIN.INI`/`SYSTEM.INI` metadata in the Windows folder and the per-user VirtualStore;
+  - game-named top-level `%TEMP%` entries written since the launch.
+
+**Blocker 2 — launch-time safety:**
+- **Re-checked immediately before process creation:**
+  - Defender protections: service, antivirus, real-time, behaviour monitoring, download scanning and on-access, plus Normal running mode;
+  - Defender detections: none new since the before phase, and none naming the test folder;
+  - compatibility state; network; running processes; the executable's hash.
+- **STOP:** any game-named or ambiguous layer (another copy's path, or the launcher), any game-named `Custom` entry, any `__COMPAT_LAYER` value and any unreadable location.
+- **Fail closed:** every launch-time check that throws or returns nothing blocks the launch. The gate logic is a separate pure function, which the tests exercise.
+
+**Blocker 3 — evidence after the test:**
+- **Still mandatory** (refuse and record nothing): the account, non-elevation and safe output paths.
+- **Recorded as STOP, while the remaining safe observations continue:**
+  - `__COMPAT_LAYER` or compatibility entries appearing after the launch;
+  - Defender being turned off;
+  - new detections;
+  - unreadable sources.
+
+**Blocker 4 — immediate exits and crashes:**
+- **Before creation:** the launch-request time is saved before the process is created.
+- **Process details:** the handle, ID, start time, exit time and exit code are each read separately, through their getter methods so the failure reason is kept. Anything not retrievable is recorded as "unavailable (reason)" and is never treated as zero.
+- **Waiting:** if no handle is held, waiting falls back to polling by process name. Start-Process and wait failures are recorded.
+- **Classification:** crash events are classed as `run`, `run (linked by report id)`, `uncertain` (path matches but process details are unavailable) or `name`. Uncertain attribution produces explicit REVIEW lines.
+- **Format:** crash events are written as **structured fields** (application or program, versions, module, exception code, fault offset, process ID, start time, paths, hang type, event name, fault bucket, signature P1–P9 and report ID). If no field is recognised, only a message hash is kept. This replaces the 800-character truncation, and WER attached-file paths are not captured.
+
+**Tests that actually ran (104):** they load only the helper's functions and constants, with mocked readers and temporary folders.
+- **Kept from revision 1:** integrity levels, name patterns, hashing, the change verdicts and refusing to overwrite a file.
+- **Compatibility and launch gate:**
+  - 8 compatibility-blocker cases;
+  - the gate passing when all checks pass;
+  - 10 fail-closed cases (each launch-time check missing);
+  - each Defender protection off, and passive mode;
+  - a new detection, a test-folder detection, the network still up, and a compatibility blocker.
+- **Launch refused before creation (16 flows):** each checks exit code 2, Start never called and no launch record. They cover:
+  - protection or detection changes between the before phase and the launch;
+  - unreadable or null Defender, detection, compatibility, network, running-process and hash checks;
+  - ambiguous and custom entries, and `__COMPAT_LAYER`;
+  - the game already running, a changed hash, and a missing before record.
+- **Successful launch:** the request is persisted before creation, and a second launch in the same run is refused.
+- **Process-detail edge cases:**
+  - immediate exit with exit code `0xC0000005`;
+  - all process details failing, or yielding nothing;
+  - no process object returned;
+  - Start-Process failing (relaunch then refused);
+  - waiting failing.
+- **Crash parsing:** Application Error, Hang and WER messages parsed; run, uncertain, name and none classification.
+- **After phase:**
+  - `__COMPAT_LAYER` appearing, Defender turned off with a new detection, and unreadable registry plus event log. In each case STOP is recorded and the remaining evidence is kept.
+  - A startup change gives STOP; a new game key gives REVIEW only.
+  - Unavailable process details give uncertain attribution.
+  - WER events are linked by report ID, and unrelated events are omitted.
+  - The after phase is refused while the game is running, when the running state is unknown, or without a launch record.
+- **Mandatory account and folder failures:** a wrong account, elevation, unreadable identity, a link folder, unknown link state and an unreadable folder.
+
+**Not tested (real readers only run on the actual launch day):**
+- the registry, Defender, event-log, network and process readers against the real system;
+- `Start-Process`;
+- the real waiting loop and 10-minute reminder;
+- the script's top-level `Stop-Pre` / `exit` path.
+
+The mocks model real getter failures through getter methods. That this matches live `Process` behaviour was checked only on a harmless `FileInfo` object.
+
+**Remaining limitations:**
+- **Built-in compatibility database:** Windows' built-in shim database still cannot be inspected.
+- **Differently named game data:** game data under names that don't match the pattern would not be seen. This is the accepted trade-off of the narrower collection.
+- **Unattributed changes:** unknown changes are not attributed to the game.
+
+**Readiness recommendation:** revision 2 is ready for Work's **independent source review**, not yet for use. After Work accepts it, Claude copies it to `C:\PitfallTest\tools`, verifies the fingerprint and asks the user for the separate, explicit approval of the first existing-account launch.
 
 #### Next run — proposed, pending explicit user approval
 
