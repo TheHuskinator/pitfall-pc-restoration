@@ -133,6 +133,14 @@ Neither auditor had access to the disc image. Hashes, raw-sector observations, Q
 
 **Evidence limits:** the test run is Claude-reported and has not been independently reproduced. The export-enabled version has not been run on any game file. `WAIL32.DLL` has not been examined. Reviews X2–X5 come from the same Work reviewer role and are not separate independent verifications.
 
+## R2.3 — `WAIL32.DLL` static analysis (2026-10-16)
+
+| Step | What happened | Outcome |
+| --- | --- | --- |
+| R2.3-S | Scope proposed by Claude, then reviewed by Work | Work: scope acceptable, with two clarifications (exports may be code or data; record forwarders without following them; names, flags and timestamps do not establish behavior or identity). Work explicitly recommended one run pinned to `af720d7` and parser blob `3c334673…`, then documentation in five uncommitted files. Delegated approval. |
+| R2.3-X | Examination | Preconditions passed (clean `main` at `af720d7`; parser blob matched; image present). A single invocation; fingerprint matched before parsing; `RESULT: OK`, exit 0. Arithmetic checks all consistent; no stop condition triggered. No other game files read, no forwarders followed (none present), no target bytes examined, nothing loaded or executed. First game-file use of the export-enabled parser. |
+| R2.3-R | Report `docs/technical/wail32.md` and status updates | **Claude-reported examination complete; pending Work review.** Published on review branch `draft/r2.3-wail32` (on Work's explicit recommendation). Lists were transcribed manually from on-screen output, with no run transcript retained; internal consistency does not establish transcription accuracy. |
+
 ## Repository hygiene: tracker character-encoding repair (2026-10-15)
 
 - **The problem:** commit `50cf7d0` saved this tracker with garbled characters: **30 damaged sequences across 22 lines**, such as `â€”` for "—" and `Â§` for "§". The cause was a Claude bulk edit, run in Windows PowerShell 5.1, that read the UTF-8 file as Windows-1252 and wrote it back as UTF-8. Earlier commits (`8f881aa`, `5aa4a29`) were clean.

@@ -58,7 +58,7 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - Independent reproduction of the EDC and listing results. These are now reproducible with `tools/verify-media001.ps1`. Claude's second run passed every check on 2026-10-15, but that is not an independent run.
 
 **Not yet done:**
-- executable analysis beyond static PE headers and imports of `PITFALL.EXE`, `PITSTART.EXE` and `KILLPIT.EXE` (no disassembly, strings, resources, exports, or other executables such as `WAIL32.DLL`);
+- executable analysis beyond static PE headers and imports of `PITFALL.EXE`, `PITSTART.EXE` and `KILLPIT.EXE`, and static headers, imports and exports of `WAIL32.DLL` (R2.3 draft): no disassembly, strings, resource contents or target bytes;
 - game execution and compatibility testing;
 - a working build environment or restoration code.
 
@@ -97,10 +97,17 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - **History:** draft `4c1d42c` (Work: Accept with corrections), then `7dbe873` (Work: Accept for testing).
   - **Testing:** Claude's single synthetic run at `7dbe873` gave **73/73 PASS, exit 0** (Claude-reported). Work accepted this as closing the testing step.
   - **Merge:** merged into `main` by merge commit `4a7ab30` on Work's explicit recommendation, under delegated approval.
-  - **Not done:** independent reproduction of the run; any re-run of the export-enabled version on game files; any `WAIL32.DLL` examination.
+  - **Not done (at merge time):** independent reproduction of the run; any re-run of the export-enabled version on game files; any `WAIL32.DLL` examination. *(`WAIL32.DLL` was examined afterwards; see R2.3.)*
+- **R2.3: Claude-reported examination complete; pending Work review** (2026-10-16). Report `docs/technical/wail32.md` is on review branch `draft/r2.3-wail32`, not merged into `main`. Its lists were transcribed manually from on-screen output and no run transcript was retained, so transcription accuracy is not established. This was the export-enabled parser's first game-file run: one invocation on Work's explicit recommendation (delegated approval), fingerprint verified before parsing, `RESULT: OK`. All results are Claude-reported.
+  - `WAIL32.DLL` is a PE32 x86 **DLL** (ImageBase `0x20000000`, linker field 2.55, subsystem 4.0).
+  - **104 export entries**, each with exactly one name (98 `AIL_…`, 4 `FILE_…`, 2 `MEM_…`); no aliases, forwarders or unused entries; all targets classified in `.text`.
+  - **65 static imports** from KERNEL32, USER32 and WINMM, including `waveOut*` and `midiOut*`. No `LoadLibraryA`; `GetProcAddress` is imported.
+  - None of the three earlier executables statically imports `WAIL32.DLL`. Whether the game uses it is **not tested**, and R2.3 is not evidence that it does.
+  - 3,072 bytes follow the last section, and a Debug directory is declared; neither was examined.
+  - Discrepancy D-EXE-3: the timestamp field 1995-07-10 03:26:55 UTC is 44 days before the disc's directory date. Not interpreted.
 
 **Next tasks:**
-1. *(Awaiting user decision)* R2.3: a separately scoped `WAIL32.DLL` header/import/export review. Claude will propose its scope first.
+1. Work's review of R2.3 on branch `draft/r2.3-wail32`. Merging into `main` is a separate decision.
 2. *(Awaiting user decision)* Resource-type enumeration for `PITFALL.EXE` and `PITSTART.EXE` (no extraction).
 3. *(Awaiting user decision)* Run-time dependencies: static string leads, or execution under its own approved test plan.
 
@@ -224,7 +231,7 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 ## Immediate next actions
 
 **Current (2026-10-16)** — the authoritative technical list is *Next proposed tasks* in *Current project status* above:
-1. Propose a separately scoped R2.3 (`WAIL32.DLL` header/import/export review). Its scope needs approval from the user, or by an explicit Work recommendation under delegated approval.
+1. Work reviews R2.3 (`docs/technical/wail32.md` on branch `draft/r2.3-wail32`): Claude-reported examination complete, done on 2026-10-16 within Work's recommended scope.
 2. Verify the Andy Glaister lead and draft—not send—an outreach note unless the user explicitly authorizes contact.
 3. Follow the two-agent handoff: Claude proposes → the user authorizes → Claude reports → the user passes it to Work → Work reports to the user → the user decides. Obtain the applicable user approval before mounting, extraction, installation, game execution, tool installation, implementation, commits or pushes.
 4. Do not commit to C++/SDL3 until the technical-discovery milestone produces a short recommendation.

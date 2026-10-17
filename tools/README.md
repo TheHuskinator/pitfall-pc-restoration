@@ -62,7 +62,7 @@ A run by the same examiner is a reproducibility check, not an independent confir
 > - **Reviews:** Work's source reviews gave `4c1d42c` "Accept with corrections" and `7dbe873` "Accept for testing".
 > - **Tests:** Claude's single synthetic run at `7dbe873`: **73/73 PASS, exit 0** (Claude-reported). Work accepted that as closing the testing step.
 > - **History:** until that run, the export support was a never-run draft on branch `draft/inspect-pe-exports` (`4c1d42c`, then `7dbe873`).
-> - **Not yet done with this version:** a re-run on the game files, independent reproduction of any run, and any examination of `WAIL32.DLL`.
+> - **Not yet done with this version:** a re-run on `PITFALL.EXE`, `PITSTART.EXE` or `KILLPIT.EXE`, and independent reproduction of any run. Its first game-file run, on `WAIL32.DLL` (R2.3, 2026-10-16), is listed under *Runs so far*.
 
 **Purpose:** report a 32-bit Windows program's (PE32) headers, sections, entry point and static imports, in original and sorted order, and its export table. It is the reviewed and synthetic-tested replacement for the session-local parser behind report R2.1 ([docs/technical/executable.md](../docs/technical/executable.md)). Review history: [audit tracker](../docs/reviews/media-001-audit-tracker.md).
 
@@ -172,8 +172,9 @@ On 2026-10-15, Claude reported doing both checks for the `c389278` versions of t
 | 2026-10-15 | Claude Code (user-approved) | Synthetic tests at `c389278` | 29/29 PASS, exit 0; temporary folder removed |
 | 2026-10-15 | Claude Code (user-approved) | `PITFALL.EXE` re-read at `c389278` | Fingerprint matched before parsing; `RESULT: OK`, exit 0. All R2.1 values reproduced; only display order differs ([executable.md §10](../docs/technical/executable.md)) |
 | 2026-10-16 | Claude Code (on Work's explicit recommendation, delegated approval) | Synthetic tests at `7dbe873` (a single invocation) | **73/73 PASS, exit 0**; temporary folder removed. Pre-checks: clean checkout, `HEAD` = `7dbe873`, blob IDs matched. No game files read. |
+| 2026-10-16 | Claude Code (on Work's explicit recommendation, delegated approval) | R2.3: `ASSETS/WAIL32.DLL` at `af720d7` (parser blob `3c334673…`), a single invocation | Fingerprint matched before parsing; `RESULT: OK`, exit 0. 65 imports, 104 export entries, no `NOTE:` lines. See [wail32.md](../docs/technical/wail32.md): Claude-reported examination complete, pending Work review; lists manually transcribed, no run transcript retained. |
 
-The 2026-10-15 `PITFALL.EXE` re-read and the R2.2 examination used the import-only version. **The export-enabled version has not been run on any game file.**
+The 2026-10-15 `PITFALL.EXE` re-read and the R2.2 examination used the import-only version. **The export-enabled version's only game-file run so far is the R2.3 run on `WAIL32.DLL`.**
 
 **Reviewed code identity for the 2026-10-16 run** (commit `7dbe873`, merged unchanged in `4a7ab30`):
 
