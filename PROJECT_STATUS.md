@@ -124,34 +124,115 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 **Preparation stop conditions:** unexpected local/remote divergence or conflicting work; any need for original-file access, staging, mounting, execution, installation, account/permission changes, destructive operations or a broader investigation. Report to Work; reserved decisions go to the user. Grammar-only source checks are allowed; do not execute the staging or observation scripts in this preparation assignment.
 
-#### Launch-readiness handoff (Claude, 2026-10-16; preparation only)
+#### Launch-readiness handoff (Claude, 2026-10-16; updated after Work's source acceptance)
 
-**Status: READY FOR THE USER'S APPROVAL PACKAGE.** Nothing has been staged, mounted, extracted or executed. No account or permission has been changed, and no game bytes were accessed for this handoff.
+**Status: AWAITING THE USER'S SINGLE APPROVAL.** Nothing has been staged, mounted, extracted or executed. No game bytes were accessed for this handoff.
 
-- **Account choice: the user chose Option A**, a separate standard local test account, in the Claude session on 2026-10-16. The user creates the account; Claude does not.
-- **Destination:** `C:\PitfallTest\pitfall-cd`, so that the test account can reach the files without access to the user's profile.
-  - **This needs the user's explicit exception to the default private-folder policy**, as noted above. `C:\PitfallTest` would be created by the user, outside every user profile, outside Git, and not synced to the cloud.
-  - Raw snapshots in `C:\PitfallTest\logs` stay there; only sanitized findings are shared.
-- **Staging script, revision 3** (source-adapted from Work-reviewed revision 2; **not executed**), SHA-256 `7C3BDA91659076C68A9D66C68A907BE17E6054F248BBC12729FCF9C081FAA7DD`. Only the destination handling changed:
-  - the destination is fixed at `C:\PitfallTest\pitfall-cd`;
-  - `C:\PitfallTest` must already exist, be exactly that path, be a real directory rather than a link, and lie outside the user-profiles folder;
-  - the link check is repeated just before writing.
+**Work's review (2026-10-16):**
+- **What Work checked:** the actual snapshot helper (revision 2) and the setup package. Both script fingerprints matched Claude's report, and GitHub `main` was confirmed at `3b0d55d`.
+- **Verdict:** both scripts are accepted for the proposed bounded use, subject to the user's setup and execution approval. Work ran neither, and source acceptance does not guarantee they work.
+- **Authorized under delegation:** this status update, consolidating the approval into one package, and one documentation-only commit and push.
 
-  The pinned inventory, the validate-before-write checks, create-new-only writes, the image checks before and after, the incomplete marker and the launch gate (exit 0 + `RESULT: OK` + no marker) are unchanged. **Source check of this adaptation: pending.** It is held in Claude's session scratch folder, not in the repository, so its source must be passed to Work for that check.
-- **Observation helper `snapshot-test.ps1`** (new, **not executed**), SHA-256 `85B8726AF40E48116B1207A815A3C2B330F1F6C87689D3C3549B3855ED8B59A6`.
-  - **Run by the user inside the test account**, before and after each attempt. It reads only, and writes its own output under `C:\PitfallTest\logs\<label>-<time>\`.
-  - **It records:** account and elevation status; game-folder files with SHA-256; an export of `HKCU\Software`; startup (`Run`/`RunOnce`) entries; per-user VirtualStore files; `%TEMP%`; and recent Application-log errors.
-  - **Limits:** these are point-in-time snapshots, not continuous monitoring, so changes are detected only afterwards. Settings outside the captured areas are not observed.
-- **Permitted changes during attempts:** the game folder, `%TEMP%`, the per-user VirtualStore, and **game-related** settings under the test account's `HKCU\Software`.
-  - Any new startup entry, any change to an unrelated application's settings or files, an installation or elevation prompt, or a security alert **stops further attempts**.
-  - The launcher attempt is labeled **sequential**, since it inherits the direct-game attempt's settings.
-- **The user's approval package**, one decision covering all of the following:
-  1. **Environment and recovery:** the Option A account (created by the user), the `C:\PitfallTest` exception, confirmed personal-data backup, and an optional restore point (system recovery only).
-  2. **Staging:** one run of the source-checked revision 3 into `C:\PitfallTest\pitfall-cd`. Claude then copies the observation helper to `C:\PitfallTest\tools`, and runs **one** WAIL32 preflight with the reviewed parser (blob `3c334673…`) on the staged copy, keeping the metadata output privately and comparing it with R2.3.
-  3. **First execution:** up to three attempts of at most ten minutes each, started by the user inside the test account, unelevated:
-     - direct `ASSETS\PITFALL.EXE` (working directory `ASSETS\`);
-     - root `PITSTART.EXE` (sequential);
-     - one useful unchanged confirmation.
+**Environment set up by the user (account and permission changes made by the user, not Claude):**
+- **Recovery** *(reported by the user, 2026-10-16)*: a restore point was created, and important files are backed up.
+- **Test account `Pitfall Test`** *(verified by Claude, read-only)*. Its name contains a space; it replaces the earlier working name `pitfalltest`.
+  - It is a local, enabled account.
+  - It is not a member of the Administrators group.
+- **Folder `C:\PitfallTest`** *(verified by Claude, read-only)*:
+  - it is a real, empty directory, not a link;
+  - it is owned by the user's own account;
+  - it has exactly four permission entries, all applied to subfolders and files: SYSTEM (Full control), Administrators (Full control), the user's own account (Modify) and `Pitfall Test` (Modify);
+  - it has no inherited entries, and no Everyone, Users or Authenticated Users entries.
+
+**Scripts** (held in Claude's session scratch folder, outside the repository; **neither executed**):
+- **Staging script, revision 3**, SHA-256 `7C3BDA91659076C68A9D66C68A907BE17E6054F248BBC12729FCF9C081FAA7DD`. Work accepted its source.
+  - The destination is fixed at `C:\PitfallTest\pitfall-cd`. The script must create it, and refuses to run if it already exists.
+  - It refuses links (including junctions) and destinations under the user-profiles folder.
+  - The inventory it checks against is pinned at `5cc516c`. It validates all 40 files and their fingerprints before writing anything, and only ever creates new files.
+  - The disc image is checked before and after.
+  - **Launch gate:** exit code 0, the line `RESULT: OK`, and no `STAGING-INCOMPLETE.txt` marker. All three are required.
+- **Observation helper `snapshot-test.ps1`, revision 3**, SHA-256 `DE761EE73890426C70133576C4300F1122F0F4DD745D78E265CA569D748DFEEC`.
+  - Revision 2 (`E67005F05DAE138F747BC615440B7A058497EF2730BD3264E225D0A8A182463C`) is the one Work accepted.
+  - **Revision 3 changes only the account check:** the expected account is `Pitfall Test`, and the name may contain spaces, but not at the start or end. The user authorized this correction on 2026-10-16. It passes PowerShell's grammar check with 0 errors and has not been re-reviewed by Work.
+  - **Who runs it and what it writes:** the user runs it inside the test account, unelevated, before and after each attempt. It reads only, and writes a new folder `C:\PitfallTest\logs\<label>-<time>\`.
+  - **It refuses to run (exit code 2) when:**
+    - it is the wrong account, or elevated, or the account is in the Administrators group;
+    - a folder involved is a link or junction;
+    - a snapshot folder with that name already exists.
+  - **What it records:**
+    - the account and its elevation status;
+    - game-folder files with their SHA-256;
+    - an export of `HKCU\Software`;
+    - startup (`Run`/`RunOnce`) entries;
+    - per-user VirtualStore files and `%TEMP%`;
+    - Application-log errors from the last three hours.
+  - **How results are reported:**
+    - each observation is reported as OK, EMPTY, UNAVAILABLE or FAILED;
+    - "No matching events" is kept distinct from "could not read the log";
+    - the final line is `SNAPSHOT RESULT: COMPLETE` (exit code 0) or `INCOMPLETE` (exit code 1).
+  - **Limits:** these are point-in-time snapshots, not continuous monitoring. Areas outside the captured locations are not observed.
+
+**Private working-copy exception** (pending the user's approval):
+- **What it covers:** the default policy keeps original material only in `private/`. The exception allows one staged copy at `C:\PitfallTest\pitfall-cd`, plus raw logs in `C:\PitfallTest\logs`.
+- **Where it may live:** outside the repository, outside every user profile, and not in OneDrive or any cloud-synced folder. Access is limited to the four permission entries above.
+- **Sharing:** the copy and the logs, including the full registry exports, are never committed, uploaded, shared or pasted into a chat. Only sanitized findings are shared.
+- **Lifetime:** kept until this milestone ends. Deleting it later is a destructive operation, so it needs the user's direct approval at that time.
+
+**Operating instructions** (Work's adjustments included):
+1. **Folder:** setup is done and verified. Any later error or unexpected permission entry means stop.
+2. **Before every use of the helper:** confirm its SHA-256 matches revision 3.
+3. **Network:** the package does not technically block connections, so the user disconnects networking (for example, Airplane mode) for each game attempt. The user reconnects afterwards to pass on sanitized findings.
+4. **Per attempt, inside the `Pitfall Test` account:**
+   1. Disconnect networking.
+   2. Take the "before" snapshot:
+      ```powershell
+      powershell -NoProfile -ExecutionPolicy Bypass -File C:\PitfallTest\tools\snapshot-test.ps1 -Label before-N
+      ```
+      Continue only on `SNAPSHOT RESULT: COMPLETE`.
+   3. Launch with an explicit working folder (not by double-clicking):
+      - **Attempt 1 (direct):**
+        ```powershell
+        Start-Process -FilePath 'C:\PitfallTest\pitfall-cd\ASSETS\PITFALL.EXE' -WorkingDirectory 'C:\PitfallTest\pitfall-cd\ASSETS'
+        ```
+      - **Attempt 2 (launcher, sequential**, because it inherits attempt 1's settings):
+        ```powershell
+        Start-Process -FilePath 'C:\PitfallTest\pitfall-cd\PITSTART.EXE' -WorkingDirectory 'C:\PitfallTest\pitfall-cd'
+        ```
+      - **Attempt 3:** one useful, unchanged confirmation of whichever attempt got further.
+   4. Observe for at most 10 minutes, then close the game.
+   5. Take the "after" snapshot with `-Label after-N`.
+   6. Reconnect networking.
+   7. Claude compares the before and after evidence **before the next launch**.
+5. **Stop the attempt if any of these happens:**
+   - a security alert;
+   - instability;
+   - an unexpected installation or elevation prompt (answer **No**);
+   - any download or online request;
+   - two minutes of unresponsiveness. End the program in Task Manager, not with `KILLPIT.EXE`.
+6. **Stop further attempts if:**
+   - a snapshot is not `COMPLETE`;
+   - concerning changes appear, such as a new startup entry or changes to an unrelated program's settings or files.
+
+   Changes that are allowed: the game folder, `%TEMP%`, the per-user VirtualStore, and game-related settings under the test account's `HKCU\Software`.
+7. **Record:**
+   - whether it launched;
+   - whether graphics are usable;
+   - keyboard and controller input;
+   - minutes of responsive gameplay;
+   - sound effects;
+   - exact error text. Screenshots stay local.
+
+   CD music is **not exercised**.
+
+**The user's single approval** covers the items below. The user may approve only part of it.
+1. Using the account and folder above as the test environment.
+2. The private working-copy exception.
+3. Claude's local steps:
+   - copying the helper (revision 3) into `C:\PitfallTest\tools` and verifying its fingerprint;
+   - one staging run, as the user's own account, unelevated;
+   - one WAIL32 preflight on the staged copy with the reviewed parser (blob `3c334673…`). Its output stays in `private/test-logs`, and it is compared with R2.3: x86 DLL, 65 imports, 104 exports.
+4. Up to three launch attempts by the user under the instructions above.
+5. Claude examining the logs locally and reporting sanitized findings.
 
 **Planned execution, not authorized by this entry:** after direct user approval, keep originals read-only; run only from the verified working copy, unelevated, without wrappers, compatibility settings or manual registry fixes. Stop on validation/preflight disagreement, an installation/elevation prompt, security alert, instability, observed unrelated changes or two minutes of unresponsiveness. No automatic fixes or repeated failed launches. Work may approve subsequent tests only inside the actual user-approved environment and limits, not simply because the first run occurred.
 
@@ -279,7 +360,7 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 ## Immediate next actions
 
 **Current (2026-10-16):** follow *Next milestone: first controlled Windows 11 launch evidence* above.
-1. Claude completes the authorized preparation handoff; routine details and wording fixes stay within the milestone.
+1. Done: the preparation handoff (*Launch-readiness handoff* above). Work accepted the scripts for bounded use, and the user has set up the test account, the test folder and recovery.
 2. Obtain the user's environment, extraction and first-execution approval as one bounded package. Work selects technical follow-ups; the user retains reserved decisions.
 3. Gather launch evidence, then let Work prioritize the smallest evidence-backed compatibility fix. Do not choose an engine or add tooling before a concrete need is established.
 4. Historical research leads remain deferred; no external contact is authorized.
@@ -341,3 +422,4 @@ Each work session should leave the project easier to resume:
 | 2026-10-16 | Merge the reviewed PE parser milestone (`draft/inspect-pe`) into `main` by fast-forward, keeping every reviewed commit ID in `main`'s history. | User-approved | ChatGPT Work ACCEPT of `4ec4321`. Tool results remain Claude-reported; independent byte verification is still open. |
 | 2026-10-16 | Expand Work's role to delegated technical project manager: choose milestones and approve routine technical work, commits, pushes and merges; audit at milestone boundaries. | User-approved | Supersedes earlier per-task approval wording. Reserved decisions remain with the user; later non-destructive runtime tests require a user-approved environment and boundaries. Approval is not independent verification. |
 | 2026-10-16 | Select first controlled Windows 11 launch evidence as the next milestone; authorize bounded preparation only. | Work decision under expanded delegation | See the current milestone assignment. No extraction, game execution, account changes or installations authorized. Defer nonessential reverse engineering. |
+| 2026-10-16 | Accept staging revision 3 and snapshot helper revision 2 for the bounded first launch; the user authorizes correcting the helper's expected account to `Pitfall Test` (revision 3). | Work review (delegated) + user authorization | Source acceptance only; nothing run. The test environment, the working-copy exception, staging, the preflight and the launch attempts still await the user's single approval. |
