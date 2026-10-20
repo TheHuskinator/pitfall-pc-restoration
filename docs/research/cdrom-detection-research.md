@@ -1,5 +1,10 @@
 # CD-ROM detection research — reviewed draft
 
+> **Update (2026-10-19): read the [dated addendum](#addendum-2026-10-19-mounted-disc-test-completed-after-this-documents-baseline) first.**
+> - The mounted-disc test discussed below has since been run once, and its approval is spent.
+> - Work has directed that it is not to be repeated.
+> - This document's statements about a pending approval, and its "next experimental decision", describe the state at commit `6638e7d`. They are not current instructions.
+
 Date: 2026-10-17. Scope: Kinesoft Windows 95 PC edition on Windows 11.
 
 **Disposition:** documentation draft for Work/Claude review. No scripts executed or approved; no game execution, media creation/mounting, installation or settings changes performed. This workspace is a synced project mirror, not a Git checkout. This new document does not alter synced references and has not been committed or pushed.
@@ -74,6 +79,40 @@ The proposed 24-track result is a descriptor-derived expectation, not a host res
 **Next experimental decision:** retain the already accepted mounted-disc proposal and its outstanding user approval. Do not make the pasted MCI probe a new prerequisite. After the authorized result is available, Work should select one discriminating follow-up. If MCI measurement is warranted, request a source-only design with explicit drive identity, x86/interface comparability, structured errors and cleanup, then review it before considering execution. Static dialog references or API logging are later alternatives, not automatic next actions.
 
 Keep originals and raw evidence private, Defender enabled, and tests within the exact approved environment. Media creation/mounting, game execution, software installation and settings changes remain reserved as specified in [P1], [P2], [P3]. No original content, raw report, game assets or screenshots belong in this documentation change. The report's legal discussion is not a project permission or rights determination; retain the repository rights policy.
+
+## Addendum (2026-10-19): mounted-disc test completed after this document's baseline
+
+This document was written from repository commit `6638e7d`. At that commit, the mounted-disc test was prepared but not run. The user added the document at commit `476675a`. The sections above are left unchanged as a record of that baseline; this addendum records what happened after it.
+
+- **The test has been run.** The user approved five actions on 2026-10-17:
+  - ISO creation;
+  - a temporary AutoPlay switch-off;
+  - mounting;
+  - one supervised launch;
+  - eject and AutoPlay restore.
+
+  All five were completed once. The approval is spent; it is no longer "outstanding" as stated above.
+- **Result.** Windows mounted a data-only ISO as `E:`, labelled `PITFALL`, with all 40 inventory files matching. The game was started directly from the hard-disk working copy, not from the disc and not through `PITSTART.EXE`.
+  - **User-reported:** the same 256-colour and CD-ROM dialogs appeared as before, and the game then closed by itself.
+  - **Claude-verified from the helper's records:** exit code 0, 25.84 s after the process started; no matching crash, hang or error-report events in the observed window; no difference between the before and after snapshots in the captured observations.
+  - A separately recorded AutoPlay stored-value difference followed the user's restore.
+
+  See [existing-account-mounted-disc-1.md](../testing/existing-account-mounted-disc-1.md).
+- **Consistency with this document's audit.** The result is consistent with the second row of *Audit of causal claims*: a data-only failure does not establish an audio-track or TOC requirement. The result report lists candidate explanations H1–H6, without ranking them:
+  - audio tracks or track layout;
+  - drive selection;
+  - the executable's location;
+  - file, label or serial expectations;
+  - virtual-drive differences;
+  - launcher set-up.
+
+  Each remains compatible with the outcome under further assumptions. This test does not distinguish them.
+- **The "next experimental decision" above is superseded.** Work has directed that the mounted-disc test is **not to be repeated**. Work has authorized preparing, for review only, a small search helper to locate the CD-ROM message in `PITFALL.EXE`. Nothing has been run. The other constraints in that paragraph still stand:
+  - the sample MCI probe is not a prerequisite;
+  - any MCI measurement first needs a reviewed source-only design;
+  - API logging is not an automatic next action.
+- **Disposition note:** the *Disposition* paragraph's statement that this document "has not been committed or pushed" described its draft state. It was committed at `476675a`.
+- **Repository visibility:** the observation in *Provenance and current baseline* was confirmed read-only by Claude on 2026-10-17: GitHub reports the repository as **public**. No tracked file is original game material. Visibility is the user's decision and is tracked separately. Making the repository private would restrict future access, but would not undo earlier public exposure.
 
 ## Citation handling and sources
 

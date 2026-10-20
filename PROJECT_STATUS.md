@@ -1,7 +1,7 @@
 # PROJECT STATUS — Pitfall: The Mayan Adventure (PC Restoration)
 
-**Status:** First launch evidence reviewed; preparing an existing-account baseline  
-**Last updated:** 2026-10-16  
+**Status:** Mounted-disc test reported (CD-ROM message unchanged); preparing a reviewed static search for the message  
+**Last updated:** 2026-10-19  
 **Project target:** Faithful restoration of the Kinesoft Windows 95 PC edition for Windows 10/11, with an eventual browser port considered after the desktop restoration is stable.
 
 ## Goals and scope
@@ -31,9 +31,17 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 ## Current project status
 
-> **This section is the authoritative current state (updated 2026-10-16).** Review labels such as "Chat 2" are kept as originally recorded; see the transition note under *Working approach*. The dated sections further down are historical snapshots. Where they conflict with this section, this section wins.
+> **This section is the authoritative current state (updated 2026-10-19).** Review labels such as "Chat 2" are kept as originally recorded; see the transition note under *Working approach*. The dated `##` sections further down are historical snapshots. Where they conflict with this section, this section wins. Within this section, milestone subsections are in date order, and a later subsection supersedes an earlier one. The current position is *Mounted-disc result and Work review*.
 
-**Phase:** native Windows 11 compatibility diagnosis. An exploratory separate-account session opened the game window but did not reach gameplay. The user has selected their existing account for the next bounded baseline; no restoration engine or implementation architecture has been chosen.
+**Phase:** native Windows 11 compatibility diagnosis.
+- **Earlier exploratory session:** a separate-account session opened the game window but did not reach gameplay.
+- **Existing-account runs:** three supervised launches in the user's own account, unelevated:
+  - baseline 1;
+  - a confirmation run;
+  - a run with a data-only disc image mounted.
+- **Where all three stopped:** each stopped after the message "Pitfall must be played using the CD-ROM." (user-reported) and exited with code 0 (verified). The mounted data-only disc did not get past the message; why is not established.
+- **Next step:** a reviewed static search for that message in `PITFALL.EXE`. Its source is under review; nothing has been run.
+- **Not chosen:** no restoration engine or implementation architecture has been chosen.
 
 **Reference media — MEDIA-001**, at `private/original-media/Pitfall_The_Mayan_Adventure_ISO/` (git-ignored):
 
@@ -392,7 +400,7 @@ The mocks model real getter failures through getter methods. That this matches l
 
 - **Helper revision 3 installed** *(verified by Claude, 2026-10-17)*: `C:\PitfallTest\tools\baseline-run-r3.ps1`, copied only because no file of that name existed. SHA-256 `315248685186A97ABED61573C3158233A0F3F41EBA1195D87EDB214A0B8FDD90` matches the accepted file. `baseline-run.ps1` (revision 2, `B9B56E5E…`) is untouched. All three phases of the next test use `baseline-run-r3.ps1`; its printed "Next:" hints still name revision 2 and are to be ignored.
 - **`make-data-iso.ps1`** is run directly from its review batch folder, after its fingerprint is checked; it is not copied elsewhere.
-- **Awaiting the user's one combined approval** for the five actions below. Work's acceptance does not itself authorize them.
+- **The user's one combined approval** for the five actions below was given on 2026-10-17 ("yes, I approve all five"), used once, and is now spent. See *Mounted-disc result and Work review*. Work's acceptance did not itself authorize the actions.
   1. One data-only ISO creation.
   2. Switching AutoPlay off temporarily (the user does this).
   3. Mounting, only after the pre-mount check passes.
@@ -401,7 +409,28 @@ The mocks model real getter failures through getter methods. That this matches l
 
   Conditions: network may stay connected, Defender stays on, everything runs unelevated, and any failed check, unexpected prompt or stop condition means stop, with no automatic retry. CD music remains outside this data-only test.
 
-#### Next run — proposed, pending explicit user approval
+#### Mounted-disc result and Work review (2026-10-17 to 2026-10-19)
+
+- **Run:** the five approved actions were completed once on 2026-10-17 (run `baseline-20261017-172712`, kept local). Report: [existing-account-mounted-disc-1.md](docs/testing/existing-account-mounted-disc-1.md), revision 3.
+- **Result:**
+  - A data-only ISO was mounted by Windows as `E:`, labelled `PITFALL`, with all 40 files matching (verified).
+  - The game was started directly from the hard-disk working copy, not through `PITSTART.EXE`.
+  - The same two dialogs appeared, and the game closed by itself (user-reported).
+  - Exit code 0 after 25.84 s; no matching crash events in the observed window; no before/after difference in the captured observations (Claude-verified).
+  - AutoPlay was restored, but its stored value is now absent where it was `0` before (recorded separately).
+- **Interpretation:** the failure does **not** establish an audio-track requirement. Six candidate explanations (H1–H6) remain compatible with the outcome; this test does not distinguish them.
+- **Work review:** revision 2 **ACCEPT WITH CORRECTIONS** (2026-10-19); revision 3 applies them and is **ACCEPTED** (2026-10-19), as a documentation review only. No independent reproduction of the game run. Work directed that the mounted-disc test is **not to be repeated**.
+- **Research document:** `docs/research/cdrom-detection-research.md` (added by the user at `476675a`, written from `6638e7d`) gains a dated addendum and a pointer at its top, so its pending-approval wording is not read as current.
+- **Next (preparation only):** Work authorized writing the source and synthetic tests of a small search helper, for review. It would locate the CD-ROM message and candidate references in the working-copy `PITFALL.EXE`, checking the file's full pinned hash before searching. Tracing the code that decides to show the message (decoding) is deferred.
+  - **Work's source review of helper revision 1 (2026-10-19):** two corrections are required before any game-file use:
+    - stop before stage B when neither CD-ROM target term is found;
+    - bound the match and reference positions kept in memory while searching, not only those printed.
+
+    Searching every ANSI match that has an address, whatever its section name, was found reasonable. Searching reference patterns across the whole file must be documented explicitly.
+  - Revision 2 is being prepared as source for review. No helper or test run, game-file read, launch, mounting, installation or settings change is authorized.
+- **Open user decision:** GitHub reports this repository as **public** (Claude's read-only check, 2026-10-17), although earlier records say private. No original game material is tracked. Making it private would restrict future access, but would not undo earlier exposure. This does not block the documentation review.
+
+#### Baseline run procedure (historical, 2026-10-16; used for baseline 1 and the confirmation run)
 
 - **Subject:** exactly one `ASSETS\PITFALL.EXE` launch from the already staged copy, under the existing account, unelevated, with `ASSETS` explicitly set as the working directory. No Windows 95 mode, reduced-colour setting, wrapper, replacement DLL, launcher or installer in this baseline.
 - **Duration:** at most 10 minutes; stop sooner on a blocking dialog, crash, security alert, instability, unexpected administrator/install/system-change request or two minutes without response. Cancel elevation/install prompts. End only the identified test process if needed; never use `KILLPIT.EXE`.
@@ -542,10 +571,10 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 
 ## Immediate next actions
 
-**Current (2026-10-16):** follow *Next milestone: one attributable baseline in the existing Windows account* above.
+**Current (2026-10-19):** see *Mounted-disc result and Work review* above.
 1. Preserve the completed separate-account exploratory session. Work reviewed it with evidence-limit corrections; no need to redo staging or WAIL32 analysis.
 2. ~~Claude completes the narrowly scoped account/privacy helper adaptation and read-only preflight, without requiring a separate Windows account.~~ Done: helper revision 2 accepted by Work and installed with a verified fingerprint (2026-10-17).
-3. ~~Obtain explicit approval for the single existing-account baseline, then record that run before selecting any compatibility change.~~ Done 2026-10-17: baseline 1 and the confirmation run, both accepted by Work. **Current:** the mounted-disc proposal, revision 3, is accepted by Work and helper revision 3 is installed. The test awaits the user's one combined approval for ISO creation, the temporary AutoPlay switch-off, mounting, one launch, then eject and restore (see *Mounted-disc preparation: review and correction*).
+3. ~~Obtain explicit approval for the single existing-account baseline, then record that run before selecting any compatibility change.~~ Done 2026-10-17: baseline 1 and the confirmation run, both accepted by Work. ~~The mounted-disc test awaits the user's combined approval.~~ Done 2026-10-17: the CD-ROM message was unchanged; the report (revision 3) is accepted by Work, and the test is not to be repeated. **Current:** revision 2 of the stage-A/B search helper (source and synthetic tests) is being prepared for Work's review, with Work's two corrections; nothing is run.
 4. Keep Defender enabled, originals read-only and personal data out of reports. Defer tooling, mounting/conversion and deeper reverse engineering until evidence justifies them.
 
 **Completed (historical):**
@@ -615,3 +644,6 @@ Each work session should leave the project easier to resume:
 | 2026-10-17 | Run future tests with the network connected; remove the helper's network gate (revision 3). | User decision; Work ACCEPT of revision 3 | Network recorded as context; network or firewall prompts are a stop condition. Earlier runs stay documented as offline. |
 | 2026-10-17 | Mounted-disc preparation revision 1: corrections required (AutoPlay before mounting, finalisation, link checks); revision 2 submitted. | Work review (delegated) | Revision 2 proposes a user-approved temporary AutoPlay switch-off. Nothing created, mounted or launched. |
 | 2026-10-17 | Accept mounted-disc revision 3 (`make-data-iso.ps1` `1F8BD327…`); install helper revision 3 as `baseline-run-r3.ps1`. | Work review (delegated) | Subject to the user's explicit combined approval of ISO creation, the AutoPlay switch-off, mounting, one launch, eject and restore. |
+| 2026-10-17 | Approve the five mounted-disc actions; they were completed once. | User approval ("yes, I approve all five") | The CD-ROM message was unchanged (reported); exit 0 (verified). The approval is spent. |
+| 2026-10-19 | Mounted-disc report revision 2: ACCEPT WITH CORRECTIONS. Do not repeat the mounted-disc test. Add a dated addendum to the research document. Prepare a stage-A/B text-search helper (source and synthetic tests only). | Work review and preparation assignment (delegated) | The failure does not establish an audio-track requirement. No helper or test execution, game-file read, launch, mounting, installation, settings change, commit or push is authorized. Repository visibility is a separate user decision. |
+| 2026-10-19 | Accept mounted-disc report revision 3. Publish it with the research addendum and this status update in one documentation-only commit and push. Helper revision 1 needs two corrections (no-target stop before stage B; bounded retained positions). | Work review (delegated) | Documentation review only; no independent reproduction. Helper revision 2 is source-only for review; no execution or game-file access is authorized. |
