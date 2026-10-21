@@ -1,7 +1,7 @@
 # PROJECT STATUS — Pitfall: The Mayan Adventure (PC Restoration)
 
-**Status:** Mounted-disc test reported (CD-ROM message unchanged); preparing a reviewed static search for the message  
-**Last updated:** 2026-10-19  
+**Status:** CD-ROM message located as string-table entry 227 (accepted); Ghidra downloaded (not run); stage 1a source preparation authorized  
+**Last updated:** 2026-10-21  
 **Project target:** Faithful restoration of the Kinesoft Windows 95 PC edition for Windows 10/11, with an eventual browser port considered after the desktop restoration is stable.
 
 ## Goals and scope
@@ -31,7 +31,7 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 ## Current project status
 
-> **This section is the authoritative current state (updated 2026-10-19).** Review labels such as "Chat 2" are kept as originally recorded; see the transition note under *Working approach*. The dated `##` sections further down are historical snapshots. Where they conflict with this section, this section wins. Within this section, milestone subsections are in date order, and a later subsection supersedes an earlier one. The current position is *Mounted-disc result and Work review*.
+> **This section is the authoritative current state (updated 2026-10-21).** Review labels such as "Chat 2" are kept as originally recorded; see the transition note under *Working approach*. The dated `##` sections further down are historical snapshots. Where they conflict with this section, this section wins. Within this section, milestone subsections are in date order, and a later subsection supersedes an earlier one. The current position is *Start-up message location and resource mapping*.
 
 **Phase:** native Windows 11 compatibility diagnosis.
 - **Earlier exploratory session:** a separate-account session opened the game window but did not reach gameplay.
@@ -40,7 +40,12 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - a confirmation run;
   - a run with a data-only disc image mounted.
 - **Where all three stopped:** each stopped after the message "Pitfall must be played using the CD-ROM." (user-reported) and exited with code 0 (verified). The mounted data-only disc did not get past the message; why is not established.
-- **Next step:** a reviewed static search for that message in `PITFALL.EXE`. Its source is under review; nothing has been run.
+- **Where the message text is stored:** two read-only searches of `PITFALL.EXE` (accepted by Work, 2026-10-21) found the CD-ROM sentence stored once, as the complete text of string-table entry **227**. The 256-colour warning is entry **17**. This shows where the text is stored, not which code uses it. See [startup-messages.md](docs/technical/startup-messages.md).
+- **Next step:** code analysis to locate uses of string 227.
+  - **Proposal:** revision 2 was accepted by Work.
+  - **Tools:** with the user's approval, Ghidra 12.1.4 and Temurin JDK 21 were downloaded, verified and extracted (Claude-reported). Neither has been run.
+  - **Now:** Work has authorized *source preparation* for stage 1a: synthetic fixtures, the analysis script and a test harness, for review.
+  - **Still awaiting separate approval:** any tool launch, synthetic execution and game-file analysis. No code analysis has been done.
 - **Not chosen:** no restoration engine or implementation architecture has been chosen.
 
 **Reference media — MEDIA-001**, at `private/original-media/Pitfall_The_Mayan_Adventure_ISO/` (git-ignored):
@@ -61,7 +66,7 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
   - Independent reproduction of the EDC and listing results. These are now reproducible with `tools/verify-media001.ps1`. Claude's second run passed every check on 2026-10-15, but that is not an independent run.
 
 **Not yet done:**
-- executable analysis beyond static PE headers and imports of `PITFALL.EXE`, `PITSTART.EXE` and `KILLPIT.EXE`, and static headers, imports and exports of `WAIL32.DLL` (R2.3 accepted): no disassembly, general string scanning, resource contents or export-target decoding;
+- executable analysis beyond static PE headers and imports of `PITFALL.EXE`, `PITSTART.EXE` and `KILLPIT.EXE`, static headers, imports and exports of `WAIL32.DLL` (R2.3 accepted), and (2026-10-21) a search for two fixed start-up sentences in `PITFALL.EXE` with metadata-only mapping of their resource locations: no disassembly, general string scanning, other resource contents or export-target decoding;
 - a controlled, reproducible launch-to-gameplay success (the first exploratory execution is recorded below);
 - a working build environment or restoration code.
 
@@ -427,8 +432,69 @@ The mocks model real getter failures through getter methods. That this matches l
     - bound the match and reference positions kept in memory while searching, not only those printed.
 
     Searching every ANSI match that has an address, whatever its section name, was found reasonable. Searching reference patterns across the whole file must be documented explicitly.
-  - Revision 2 is being prepared as source for review. No helper or test run, game-file read, launch, mounting, installation or settings change is authorized.
+  - Revision 2 is being prepared as source for review. No helper or test run, game-file read, launch, mounting, installation or settings change is authorized. *(Later: done and run; see* Start-up message location and resource mapping *below.)*
 - **Open user decision:** GitHub reports this repository as **public** (Claude's read-only check, 2026-10-17), although earlier records say private. No original game material is tracked. Making it private would restrict future access, but would not undo earlier exposure. This does not block the documentation review.
+
+#### Start-up message location and resource mapping (2026-10-19 to 2026-10-21)
+
+Report: [startup-messages.md](docs/technical/startup-messages.md), which lists every helper and evidence fingerprint. All results are **Claude-reported findings reviewed by Work**, not an independently reproduced examination.
+
+**Text search**
+- **The helper:** `find-pe-text.ps1` revision 2 (`0E581E33…45F2`) applies Work's two corrections. Work accepted it for testing on 2026-10-19.
+- **Synthetic test:** one run, 72/72 PASS, on 2026-10-20.
+- **Search run 1** (2026-10-21, one Work-authorized run on the working copy, exit 0):
+  - each full sentence is stored once, in UTF-16LE, in `.rsrc`;
+  - there is no single-byte (ANSI) copy.
+- **Work verdict: accepted as location evidence,** with three interpretation corrections:
+  - references were not searched, by design, which does not mean that none exist;
+  - no reference-finding method was established yet;
+  - the gap between the sentences shows distance only.
+
+**Resource mapping**
+- **The helper:** `map-pe-resource.ps1` (`EF66F9DD…5C89`). Work reviewed it as source only, then accepted it for one synthetic run: 55/55 PASS. Work checked the saved log's fingerprint without re-running the tests, and authorized one run on the working copy.
+- **Mapping run 1** (2026-10-21, one run, exit 0):
+  - The CD-ROM sentence is the whole of string-table (RT_STRING) block 15, entry 3: **string ID 227**.
+  - The colour warning is the whole of block 2, entry 1: **string ID 17**.
+  - Both are US English (`0x0409`), and each mapping is unique.
+- **Work verdict: ACCEPT** (2026-10-21). Work checked the evidence and helper fingerprints and the printed arithmetic. Work's qualifications:
+  - "unique mapping" means exactly one resource contains each specified range; how many copies of each sentence exist comes from the search;
+  - an exact string-table entry does not prove that the displayed message is never modified or combined at run time;
+  - the mapping cannot establish the start-up check logic, and `LoadStringA` is not assumed to be the loading route.
+
+**Next (Work, 2026-10-21; preparation only)**
+- **Prepare** this documentation update and a code-analysis proposal. The proposal locates uses of string 227, with 17 as a comparison. It names a disassembler and anything that needs the user's approval, and it defines the boundary, metadata-only reporting, evidence classes and stop conditions.
+- **Not authorized:** new helper implementation, game-file reads, disassembly, runtime tests, mounting, downloads, installations, settings changes, commits or pushes.
+- **Work's framing:** the next substantive question is which code uses string 227 and what branch leads there, not whether audio tracks are required.
+- **Tool availability** (Claude's read-only checks, 2026-10-21): no suitable installed disassembler, Java runtime, Python or Visual Studio tools were found. This does not prove that none exists anywhere on the PC. Any analysis tool needs the user's approval to download and use, and a decision record (`CLAUDE.md` rule 6).
+- **Work review of the first proposal (2026-10-21):**
+  - **Documentation:** accepted with small wording corrections, applied here.
+  - **Proposal:** to be revised:
+    - string 17 is a comparison, not a guaranteed positive control;
+    - access to resource block 15 is not by itself a reference to string 227;
+    - "confirmed" means an established static call target and argument, not proof of run-time reachability;
+    - all output and analysis must be bounded;
+    - release requirements must come from the selected release's tagged documentation.
+  - **Work's preferred plan:** Ghidra 12.1.4 and its required JDK only, with radare2 deferred and stage 2 kept separate.
+- ~~**Current:** the revised proposal is under Work's review. The download and extraction decision then goes to the user. Synthetic validation and the first game-file analysis each need separate Work authorization after that.~~ *(Superseded the same day; see below.)*
+- **Proposal revision 2: ACCEPT** (Work, 2026-10-21) for the download-and-extraction request to go to the user. This was not approval to run either tool. Work's two limitations:
+  - network polling every 10 seconds is observation, not isolation;
+  - settings, cache and temporary-file redirection and external-library loading are assumptions until validated. They are not proven safeguards.
+- **Download and extraction** (user approval "yes to all 4", 2026-10-21; Claude-reported; Work ACCEPT of the record):
+  - **Ghidra 12.1.4:** `ghidra_12.1.4_PUBLIC_20260921.zip`, 569,649,598 bytes, SHA-256 `ddac49f9…d4db`.
+  - **Temurin JDK 21.0.12.1+1:** `OpenJDK21U-jdk_x64_windows_hotspot_21.0.12.1_1.zip`, 205,073,461 bytes, SHA-256 `f9d6e191…8b4e`.
+  - **Checks:** both sizes and checksums matched the published values.
+  - **Location:** extracted unelevated into `C:\PitfallTest\analysis-tools\` (5,219 and 490 files); the downloads are kept in `C:\PitfallTest\downloads\`.
+  - **Security:** no Defender detection or prompt occurred. Nothing was installed, registered or run.
+
+  Work did not rehash the installed files or reproduce the security checks.
+- **Current:** stage 1a **source preparation** is authorized (Work, 2026-10-21):
+  - synthetic fixtures and their expected results;
+  - the Java analysis script;
+  - a bounded launch and test harness;
+  - checks of redirection, library loading, timeouts and output limits.
+
+  All of it stops for source review. **Not yet authorized:** Java or Ghidra launch, compilation, fixture generation, synthetic execution or game-file access. A `docs/decisions/` record for the new tool dependency (`CLAUDE.md` rule 6) is still to be written.
+- **Open user decision:** repository visibility (see the previous subsection).
 
 #### Baseline run procedure (historical, 2026-10-16; used for baseline 1 and the confirmation run)
 
@@ -571,10 +637,10 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 
 ## Immediate next actions
 
-**Current (2026-10-19):** see *Mounted-disc result and Work review* above.
+**Current (2026-10-21):** see *Start-up message location and resource mapping* above.
 1. Preserve the completed separate-account exploratory session. Work reviewed it with evidence-limit corrections; no need to redo staging or WAIL32 analysis.
 2. ~~Claude completes the narrowly scoped account/privacy helper adaptation and read-only preflight, without requiring a separate Windows account.~~ Done: helper revision 2 accepted by Work and installed with a verified fingerprint (2026-10-17).
-3. ~~Obtain explicit approval for the single existing-account baseline, then record that run before selecting any compatibility change.~~ Done 2026-10-17: baseline 1 and the confirmation run, both accepted by Work. ~~The mounted-disc test awaits the user's combined approval.~~ Done 2026-10-17: the CD-ROM message was unchanged; the report (revision 3) is accepted by Work, and the test is not to be repeated. **Current:** revision 2 of the stage-A/B search helper (source and synthetic tests) is being prepared for Work's review, with Work's two corrections; nothing is run.
+3. ~~Obtain explicit approval for the single existing-account baseline, then record that run before selecting any compatibility change.~~ Done 2026-10-17: baseline 1 and the confirmation run, both accepted by Work. ~~The mounted-disc test awaits the user's combined approval.~~ Done 2026-10-17: the CD-ROM message was unchanged; the report (revision 3) is accepted by Work, and the test is not to be repeated. ~~**Current:** revision 2 of the stage-A/B search helper (source and synthetic tests) is being prepared for Work's review, with Work's two corrections; nothing is run.~~ Done 2026-10-21: the search and resource-mapping runs are accepted by Work. The CD-ROM message is string-table entry 227 (`docs/technical/startup-messages.md`). ~~**Current:** a revised code-analysis proposal to locate uses of string 227 is under Work's review. Any disassembler download needs the user's approval.~~ Done 2026-10-21: proposal revision 2 accepted, and Ghidra 12.1.4 and JDK 21 downloaded and extracted with the user's approval (not run). **Current:** stage 1a source preparation (fixtures, analysis script and harness) for Work's review. Execution and game-file analysis await separate approval.
 4. Keep Defender enabled, originals read-only and personal data out of reports. Defer tooling, mounting/conversion and deeper reverse engineering until evidence justifies them.
 
 **Completed (historical):**
@@ -647,3 +713,9 @@ Each work session should leave the project easier to resume:
 | 2026-10-17 | Approve the five mounted-disc actions; they were completed once. | User approval ("yes, I approve all five") | The CD-ROM message was unchanged (reported); exit 0 (verified). The approval is spent. |
 | 2026-10-19 | Mounted-disc report revision 2: ACCEPT WITH CORRECTIONS. Do not repeat the mounted-disc test. Add a dated addendum to the research document. Prepare a stage-A/B text-search helper (source and synthetic tests only). | Work review and preparation assignment (delegated) | The failure does not establish an audio-track requirement. No helper or test execution, game-file read, launch, mounting, installation, settings change, commit or push is authorized. Repository visibility is a separate user decision. |
 | 2026-10-19 | Accept mounted-disc report revision 3. Publish it with the research addendum and this status update in one documentation-only commit and push. Helper revision 1 needs two corrections (no-target stop before stage B; bounded retained positions). | Work review (delegated) | Documentation review only; no independent reproduction. Helper revision 2 is source-only for review; no execution or game-file access is authorized. |
+| 2026-10-19 to 2026-10-21 | Accept search helper revision 2 for testing; after its synthetic run (72/72), authorize one search run on the working-copy `PITFALL.EXE`. | Work review and authorization (delegated) | One run, exit 0. Accepted as location evidence with three interpretation corrections. |
+| 2026-10-21 | Authorize a source-only resource-mapping helper. Accept it for one synthetic run (55/55), then authorize one mapping run on the working copy. | Work review and authorization (delegated) | One run, exit 0: the CD-ROM message is string 227 and the colour warning is string 17. |
+| 2026-10-21 | Accept the mapping results. Authorize documentation and a code-analysis proposal (preparation only). | Work review (delegated) | Claude-reported findings reviewed by Work, not independently reproduced. No disassembly, download, installation, commit or push authorized. A disassembler download is reserved for the user. |
+| 2026-10-21 | Documentation accepted with small corrections. The proposal is to be revised. Preferred tool: Ghidra 12.1.4 with its required JDK 21 only; radare2 deferred; stage 2 kept separate. | Work review and recommendation (delegated) | Preparation only. The download and extraction decision is the user's. Synthetic validation and the first game-file analysis need separate Work authorization. |
+| 2026-10-21 | Accept proposal revision 2 and send its download request to the user. Approve downloading, verifying and extracting the pinned Ghidra 12.1.4 and Temurin JDK 21.0.12.1+1 zips. | Work ACCEPT; user approval ("yes to all 4") | Completed once; both hashes matched; nothing run (Claude-reported). Running either tool was excluded. |
+| 2026-10-21 | Accept the download record. Authorize stage 1a source preparation, and one documentation-only commit and push of the accepted diff with a minimal current-state correction. | Work review and authorization (delegated) | No Java or Ghidra launch, compilation, fixture generation, synthetic execution, game-file access, download, installation or settings change. |

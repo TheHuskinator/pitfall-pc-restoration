@@ -4,6 +4,7 @@
 > - The mounted-disc test discussed below has since been run once, and its approval is spent.
 > - Work has directed that it is not to be repeated.
 > - This document's statements about a pending approval, and its "next experimental decision", describe the state at commit `6638e7d`. They are not current instructions.
+> - **Later (2026-10-21):** see also the [second addendum](#addendum-2026-10-21-the-message-text-has-been-located): the CD-ROM message has been located as string-table entry 227.
 
 Date: 2026-10-17. Scope: Kinesoft Windows 95 PC edition on Windows 11.
 
@@ -113,6 +114,24 @@ This document was written from repository commit `6638e7d`. At that commit, the 
   - API logging is not an automatic next action.
 - **Disposition note:** the *Disposition* paragraph's statement that this document "has not been committed or pushed" described its draft state. It was committed at `476675a`.
 - **Repository visibility:** the observation in *Provenance and current baseline* was confirmed read-only by Claude on 2026-10-17: GitHub reports the repository as **public**. No tracked file is original game material. Visibility is the user's decision and is tracked separately. Making the repository private would restrict future access, but would not undo earlier public exposure.
+
+## Addendum (2026-10-21): the message text has been located
+
+The first addendum's statement that the search helper was being prepared and "nothing has been run" is now out of date.
+
+- **What was run:** after Work's reviews and synthetic tests, two read-only helpers were each run once on the working-copy `PITFALL.EXE`.
+- **What they found:** the CD-ROM sentence is stored once, as the complete text of string-table entry **227**. The 256-colour warning is entry **17**. See [startup-messages.md](../technical/startup-messages.md).
+- **Review status:** Work accepted both results as Claude-reported findings, not an independently reproduced examination.
+- **Consistency with this document.** Locating the text does not identify the gate. In line with *Audit of causal claims*:
+  - the result does not show which API or branch leads to the dialog;
+  - it does not show whether `LoadStringA` is the loading route;
+  - it does not bear on whether CD audio tracks are required.
+
+  H1–H6 remain undistinguished.
+- **Next:** code analysis to locate the code that uses string 227.
+  - **Proposal and tools:** Work accepted the proposal (revision 2). With the user's approval, the analysis tool (Ghidra 12.1.4 with JDK 21) has been downloaded and extracted, but not run.
+  - **Authorized now:** preparation of synthetic validation material only.
+  - **Not yet done:** no code analysis.
 
 ## Citation handling and sources
 

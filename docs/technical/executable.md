@@ -245,8 +245,8 @@ These are **not findings**. They are listed only so that a later, separately app
 ## 8. Not tested / out of scope
 
 - Disassembly or decompilation, including the code at the entry point.
-- Strings inside the executable, including any run-time library names.
-- Resource section contents or a list of its types (`.rsrc` was not parsed).
+- Strings inside the executable, including any run-time library names. *(Later, 2026-10-21: a search for two fixed start-up sentences only; see [startup-messages.md](startup-messages.md). No general string scan has been made.)*
+- Resource section contents or a list of its types (`.rsrc` was not parsed). *(Later, 2026-10-21: the resource directory was walked, metadata only, to map those two sentences to string-table entries 227 and 17; see [startup-messages.md](startup-messages.md). No list of types was reported, and other resource contents were not examined.)*
 - Base-relocation entries, the DOS stub contents, and any Rich header or other undocumented data before `0x80`.
 - Execution, loading or debugging; run-time library loading; registry or file activity.
 - Presence and behavior of the imported functions on Windows 10/11.
