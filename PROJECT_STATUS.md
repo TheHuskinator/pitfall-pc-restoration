@@ -1,6 +1,6 @@
 # PROJECT STATUS — Pitfall: The Mayan Adventure (PC Restoration)
 
-**Status:** CD-ROM message located as string-table entry 227 (accepted); Ghidra downloaded (not run); stage 1a source preparation authorized  
+**Status:** CD-ROM message located as string-table entry 227 (accepted); Ghidra downloaded (not run); stage 1a source preparation authorized, not started  
 **Last updated:** 2026-10-21  
 **Project target:** Faithful restoration of the Kinesoft Windows 95 PC edition for Windows 10/11, with an eventual browser port considered after the desktop restoration is stable.
 
@@ -31,7 +31,7 @@ Create a legally sound, faithful, playable restoration of the Kinesoft Windows 9
 
 ## Current project status
 
-> **This section is the authoritative current state (updated 2026-10-21).** Review labels such as "Chat 2" are kept as originally recorded; see the transition note under *Working approach*. The dated `##` sections further down are historical snapshots. Where they conflict with this section, this section wins. Within this section, milestone subsections are in date order, and a later subsection supersedes an earlier one. The current position is *Start-up message location and resource mapping*.
+> **This section is the authoritative current state (updated 2026-10-21).** Review labels such as "Chat 2" are kept as originally recorded; see the transition note under *Working approach*. The dated `##` sections further down are historical snapshots. Where they conflict with this section, this section wins. Within this section, milestone subsections are in date order, and a later subsection supersedes an earlier one. The current position is *Session handoff (2026-10-21)*, which summarizes *Start-up message location and resource mapping*.
 
 **Phase:** native Windows 11 compatibility diagnosis.
 - **Earlier exploratory session:** a separate-account session opened the game window but did not reach gameplay.
@@ -496,6 +496,85 @@ Report: [startup-messages.md](docs/technical/startup-messages.md), which lists e
   All of it stops for source review. **Not yet authorized:** Java or Ghidra launch, compilation, fixture generation, synthetic execution or game-file access. A `docs/decisions/` record for the new tool dependency (`CLAUDE.md` rule 6) is still to be written.
 - **Open user decision:** repository visibility (see the previous subsection).
 
+#### Session handoff (2026-10-21)
+
+The user asked for a clean handoff before a new Claude Code conversation. **Start here.** This subsection summarizes the state above; where they differ, the dated entries above give the detail.
+
+**Repository:**
+- `main` = `origin/main`, clean. The documentation commit `c9fab8c` holds the accepted start-up message results; this handoff commit follows it.
+- Nothing proprietary is tracked.
+- Local review files are in the git-ignored `private/work-review/`. Its `README.md` lists every batch with fingerprints and status.
+
+**Completed and accepted** (all Claude-reported unless stated):
+
+| Item | Result | Evidence |
+|---|---|---|
+| Three existing-account launches (baseline, confirmation, mounted data-only disc) | Each stopped at "Pitfall must be played using the CD-ROM."; exit code 0 | `docs/testing/` reports |
+| Text-search helper `find-pe-text.ps1` revision 2 | Synthetic 72/72 PASS (2026-10-20). One run on `PITFALL.EXE`: each sentence stored once, UTF-16LE, in `.rsrc` | [startup-messages.md](docs/technical/startup-messages.md) |
+| Resource-mapping helper `map-pe-resource.ps1` | Synthetic 55/55 PASS. One run: CD-ROM message = string **227** (block 15, entry 3); colour warning = string **17** (block 2, entry 1); US English | same |
+| Download and extraction of Ghidra and its JDK (user-approved) | Both sizes and SHA-256 values matched; extracted unelevated; **not run** | `private/work-review/2026-10-21-tool-download-1/RECORD.md` (`8181EF66…9DCB`) |
+
+The two helpers and their tests live only in local review batches, not in `tools/`.
+
+**Installed analysis tools** (Claude-reported; re-hashed read-only at handoff, all unchanged):
+
+| Tool | Version | Location | Fingerprints |
+|---|---|---|---|
+| Ghidra | 12.1.4 PUBLIC (`application.java.min=21`) | `C:\PitfallTest\analysis-tools\ghidra_12.1.4_PUBLIC\` (5,219 files) | zip `ghidra_12.1.4_PUBLIC_20260921.zip`, 569,649,598 bytes, `ddac49f903da9d5bac833e5cc79395098b9c33cfd3279be5f31bd00387d2d4db`. `support\analyzeHeadless.bat` `DD7B9D17…AE07`; `support\launch.bat` `4B3C3A6A…9434`; `support\launch.properties` `5A0FA484…AE83`; `ghidraRun.bat` `9374C936…1357` |
+| Eclipse Temurin JDK | 21.0.12.1+1-LTS, x86_64 | `C:\PitfallTest\analysis-tools\jdk-21.0.12.1+1\` (490 files) | zip `OpenJDK21U-jdk_x64_windows_hotspot_21.0.12.1_1.zip`, 205,073,461 bytes, `f9d6e191ab098c0d416e7d588a24420a8621cd2f4720dab2459b8b7b2d2d8b4e`. `bin\java.exe` `82051FDA…1D55` |
+
+- **Downloads** are kept in `C:\PitfallTest\downloads\`.
+- **Full file manifest:** `private/work-review/2026-10-21-tool-download-1/analysis-tools-manifest.txt` (`6A8E3373…68F8`, 5,709 files).
+- **Nothing registered with Windows:** no PATH, registry, service or file-association change.
+- **Validation of the tools: none yet.** Neither Java nor Ghidra has ever been launched. The only checks were download integrity, file counts and version labels read from text files.
+- `C:\PitfallTest\analysis-work\` and `C:\PitfallTest\analysis\` do not exist yet.
+
+**Not done:**
+
+| Work | Status |
+|---|---|
+| **Stage 1a source preparation:** synthetic fixtures and expected results, the Java analysis script, a bounded launch and test harness, and checks of settings, cache and temporary-file redirection, external-library loading, timeouts and output limits | **Authorized by Work (2026-10-21), not started.** No files exist yet. It must stop for Work's source review. |
+| Stage 1a execution: launching Java or Ghidra, compilation, fixture generation, the synthetic run | **Not authorized.** Needs Work's authorization after the source review. |
+| Stage 1b: one headless analysis of the working-copy `PITFALL.EXE` | **Not authorized.** Needs Work's authorization after stage 1a. This would be the first disassembly of game code. |
+| Stage 2: the immediate context of confirmed references | **Not authorized.** Separate Work decision after 1b. |
+| `docs/decisions/` record for the Ghidra and JDK dependency (`CLAUDE.md` rule 6) | Not written |
+| Adding the two helpers to `tools/` | Not proposed; would be a separate reviewed change |
+| Repository visibility (GitHub reports **public**) | Open user decision |
+
+**The plan to follow:** proposal revision 2, `private/work-review/2026-10-21-docs-and-code-analysis-proposal-r2/code-analysis-proposal.md` (`37BE7BF0…53CA`). It defines:
+- routes R1–R5;
+- evidence classes:
+  - **C1** confirmed *static* reference, not proof of run-time reachability;
+  - **B** block-level only (block 15 ≠ string 227 without evidence of entry 3);
+  - **C2** probable;
+  - **U** unresolved, never "coincidence";
+  - **N** not found (complete analysis only);
+- string 17 as a comparison only;
+- the bounds: 1,800 s analysis timeout, 60 min wall clock, `-max-cpu 2`, wrapper depth 2, 200 call sites per import slot, C1 ≤ 10 per string, B ≤ 10, C2 ≤ 25, 150 listed lines, 64 KB report;
+- process-scoped redirection to `C:\PitfallTest\analysis-work`;
+- metadata-only reporting.
+
+**Limitations to keep explicit** (Work, 2026-10-21):
+- **Network polling** (every 10 s) is observation, not isolation.
+- **Unvalidated assumptions:** settings, cache and temporary-file redirection and external-library loading are assumptions until stage 1a validates them. They are not proven safeguards.
+
+**Stop conditions** (proposal revision 2, section 10). Stop, preserve the evidence, do not retry, and report on:
+- a tool, script or game-file fingerprint mismatch;
+- a Defender alert, or an elevation, SmartScreen, network or firewall prompt;
+- a non-loopback connection by the Ghidra Java process;
+- any write outside the declared folders, including new items in `%APPDATA%\ghidra`, `%LOCALAPPDATA%\ghidra`, `%TEMP%` (Ghidra or `hsperfdata`), `%USERPROFILE%\.ghidra` or `HKCU\Software\JavaSoft`; all were absent at handoff;
+- a PE layout or import-slot disagreement with `executable.md`, or external libraries being loaded;
+- any `LIMIT`;
+- any step that would execute, debug, emulate or patch game code, or read another game file;
+- output that would need raw bytes, listings or decompiler text.
+
+**Standing requirements:**
+- **Reserved for the user:** downloads and installations, first execution and the runtime environment, mounting and extraction, and external contact.
+- **Work's authorization is needed** for each later stage.
+- **Defender stays on,** with no exclusions; everything runs unelevated.
+- **Originals stay read-only;** no original material is committed.
+- **Commits and pushes** happen only within explicit authorization, never force-pushed.
+
 #### Baseline run procedure (historical, 2026-10-16; used for baseline 1 and the confirmation run)
 
 - **Subject:** exactly one `ASSETS\PITFALL.EXE` launch from the already staged copy, under the existing account, unelevated, with `ASSETS` explicitly set as the working directory. No Windows 95 mode, reduced-colour setting, wrapper, replacement DLL, launcher or installer in this baseline.
@@ -637,7 +716,7 @@ Full notes: `docs/technical/disc-contents.md`. Per-file hashes: `docs/inventory/
 
 ## Immediate next actions
 
-**Current (2026-10-21):** see *Start-up message location and resource mapping* above.
+**Current (2026-10-21):** see *Session handoff (2026-10-21)* above.
 1. Preserve the completed separate-account exploratory session. Work reviewed it with evidence-limit corrections; no need to redo staging or WAIL32 analysis.
 2. ~~Claude completes the narrowly scoped account/privacy helper adaptation and read-only preflight, without requiring a separate Windows account.~~ Done: helper revision 2 accepted by Work and installed with a verified fingerprint (2026-10-17).
 3. ~~Obtain explicit approval for the single existing-account baseline, then record that run before selecting any compatibility change.~~ Done 2026-10-17: baseline 1 and the confirmation run, both accepted by Work. ~~The mounted-disc test awaits the user's combined approval.~~ Done 2026-10-17: the CD-ROM message was unchanged; the report (revision 3) is accepted by Work, and the test is not to be repeated. ~~**Current:** revision 2 of the stage-A/B search helper (source and synthetic tests) is being prepared for Work's review, with Work's two corrections; nothing is run.~~ Done 2026-10-21: the search and resource-mapping runs are accepted by Work. The CD-ROM message is string-table entry 227 (`docs/technical/startup-messages.md`). ~~**Current:** a revised code-analysis proposal to locate uses of string 227 is under Work's review. Any disassembler download needs the user's approval.~~ Done 2026-10-21: proposal revision 2 accepted, and Ghidra 12.1.4 and JDK 21 downloaded and extracted with the user's approval (not run). **Current:** stage 1a source preparation (fixtures, analysis script and harness) for Work's review. Execution and game-file analysis await separate approval.
@@ -719,3 +798,4 @@ Each work session should leave the project easier to resume:
 | 2026-10-21 | Documentation accepted with small corrections. The proposal is to be revised. Preferred tool: Ghidra 12.1.4 with its required JDK 21 only; radare2 deferred; stage 2 kept separate. | Work review and recommendation (delegated) | Preparation only. The download and extraction decision is the user's. Synthetic validation and the first game-file analysis need separate Work authorization. |
 | 2026-10-21 | Accept proposal revision 2 and send its download request to the user. Approve downloading, verifying and extracting the pinned Ghidra 12.1.4 and Temurin JDK 21.0.12.1+1 zips. | Work ACCEPT; user approval ("yes to all 4") | Completed once; both hashes matched; nothing run (Claude-reported). Running either tool was excluded. |
 | 2026-10-21 | Accept the download record. Authorize stage 1a source preparation, and one documentation-only commit and push of the accepted diff with a minimal current-state correction. | Work review and authorization (delegated) | No Java or Ghidra launch, compilation, fixture generation, synthetic execution, game-file access, download, installation or settings change. |
+| 2026-10-21 | Prepare a clean session handoff in `PROJECT_STATUS.md` and commit and push it. | User request | Documentation only. No testing, execution, installation or configuration change. Stage 1a source preparation remains authorized but not started. |
